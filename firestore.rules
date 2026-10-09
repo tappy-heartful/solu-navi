@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 認証済みかどうかのヘルパー
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // システム管理者判定
+    function isSystemAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSystemAdmin == true;
+    }
+    
+    // ユーザー自身かどうかの判定
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // users コレクション
+    match /users/{uid} {
+      // 閲覧: 認証済みユーザー全員（名簿閲覧のため）
+      allow read: if isAuthenticated();
+      // 作成・更新: 本人またはシステム管理者
+      allow create, update: if isOwner(uid) || isSystemAdmin();
+      // 削除: システム管理者のみ
+      allow delete: if isSystemAdmin();
+      
+      // プライベート情報サブコレクション (居住地等)
+      match /private/{document=**} {
+        allow read, write: if isOwner(uid) || isSystemAdmin();
+      }
+    }
+
+    // oauthStates コレクション (LINEログイン認証用)
+    match /oauthStates/{state} {
+      allow create: if true;
+      allow read, delete: if true;
+    }
+
+    // pwaAuthSessions コレクション (PWAクロスコンテキスト同期用)
+    match /pwaAuthSessions/{sessionId} {
+      allow read, write: if true;
+    }
+
+    // 静的マスタコレクション (sections, roles, instruments)
+    match /sections/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isSystemAdmin();
+    }
+    match /roles/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isSystemAdmin();
+    }
+    match /instruments/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isSystemAdmin();
+    }
+
+    // 操作ログ・アクセスログ
+    match /logs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if isSystemAdmin();
+    }
+    match /accessLogs/{logId} {
+      allow create: if isAuthenticated();
+      allow read: if isSystemAdmin();
+    }
+  }
+}
