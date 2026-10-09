@@ -212,7 +212,7 @@ export function UserEditClient() {
 
   if (loading) {
     return (
-      <EditFormLayout title="プロフィール編集" onSubmit={() => {}}>
+      <EditFormLayout title="プロフィール編集" onSubmit={() => { }}>
         <div className={styles.loading}>読み込み中...</div>
       </EditFormLayout>
     );
@@ -251,7 +251,7 @@ export function UserEditClient() {
         label="略称 (譜割り用・2文字以内)"
         required
         error={errors.abbreviation}
-        description="譜割り（パート割り）等で使用する2文字の略称（例: たぴ、田、太 等）"
+        description="譜割り（パート割り）等で使用する2文字の略称（例: はな、たろ 等）"
       >
         <AppInput
           type="text"
