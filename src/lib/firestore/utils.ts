@@ -3,13 +3,32 @@ import { Timestamp } from "firebase/firestore";
 /**
  * FirestoreドキュメントのTimestampや再帰的オブジェクトをシリアライズ可能なプレーンオブジェクトに変換する
  */
-export function toPlainObject<T>(data: unknown): T {
-  if (data === null || data === undefined) {
-    return data as T;
+export function toPlainObject<T = any>(input: unknown): T {
+  if (input === null || input === undefined) {
+    return input as T;
+  }
+
+  let data = input;
+  // DocumentSnapshot の場合
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    "data" in input &&
+    typeof (input as any).data === "function" &&
+    "id" in input
+  ) {
+    const docData = (input as any).data() || {};
+    data = { ...docData, id: (input as any).id };
   }
 
   // Firestore Timestamp
-  if (data instanceof Timestamp || (typeof data === "object" && "toMillis" in data && typeof (data as { toMillis: () => number }).toMillis === "function")) {
+  if (
+    data instanceof Timestamp ||
+    (typeof data === "object" &&
+      data !== null &&
+      "toMillis" in data &&
+      typeof (data as { toMillis: () => number }).toMillis === "function")
+  ) {
     return (data as { toMillis: () => number }).toMillis() as unknown as T;
   }
 

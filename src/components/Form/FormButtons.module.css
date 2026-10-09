@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.clearBtn {
+  flex: 1;
+  max-width: 140px;
+  padding: 0.75rem 1.25rem;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearBtn:hover {
+  background-color: #e2e8f0;
+}
+
+.saveBtn {
+  flex: 2;
+  max-width: 220px;
+  padding: 0.75rem 1.5rem;
+  background-color: #146081;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.saveBtn:hover {
+  background-color: #0f4a64;
+}

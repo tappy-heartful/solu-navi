@@ -1,0 +1,174 @@
+﻿"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Event, EventAdjustStatus } from "@/lib/firestore/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { BaseLayout } from "@/components/Layout/BaseLayout";
+import { AnswerEditLayout } from "@/components/Layout/AnswerEditLayout";
+import { getDayOfWeek, showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
+import { submitAdjustAnswer } from "@/features/event/api/event-client-service";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import styles from "./EventAdjustAnswer.module.css";
+
+type Props = {
+  eventId: string;
+  event: Event;
+  adjustStatuses: EventAdjustStatus[];
+};
+
+export function EventAdjustAnswerClient({ eventId, event, adjustStatuses }: Props) {
+  const router = useRouter();
+  const { userData } = useAuth();
+  const uid = userData?.id;
+
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [comment, setComment] = useState<string>("");
+  const [isEdit, setIsEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const candidateDates = event.candidateDates || [];
+
+  useEffect(() => {
+    if (!uid) return;
+    const fetch = async () => {
+      try {
+        const snap = await getDoc(doc(db, "eventAdjustAnswers", `${eventId}_${uid}`));
+        if (snap.exists()) {
+          setAnswers(snap.data().answers || {});
+          setComment(snap.data().comment || "");
+          setIsEdit(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch adjust answer:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetch();
+  }, [uid, eventId]);
+
+  const handleChange = (date: string, statusId: string) => {
+    setAnswers((prev) => ({ ...prev, [date]: statusId }));
+  };
+
+  const handleSave = async () => {
+    if (!uid) return;
+
+    const unanswered = candidateDates.filter((d) => !answers[d]);
+    if (unanswered.length > 0) {
+      await showDialog("すべての候補日に回答してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(`回答を${isEdit ? "修正" : "登録"}しますか？`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await submitAdjustAnswer(eventId, uid, answers, comment);
+      hideSpinner();
+      await writeLog({ dataId: eventId, action: `イベント回答（調整）${isEdit ? "修正" : "登録"}` });
+      await showDialog(`回答を${isEdit ? "修正" : "登録"}しました`, true);
+      router.refresh();
+      showSpinner();
+      router.push(`/event/confirm?eventId=${eventId}`);
+    } catch (e) {
+      hideSpinner();
+      await writeLog({
+        dataId: eventId,
+        action: `イベント回答（調整）${isEdit ? "修正" : "登録"}`,
+        status: "error",
+        errorDetail: { message: (e as Error).message },
+      });
+      await showDialog("登録に失敗しました", true);
+    }
+  };
+
+  return (
+    <BaseLayout>
+      <AnswerEditLayout
+        featureName="イベント"
+        icon="fa-solid fa-calendar-days"
+        basePath="/event"
+        featureIdKey="eventId"
+        dataId={eventId}
+        mode={isEdit ? "edit" : "new"}
+        onSave={handleSave}
+        isLoading={isLoading}
+      >
+        <div className="form-group">
+          <label className="label-title">タイトル</label>
+          <div className="label-value">{event.title}</div>
+        </div>
+
+        <div className="form-group">
+          <label className="label-title">日程調整回答</label>
+          <div className={styles.adjustTable}>
+            {/* ヘッダー */}
+            <div className={`${styles.adjustRow} ${styles.headerRow}`}>
+              <div className={styles.dateCell}>
+                日付
+                <br />
+                (曜日)
+              </div>
+              {adjustStatuses.map((status) => (
+                <div key={status.id} className={styles.statusCell}>
+                  {status.name}
+                </div>
+              ))}
+            </div>
+            {/* 各候補日の行 */}
+            {candidateDates.map((date) => {
+              const parts = date.split(".");
+              const monthDay = parts.length === 3 ? `${parts[1]}/${parts[2]}` : date;
+              const dayStr = getDayOfWeek(date, true);
+              const selected = answers[date] || "";
+
+              return (
+                <div key={date} className={`${styles.adjustRow} ${selected ? styles.selectedRow : ""}`}>
+                  <div className={styles.dateCell}>
+                    <span className={styles.datePart}>{monthDay}</span>
+                    <span className={styles.dayPart}>({dayStr})</span>
+                  </div>
+                  {adjustStatuses.map((status) => {
+                    const radioId = `${date}_${status.id}`;
+                    const isSelected = selected === status.id;
+                    return (
+                      <div
+                        key={status.id}
+                        className={`${styles.statusCell} ${isSelected ? styles.selectedCell : ""}`}
+                        onClick={() => handleChange(date, status.id)}
+                      >
+                        <input
+                          type="radio"
+                          id={radioId}
+                          name={`adjust-${date}`}
+                          value={status.id}
+                          checked={isSelected}
+                          onChange={() => handleChange(date, status.id)}
+                          className={styles.radioInput}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="form-group" style={{ marginTop: "1.5rem" }}>
+          <label className="label-title">コメント</label>
+          <textarea
+            rows={3}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="連絡事項やコメントがあれば入力してください..."
+          />
+        </div>
+      </AnswerEditLayout>
+    </BaseLayout>
+  );
+}

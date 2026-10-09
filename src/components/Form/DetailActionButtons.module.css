@@ -1,0 +1,66 @@
+.section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 0.75rem 0;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.editBtn,
+.copyBtn,
+.deleteBtn {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editBtn {
+  background-color: #146081;
+  color: #ffffff;
+}
+
+.editBtn:hover {
+  background-color: #0f4a64;
+}
+
+.copyBtn {
+  background-color: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.copyBtn:hover {
+  background-color: #e2e8f0;
+}
+
+.deleteBtn {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.deleteBtn:hover {
+  background-color: #fecaca;
+}

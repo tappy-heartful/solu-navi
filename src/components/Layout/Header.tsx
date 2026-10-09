@@ -98,6 +98,22 @@ export function Header() {
                 <FontAwesomeIcon icon={faHome} className={styles.navIcon} />
                 <span>ホーム</span>
               </Link>
+              <Link href="/event" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
+                <i className="fa-solid fa-calendar-days" style={{ width: "20px", textAlign: "center" }} />
+                <span>イベント・練習予定</span>
+              </Link>
+              <Link href="/call" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
+                <i className="fa-solid fa-music" style={{ width: "20px", textAlign: "center" }} />
+                <span>曲募集</span>
+              </Link>
+              <Link href="/vote" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
+                <i className="fa-solid fa-square-poll-vertical" style={{ width: "20px", textAlign: "center" }} />
+                <span>曲投票</span>
+              </Link>
+              <Link href="/master" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
+                <i className="fa-solid fa-sliders" style={{ width: "20px", textAlign: "center" }} />
+                <span>マスタ管理 (パート・楽器)</span>
+              </Link>
               <Link href="/user" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
                 <FontAwesomeIcon icon={faUsers} className={styles.navIcon} />
                 <span>部員名簿 (ユーザー一覧)</span>

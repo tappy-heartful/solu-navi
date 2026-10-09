@@ -1,4 +1,4 @@
-.input {
+﻿.input {
   width: 100%;
   padding: 0.625rem 0.875rem;
   font-size: 0.9375rem;
@@ -11,7 +11,7 @@
 }
 
 .input:focus {
-  border-color: #1e3a8a;
+  border-color: #146081;
   box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
 }
 

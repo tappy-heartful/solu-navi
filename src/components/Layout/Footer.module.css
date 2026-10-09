@@ -1,4 +1,4 @@
-.bottomNav {
+﻿.bottomNav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -45,14 +45,14 @@
 }
 
 .active {
-  color: #1e3a8a;
+  color: #146081;
 }
 
 .active .icon {
-  color: #1e3a8a;
+  color: #146081;
 }
 
 .active .label {
-  color: #1e3a8a;
+  color: #146081;
   font-weight: 700;
 }

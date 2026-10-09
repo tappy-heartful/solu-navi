@@ -11,6 +11,8 @@ import {
   faUserPen,
   faCalendarDays,
   faMusic,
+  faSquarePollVertical,
+  faSliders,
   faFileShield,
   faTriangleExclamation,
   faArrowRight,
@@ -88,7 +90,7 @@ export function HomeClient() {
               <span className={styles.badgeLabel}>パート</span>
               <span
                 className={styles.sectionBadge}
-                style={{ backgroundColor: section?.color || "#1e3a8a" }}
+                style={{ backgroundColor: section?.color || "#146081" }}
               >
                 {section?.name || "未設定"}
               </span>
@@ -116,6 +118,46 @@ export function HomeClient() {
         </div>
 
         <div className={styles.quickGrid}>
+          <Link href="/event" prefetch={false} className={styles.quickCard}>
+            <div className={`${styles.quickIcon} ${styles.blue}`}>
+              <FontAwesomeIcon icon={faCalendarDays} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>イベント・出欠</span>
+              <span className={styles.quickSub}>練習日程・本番・出欠回答</span>
+            </div>
+          </Link>
+
+          <Link href="/call" prefetch={false} className={styles.quickCard}>
+            <div className={`${styles.quickIcon} ${styles.amber}`}>
+              <FontAwesomeIcon icon={faMusic} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>曲募集</span>
+              <span className={styles.quickSub}>ライブ選曲のリクエスト応募</span>
+            </div>
+          </Link>
+
+          <Link href="/vote" prefetch={false} className={styles.quickCard}>
+            <div className={`${styles.quickIcon} ${styles.purple}`}>
+              <FontAwesomeIcon icon={faSquarePollVertical} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>曲投票</span>
+              <span className={styles.quickSub}>候補曲の単一・ボルダ投票</span>
+            </div>
+          </Link>
+
+          <Link href="/master" prefetch={false} className={styles.quickCard}>
+            <div className={`${styles.quickIcon} ${styles.emerald}`}>
+              <FontAwesomeIcon icon={faSliders} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>マスタ管理</span>
+              <span className={styles.quickSub}>パート・楽器一覧と管理</span>
+            </div>
+          </Link>
+
           <Link href="/user" prefetch={false} className={styles.quickCard}>
             <div className={`${styles.quickIcon} ${styles.blue}`}>
               <FontAwesomeIcon icon={faUsers} />

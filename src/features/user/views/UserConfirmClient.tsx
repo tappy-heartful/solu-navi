@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -135,7 +135,7 @@ export function UserConfirmClient() {
               {section && (
                 <span
                   className={styles.sectionBadge}
-                  style={{ backgroundColor: section.color || "#1e3a8a" }}
+                  style={{ backgroundColor: section.color || "#146081" }}
                 >
                   {section.name}
                 </span>

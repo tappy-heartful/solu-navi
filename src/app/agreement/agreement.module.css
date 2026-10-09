@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -52,7 +52,7 @@
 .title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #1e3a8a;
+  color: #146081;
   margin: 0;
   display: flex;
   align-items: center;
@@ -120,7 +120,7 @@
   width: 1.25rem;
   height: 1.25rem;
   margin-top: 0.125rem;
-  accent-color: #1e3a8a;
+  accent-color: #146081;
   cursor: pointer;
 }
 
@@ -137,7 +137,7 @@
   font-size: 1rem;
   font-weight: 700;
   color: #ffffff;
-  background-color: #1e3a8a;
+  background-color: #146081;
   border: none;
   border-radius: 0.625rem;
   cursor: pointer;
@@ -150,7 +150,7 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background-color: #1e40af;
+  background-color: #0f4a64;
 }
 
 .submitBtn:disabled {

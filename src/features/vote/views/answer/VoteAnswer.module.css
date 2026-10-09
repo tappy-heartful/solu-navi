@@ -1,0 +1,213 @@
+.voteHeader {
+  margin-bottom: 1.5rem;
+}
+
+.voteTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem 0;
+}
+
+.voteDesc {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.itemCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.itemHeader {
+  background-color: #e8f4f8;
+  border-bottom: 2px solid #b6dce8;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.itemIndex {
+  background-color: #146081;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.itemName {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #146081;
+}
+
+.ytLinkBtn {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bordaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem 0 1.25rem;
+}
+
+.bordaGuide {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #146081;
+  font-weight: 600;
+}
+
+.clearBordaBtn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.clearBordaBtn:hover {
+  background-color: #f1f5f9;
+}
+
+.choicesList {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.choiceRow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.choiceRow:hover {
+  background-color: #f1f5f9;
+}
+
+.selectedRow {
+  background-color: #e8f4f8;
+  border-color: #146081;
+}
+
+.checkCol {
+  width: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.emptyCircle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+}
+
+.rankBadge {
+  background-color: #146081;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  accent-color: #146081;
+  cursor: pointer;
+}
+
+.choiceInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.choiceName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.diffRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.diffBadge {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 700;
+  background-color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.diffBar {
+  height: 5px;
+  width: 50px;
+  background-color: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.diffFill {
+  height: 100%;
+}
+
+.choiceYtBtn {
+  background-color: #ffffff;
+  color: #146081;
+  border: 1px solid #b6dce8;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.choiceYtBtn:hover {
+  background-color: #e8f4f8;
+}

@@ -1,15 +1,108 @@
 import React, { InputHTMLAttributes } from "react";
+import { FormField } from "./FormField";
 import styles from "./AppInput.module.css";
 
-interface AppInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  error?: boolean;
+export interface AppInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
+  label?: string;
+  field?: string;
+  value?: any;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  error?: string | boolean;
+  required?: boolean;
+  type?: string;
+  updateField?: (field: string, value: any) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  min?: number | string;
+  max?: number | string;
 }
 
-export function AppInput({ error, className = "", ...props }: AppInputProps) {
+export function AppInput({
+  label,
+  field,
+  value,
+  onChange,
+  error,
+  required,
+  type = "text",
+  updateField,
+  placeholder,
+  disabled,
+  className = "",
+  min,
+  max,
+  ...rest
+}: AppInputProps) {
+  // updateField と field がない場合は通常の input として動作
+  if (!updateField || !field) {
+    const isError = Boolean(error);
+    return (
+      <input
+        type={type}
+        className={`${styles.input} ${isError ? styles.hasError : ""} ${className}`}
+        value={value !== undefined && value !== null ? String(value) : undefined}
+        onChange={onChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        max={max}
+        {...rest}
+      />
+    );
+  }
+
+  // チェックボックス
+  if (type === "checkbox") {
+    return (
+      <div className="form-group checkbox-group" style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={!!value}
+            disabled={disabled}
+            onChange={(e) => updateField(field, e.target.checked)}
+            style={{ width: "18px", height: "18px" }}
+          />
+          {label}
+        </label>
+      </div>
+    );
+  }
+
+  const strValue = value !== undefined && value !== null ? String(value) : "";
+  const errorMessage = typeof error === "string" ? error : undefined;
+
+  // テキストエリア
+  if (type === "textarea") {
+    return (
+      <FormField label={label || ""} required={required} error={errorMessage}>
+        <textarea
+          className="form-control"
+          value={strValue}
+          rows={4}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={(e) => updateField(field, e.target.value)}
+          style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "6px" }}
+        />
+      </FormField>
+    );
+  }
+
   return (
-    <input
-      className={`${styles.input} ${error ? styles.hasError : ""} ${className}`}
-      {...props}
-    />
+    <FormField label={label || ""} required={required} error={errorMessage}>
+      <input
+        type={type}
+        className="form-control"
+        value={strValue}
+        placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        max={max}
+        onChange={(e) => updateField(field, type === "number" ? Number(e.target.value) : e.target.value)}
+        style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "6px" }}
+        {...rest}
+      />
+    </FormField>
   );
 }

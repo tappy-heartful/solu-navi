@@ -14,7 +14,20 @@ interface DialogOptions {
 
 let dialogHandler: ((options: DialogOptions) => Promise<boolean>) | null = null;
 
-export function showDialog(options: DialogOptions): Promise<boolean> {
+export function showDialog(
+  optionsOrMessage: string | DialogOptions,
+  isAlertOnly = false
+): Promise<boolean> {
+  let options: DialogOptions;
+  if (typeof optionsOrMessage === "string") {
+    options = {
+      message: optionsOrMessage,
+      isConfirm: !isAlertOnly,
+    };
+  } else {
+    options = optionsOrMessage;
+  }
+
   if (dialogHandler) {
     return dialogHandler(options);
   }

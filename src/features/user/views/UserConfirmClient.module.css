@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -11,8 +11,8 @@
   padding: 0.5rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: #1e3a8a;
-  background-color: #eff6ff;
+  color: #146081;
+  background-color: #e8f4f8;
   border: 1px solid #bfdbfe;
   border-radius: 0.5rem;
   text-decoration: none;
@@ -145,7 +145,7 @@
 }
 
 .itemIcon {
-  color: #1e3a8a;
+  color: #146081;
   width: 1rem;
 }
 
@@ -164,8 +164,8 @@
 .instTag {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #1e3a8a;
-  background-color: #eff6ff;
+  color: #146081;
+  background-color: #e8f4f8;
   padding: 0.25rem 0.625rem;
   border-radius: 6px;
   border: 1px solid #bfdbfe;
@@ -178,7 +178,7 @@
 }
 
 .telLink {
-  color: #1e3a8a;
+  color: #146081;
   text-decoration: underline;
 }
 

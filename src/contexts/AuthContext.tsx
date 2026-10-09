@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userRef,
           (snap) => {
             if (snap.exists()) {
-              setUserData(toPlainObject<UserDoc>({ ...snap.data(), uid: snap.id }));
+              setUserData(toPlainObject<UserDoc>({ ...snap.data(), uid: snap.id, id: snap.id }));
             } else {
               setUserData(null);
             }
@@ -97,6 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (!isAdmin && userData) {
     if (pathname.startsWith("/user") && userData.isUserAdmin) isAdmin = true;
     if (pathname.startsWith("/event") && userData.isEventAdmin) isAdmin = true;
+    if (pathname.startsWith("/call") && userData.isCallAdmin) isAdmin = true;
+    if (pathname.startsWith("/vote") && userData.isVoteAdmin) isAdmin = true;
+    if (pathname.startsWith("/master") && userData.isMasterAdmin) isAdmin = true;
     if (pathname.startsWith("/score") && userData.isScoreAdmin) isAdmin = true;
     if (pathname.startsWith("/notice") && userData.isNoticeAdmin) isAdmin = true;
     if (pathname.startsWith("/live") && userData.isLiveAdmin) isAdmin = true;

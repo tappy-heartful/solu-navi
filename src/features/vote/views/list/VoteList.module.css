@@ -1,0 +1,67 @@
+.sectionContainer {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionIcon {
+  color: #146081;
+}
+
+.rowTitle {
+  color: #146081;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rowTitle:hover {
+  text-decoration: underline;
+  color: #0f4a64;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.answered {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.closed {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.countCol {
+  white-space: nowrap;
+}
+
+.termCol {
+  font-size: 0.8rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.itemsCol {
+  font-size: 0.85rem;
+  color: #334155;
+}

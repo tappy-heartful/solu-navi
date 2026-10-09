@@ -1,4 +1,4 @@
-.footer {
+﻿.footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -29,7 +29,7 @@
   font-size: 0.875rem;
   font-weight: 700;
   color: #ffffff;
-  background-color: #1e3a8a;
+  background-color: #146081;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -38,7 +38,7 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background-color: #1e40af;
+  background-color: #0f4a64;
 }
 
 .submitBtn:disabled,

@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
 }
@@ -21,7 +21,7 @@
 }
 
 .titleIcon {
-  color: #1e3a8a;
+  color: #146081;
   font-size: 1.25rem;
 }
 
@@ -62,7 +62,7 @@
 }
 
 .searchInput:focus {
-  border-color: #1e3a8a;
+  border-color: #146081;
   box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
 
@@ -109,9 +109,9 @@
 }
 
 .activeTab {
-  background-color: #1e3a8a;
+  background-color: #146081;
   color: #ffffff;
-  border-color: #1e3a8a;
+  border-color: #146081;
 }
 
 /* リスト */

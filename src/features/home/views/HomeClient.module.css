@@ -1,4 +1,4 @@
-.container {
+﻿.container {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -52,7 +52,7 @@
 
 /* ウェルカムカード */
 .welcomeCard {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #146081 0%, #0f4a64 100%);
   border-radius: 1rem;
   padding: 1.5rem;
   color: #ffffff;
@@ -204,7 +204,7 @@
   font-size: 1.125rem;
 }
 
-.blue { background-color: #eff6ff; color: #1e3a8a; }
+.blue { background-color: #e8f4f8; color: #146081; }
 .amber { background-color: #fffbeb; color: #d97706; }
 .emerald { background-color: #ecfdf5; color: #059669; }
 .purple { background-color: #f5f3ff; color: #7c3aed; }
@@ -243,7 +243,7 @@
 }
 
 .noticeIcon {
-  color: #1e3a8a;
+  color: #146081;
 }
 
 .noticeHeader h4 {

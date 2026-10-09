@@ -2,8 +2,9 @@
 @import "@fortawesome/fontawesome-svg-core/styles.css";
 
 :root {
-  --primary: #1e3a8a;
-  --primary-hover: #1e40af;
+  --primary: #146081;
+  --primary-hover: #0f4a64;
+  --primary-light: #e8f4f8;
   --secondary: #d97706;
   --bg-main: #f8fafc;
   --text-main: #0f172a;
@@ -39,3 +40,45 @@ body {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* テーブル共通スタイル */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+}
+
+.list-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.list-table th,
+.list-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid #f1f5f9;
+}
+
+.list-table th {
+  background-color: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.list-table tbody tr:hover {
+  background-color: var(--primary-light);
+}
+
+.list-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
