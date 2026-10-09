@@ -285,6 +285,74 @@ export function getDayOfWeek(dateStr: string, short = false): string {
   return `${y}年${m}月${d}日(${dayStr})`;
 }
 
+/**
+ * 現在の年度 (4月〜翌年3月) を取得 (JST基準)
+ */
+export function getCurrentAcademicYear(dateInput?: any): number {
+  const jst = getJSTDate(dateInput);
+  const year = jst.getUTCFullYear();
+  const month = jst.getUTCMonth() + 1; // 1-12
+  return month >= 4 ? year : year - 1;
+}
+
+/**
+ * 入学年度から現在の回生・学年を算出
+ * 例 (2026年度の場合):
+ * 2026年入学 -> 1回生
+ * 2025年入学 -> 2回生
+ * 2024年入学 -> 3回生
+ * 2023年入学 -> 4回生
+ * 2022年以前 -> OB/OG
+ */
+export function getGradeFromEnrollmentYear(enrollmentYear?: number | string | null): string {
+  if (!enrollmentYear) return "未設定";
+  const yearNum = typeof enrollmentYear === "string" ? parseInt(enrollmentYear, 10) : enrollmentYear;
+  if (isNaN(yearNum) || yearNum <= 0) return "未設定";
+
+  const currentAcademicYear = getCurrentAcademicYear();
+  const diff = currentAcademicYear - yearNum + 1;
+
+  if (diff <= 0) {
+    return "新入生";
+  } else if (diff === 1) {
+    return "1回生";
+  } else if (diff === 2) {
+    return "2回生";
+  } else if (diff === 3) {
+    return "3回生";
+  } else if (diff === 4) {
+    return "4回生";
+  } else {
+    return "OB/OG";
+  }
+}
+
+/**
+ * 入学年度の選択肢リストを生成（現役生: 4回生まで）
+ */
+export function getEnrollmentYearOptions(): { year: number; label: string }[] {
+  const currentAcademicYear = getCurrentAcademicYear();
+  const options: { year: number; label: string }[] = [];
+
+  // 来年度 (入学予定・新入生用)
+  const nextYear = currentAcademicYear + 1;
+  options.push({
+    year: nextYear,
+    label: `${nextYear}年度 (新入生)`,
+  });
+
+  // 現在年度から4回生まで (4学年分)
+  for (let y = currentAcademicYear; y >= currentAcademicYear - 3; y--) {
+    const grade = getGradeFromEnrollmentYear(y);
+    options.push({
+      year: y,
+      label: `${y}年度 (${grade})`,
+    });
+  }
+
+  return options;
+}
+
 // 再エクスポート
 export {
   doc,

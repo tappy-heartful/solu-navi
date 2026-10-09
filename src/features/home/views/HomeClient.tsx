@@ -22,6 +22,7 @@ import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { getGradeFromEnrollmentYear } from "@/lib/functions";
 import styles from "./HomeClient.module.css";
 
 export function HomeClient() {
@@ -40,10 +41,9 @@ export function HomeClient() {
 
   // プロフィール未完了判定
   const isProfileIncomplete = !Boolean(
-    userData?.displayName &&
+    userData?.abbreviation &&
     userData?.sectionId &&
     userData?.roleId &&
-    userData?.abbreviation &&
     userData?.instrumentIds?.length
   );
 
@@ -80,12 +80,18 @@ export function HomeClient() {
             <div className={styles.welcomeText}>
               <span className={styles.greeting}>Sound Solition Orchestra</span>
               <h2 className={styles.userName}>
-                {userData?.displayName ? `${userData.displayName} さん` : "部員メンバー さん"}
+                {userData?.abbreviation || userData?.displayName
+                  ? `${userData.abbreviation || userData.displayName} さん`
+                  : "部員メンバー さん"}
               </h2>
             </div>
           </div>
 
           <div className={styles.profileBadgeGrid}>
+            <div className={styles.badgeItem}>
+              <span className={styles.badgeLabel}>役職</span>
+              <span className={styles.roleBadge}>{role?.name || "メンバー"}</span>
+            </div>
             <div className={styles.badgeItem}>
               <span className={styles.badgeLabel}>パート</span>
               <span
@@ -96,12 +102,12 @@ export function HomeClient() {
               </span>
             </div>
             <div className={styles.badgeItem}>
-              <span className={styles.badgeLabel}>役職</span>
-              <span className={styles.roleBadge}>{role?.name || "メンバー"}</span>
-            </div>
-            <div className={styles.badgeItem}>
-              <span className={styles.badgeLabel}>略称</span>
-              <span className={styles.abbrBadge}>{userData?.abbreviation || "未設定"}</span>
+              <span className={styles.badgeLabel}>回生</span>
+              <span className={styles.gradeBadge}>
+                {userData?.enrollmentYear
+                  ? getGradeFromEnrollmentYear(userData.enrollmentYear)
+                  : "未設定"}
+              </span>
             </div>
             <div className={styles.badgeItem}>
               <span className={styles.badgeLabel}>担当楽器</span>

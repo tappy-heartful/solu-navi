@@ -1,4 +1,4 @@
-﻿.container {
+.container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -59,12 +59,6 @@
 .headerInfo {
   flex: 1;
   min-width: 0;
-}
-
-.kana {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-bottom: 0.125rem;
 }
 
 .displayName {
@@ -175,20 +169,6 @@
   color: #94a3b8;
   font-size: 0.875rem;
   font-style: italic;
-}
-
-.telLink {
-  color: #146081;
-  text-decoration: underline;
-}
-
-.paypayId {
-  font-family: monospace;
-  background-color: #fef2f2;
-  color: #dc2626;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
 }
 
 .loading,

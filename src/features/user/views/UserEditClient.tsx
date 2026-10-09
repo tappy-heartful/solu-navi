@@ -13,7 +13,8 @@ import { showDialog } from "@/components/Common/CommonDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { fetchUserById, updateUserProfile } from "../api/user-client-service";
-import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS, GRADES } from "@/lib/firestore/constants";
+import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { getEnrollmentYearOptions, getGradeFromEnrollmentYear } from "@/lib/functions";
 import { UserFormData } from "../types";
 import styles from "./UserEditClient.module.css";
 
@@ -29,17 +30,15 @@ export function UserEditClient() {
   const targetUid = (isAdmin && queryUid) ? queryUid : currentUser?.uid;
 
   const [formData, setFormData] = useState<UserFormData>({
-    displayName: "",
-    kana: "",
     abbreviation: "",
     sectionId: "",
     roleId: "6", // デフォルトはメンバー
     instrumentIds: [],
-    grade: "",
-    phoneNumber: "",
-    paypayId: "",
+    enrollmentYear: "",
   });
 
+  const [isOtherYear, setIsOtherYear] = useState(false);
+  const [customYearInput, setCustomYearInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,16 +62,23 @@ export function UserEditClient() {
       }
 
       if (data) {
+        const yr = data.enrollmentYear;
+        const opts = getEnrollmentYearOptions();
+        const isStandard = yr ? opts.some((opt) => opt.year === yr) : false;
+        if (yr && !isStandard) {
+          setIsOtherYear(true);
+          setCustomYearInput(String(yr));
+        } else {
+          setIsOtherYear(false);
+          setCustomYearInput("");
+        }
+
         setFormData({
-          displayName: data.displayName || "",
-          kana: data.kana || "",
           abbreviation: data.abbreviation || "",
           sectionId: data.sectionId || "",
           roleId: data.roleId || "6",
           instrumentIds: data.instrumentIds || [],
-          grade: data.grade || "",
-          phoneNumber: data.phoneNumber || "",
-          paypayId: data.paypayId || "",
+          enrollmentYear: data.enrollmentYear ?? "",
         });
       }
       setLoading(false);
@@ -80,6 +86,40 @@ export function UserEditClient() {
 
     load();
   }, [targetUid, currentUser?.uid, currentUserData, isInitial, setBreadcrumbs]);
+
+  const handleEnrollmentSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "other") {
+      setIsOtherYear(true);
+      if (customYearInput.trim()) {
+        const parsed = parseInt(customYearInput.trim(), 10);
+        setFormData((prev) => ({
+          ...prev,
+          enrollmentYear: isNaN(parsed) ? "" : parsed,
+        }));
+      } else {
+        setFormData((prev) => ({ ...prev, enrollmentYear: "" }));
+      }
+    } else if (val === "") {
+      setIsOtherYear(false);
+      setCustomYearInput("");
+      setFormData((prev) => ({ ...prev, enrollmentYear: "" }));
+    } else {
+      setIsOtherYear(false);
+      setCustomYearInput("");
+      setFormData((prev) => ({ ...prev, enrollmentYear: Number(val) }));
+    }
+  };
+
+  const handleCustomYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setCustomYearInput(val);
+    const parsed = parseInt(val.trim(), 10);
+    setFormData((prev) => ({
+      ...prev,
+      enrollmentYear: isNaN(parsed) ? "" : parsed,
+    }));
+  };
 
   // 担当楽器のトグル
   const handleToggleInstrument = (instId: string) => {
@@ -96,11 +136,8 @@ export function UserEditClient() {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
 
-    if (!formData.displayName.trim()) {
-      errs.displayName = "氏名を入力してください。";
-    }
     if (!formData.abbreviation.trim()) {
-      errs.abbreviation = "略称（譜割りや出席表で使う短い名前）を入力してください。";
+      errs.abbreviation = "略称（サークル内での呼び名）を入力してください。";
     }
     if (!formData.sectionId) {
       errs.sectionId = "所属パートを選択してください。";
@@ -110,10 +147,6 @@ export function UserEditClient() {
     }
     if (formData.instrumentIds.length === 0) {
       errs.instrumentIds = "担当楽器を1つ以上選択してください。";
-    }
-    // サックスパート（sectionId === "1"）は PayPay ID 必須
-    if (formData.sectionId === "1" && !formData.paypayId.trim()) {
-      errs.paypayId = "サックスパートは会計清算の受取用にPayPay IDの入力が必須です。";
     }
 
     setErrors(errs);
@@ -138,15 +171,12 @@ export function UserEditClient() {
       showSpinner("プロフィールを保存しています...");
 
       await updateUserProfile(targetUid, {
-        displayName: formData.displayName.trim(),
-        kana: formData.kana.trim(),
+        displayName: formData.abbreviation.trim(),
         abbreviation: formData.abbreviation.trim(),
         sectionId: formData.sectionId,
         roleId: formData.roleId,
         instrumentIds: formData.instrumentIds,
-        grade: formData.grade,
-        phoneNumber: formData.phoneNumber.trim(),
-        paypayId: formData.paypayId.trim(),
+        enrollmentYear: formData.enrollmentYear === "" ? undefined : Number(formData.enrollmentYear),
       });
 
       hideSpinner();
@@ -186,6 +216,8 @@ export function UserEditClient() {
     (i) => formData.sectionId && i.sectionId !== formData.sectionId
   );
 
+  const enrollmentOptions = getEnrollmentYearOptions();
+
   return (
     <EditFormLayout
       title={isInitial ? "初回プロフィール登録" : "プロフィール編集"}
@@ -204,41 +236,12 @@ export function UserEditClient() {
         </div>
       )}
 
-      {/* 氏名 */}
+      {/* 略称・呼び名 */}
       <FormField
-        label="氏名"
-        required
-        error={errors.displayName}
-        description="例: 愛大 太郎（漢字でフルネームを入力）"
-      >
-        <AppInput
-          type="text"
-          placeholder="愛大 太郎"
-          value={formData.displayName}
-          onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-          error={Boolean(errors.displayName)}
-        />
-      </FormField>
-
-      {/* ふりがな */}
-      <FormField
-        label="ふりがな"
-        description="例: あいだ たろう（ひらがなで入力）"
-      >
-        <AppInput
-          type="text"
-          placeholder="あいだ たろう"
-          value={formData.kana}
-          onChange={(e) => setFormData({ ...formData, kana: e.target.value })}
-        />
-      </FormField>
-
-      {/* 略称・短縮名 */}
-      <FormField
-        label="略称 (短縮名)"
+        label="略称 (呼び名)"
         required
         error={errors.abbreviation}
-        description="譜割りや出欠表で表示される短い名前（例: タロウ, ヤマダ, TP1）"
+        description="譜割りや出欠表、部内で呼び合う名前（例: タロウ, ヤマダ, TP1）"
       >
         <AppInput
           type="text"
@@ -247,6 +250,26 @@ export function UserEditClient() {
           onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })}
           error={Boolean(errors.abbreviation)}
         />
+      </FormField>
+
+      {/* 役職選択 */}
+      <FormField
+        label="役職"
+        required
+        error={errors.roleId}
+        description="サークル内での役職を選択してください"
+      >
+        <select
+          value={formData.roleId}
+          onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
+          className={styles.select}
+        >
+          {DEFAULT_ROLES.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.name} {r.description ? `(${r.description})` : ""}
+            </option>
+          ))}
+        </select>
       </FormField>
 
       {/* パート選択 */}
@@ -278,26 +301,6 @@ export function UserEditClient() {
             </label>
           ))}
         </div>
-      </FormField>
-
-      {/* 役職選択 */}
-      <FormField
-        label="役職"
-        required
-        error={errors.roleId}
-        description="サークル内での役職を選択してください"
-      >
-        <select
-          value={formData.roleId}
-          onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-          className={styles.select}
-        >
-          {DEFAULT_ROLES.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name} {r.description ? `(${r.description})` : ""}
-            </option>
-          ))}
-        </select>
       </FormField>
 
       {/* 担当楽器 (複数選択) */}
@@ -345,49 +348,42 @@ export function UserEditClient() {
         )}
       </FormField>
 
-      {/* 学年 */}
-      <FormField label="学年 / 所属" description="例: 学部2年 (B2)">
+      {/* 入学年度 */}
+      <FormField
+        label="入学年度"
+        description="入学年度を選択してください（4回生まで選択可。それ以前のOB/OGは「その他」から直接入力）"
+      >
         <select
-          value={formData.grade}
-          onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+          value={isOtherYear ? "other" : (formData.enrollmentYear || "")}
+          onChange={handleEnrollmentSelectChange}
           className={styles.select}
         >
           <option value="">選択してください</option>
-          {GRADES.map((g) => (
-            <option key={g} value={g}>
-              {g}
+          {enrollmentOptions.map((opt) => (
+            <option key={opt.year} value={opt.year}>
+              {opt.label}
             </option>
           ))}
+          <option value="other">その他 (OB/OG・入学年度を直接入力)</option>
         </select>
-      </FormField>
 
-      {/* 電話番号 */}
-      <FormField
-        label="電話番号"
-        description="本番や緊急連絡用（例: 090-1234-5678）"
-      >
-        <AppInput
-          type="tel"
-          placeholder="090-1234-5678"
-          value={formData.phoneNumber}
-          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-        />
-      </FormField>
-
-      {/* PayPay ID */}
-      <FormField
-        label="PayPay ID"
-        required={formData.sectionId === "1"}
-        error={errors.paypayId}
-        description="会計精算の受取用（※サックスパートは必須）"
-      >
-        <AppInput
-          type="text"
-          placeholder="paypay_id_example"
-          value={formData.paypayId}
-          onChange={(e) => setFormData({ ...formData, paypayId: e.target.value })}
-          error={Boolean(errors.paypayId)}
-        />
+        {isOtherYear && (
+          <div className={styles.customYearContainer}>
+            <AppInput
+              type="number"
+              placeholder="入学年度を西暦で入力 (例: 2020)"
+              value={customYearInput}
+              onChange={handleCustomYearChange}
+              min={1950}
+              max={new Date().getFullYear() + 1}
+            />
+            {Boolean(formData.enrollmentYear) && (
+              <div className={styles.gradePreview}>
+                判定: {getGradeFromEnrollmentYear(Number(formData.enrollmentYear))} ({formData.enrollmentYear}年度入学)
+              </div>
+            )}
+          </div>
+        )}
       </FormField>
 
       <FormFooter

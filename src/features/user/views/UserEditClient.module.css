@@ -1,4 +1,4 @@
-﻿.noticeAlert {
+.noticeAlert {
   background-color: #e8f4f8;
   border: 1px solid #bfdbfe;
   border-radius: 0.75rem;
@@ -141,4 +141,22 @@
   text-align: center;
   color: #64748b;
   font-size: 0.875rem;
+}
+
+/* その他入学年度手入力 */
+.customYearContainer {
+  margin-top: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.gradePreview {
+  font-size: 0.8125rem;
+  color: #059669;
+  font-weight: 600;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.375rem;
 }

@@ -10,6 +10,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { UserDoc } from "../types";
 import { fetchUsers } from "../api/user-client-service";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { getGradeFromEnrollmentYear } from "@/lib/functions";
 import styles from "./UserListClient.module.css";
 
 export function UserListClient() {
@@ -47,9 +48,8 @@ export function UserListClient() {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const nameMatch = u.displayName?.toLowerCase().includes(q);
-        const kanaMatch = u.kana?.toLowerCase().includes(q);
         const abbrMatch = u.abbreviation?.toLowerCase().includes(q);
-        return Boolean(nameMatch || kanaMatch || abbrMatch);
+        return Boolean(nameMatch || abbrMatch);
       }
       return true;
     });
@@ -73,7 +73,7 @@ export function UserListClient() {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="部員名・ふりがな・略称で検索"
+            placeholder="部員名 (略称) で検索"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -136,7 +136,7 @@ export function UserListClient() {
                     {user.pictureUrl ? (
                       <Image
                         src={user.pictureUrl}
-                        alt={user.displayName}
+                        alt={user.abbreviation || user.displayName || "部員アバター"}
                         width={48}
                         height={48}
                         className={styles.avatarImg}
@@ -151,10 +151,7 @@ export function UserListClient() {
 
                   <div className={styles.cardContent}>
                     <div className={styles.nameRow}>
-                      <span className={styles.displayName}>{user.displayName}</span>
-                      {user.abbreviation && (
-                        <span className={styles.abbrBadge}>{user.abbreviation}</span>
-                      )}
+                      <span className={styles.displayName}>{user.abbreviation || user.displayName}</span>
                       {sec && (
                         <span
                           className={styles.sectionBadge}
@@ -167,7 +164,11 @@ export function UserListClient() {
 
                     <div className={styles.metaRow}>
                       {role && <span className={styles.roleName}>{role.name}</span>}
-                      {user.grade && <span className={styles.grade}>{user.grade}</span>}
+                      {user.enrollmentYear && (
+                        <span className={styles.grade}>
+                          {getGradeFromEnrollmentYear(user.enrollmentYear)}
+                        </span>
+                      )}
                       {instNames.length > 0 && (
                         <span className={styles.instruments}>
                           {instNames.join(" / ")}

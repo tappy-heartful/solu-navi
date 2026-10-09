@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -8,10 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
   faEdit,
-  faPhone,
   faMusic,
   faBuildingColumns,
-  faCreditCard,
   faShieldHalved,
   faIdCard,
 } from "@fortawesome/free-solid-svg-icons";
@@ -21,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UserDoc } from "../types";
 import { fetchUserById } from "../api/user-client-service";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { getGradeFromEnrollmentYear } from "@/lib/functions";
 import styles from "./UserConfirmClient.module.css";
 
 export function UserConfirmClient() {
@@ -112,7 +111,7 @@ export function UserConfirmClient() {
             {targetUser.pictureUrl ? (
               <Image
                 src={targetUser.pictureUrl}
-                alt={targetUser.displayName}
+                alt={targetUser.abbreviation || targetUser.displayName || "部員アバター"}
                 width={80}
                 height={80}
                 className={styles.avatarImg}
@@ -126,12 +125,9 @@ export function UserConfirmClient() {
           </div>
 
           <div className={styles.headerInfo}>
-            <div className={styles.kana}>{targetUser.kana || "　"}</div>
-            <h2 className={styles.displayName}>{targetUser.displayName}</h2>
+            <h2 className={styles.displayName}>{targetUser.abbreviation || targetUser.displayName}</h2>
             <div className={styles.tagsRow}>
-              {targetUser.abbreviation && (
-                <span className={styles.abbrBadge}>略称: {targetUser.abbreviation}</span>
-              )}
+              {role && <span className={styles.roleBadge}>{role.name}</span>}
               {section && (
                 <span
                   className={styles.sectionBadge}
@@ -140,7 +136,6 @@ export function UserConfirmClient() {
                   {section.name}
                 </span>
               )}
-              {role && <span className={styles.roleBadge}>{role.name}</span>}
               {targetUser.isSystemAdmin && (
                 <span className={styles.adminBadge}>
                   <FontAwesomeIcon icon={faShieldHalved} /> システム管理者
@@ -173,43 +168,17 @@ export function UserConfirmClient() {
             </div>
           </div>
 
-          {/* 学年 */}
+          {/* 入学年度 / 回生 */}
           <div className={styles.detailItem}>
             <div className={styles.itemLabel}>
               <FontAwesomeIcon icon={faBuildingColumns} className={styles.itemIcon} />
-              <span>学年 / 所属</span>
+              <span>入学年度 / 回生</span>
             </div>
             <div className={styles.itemValue}>
-              {targetUser.grade || <span className={styles.unregistered}>未設定</span>}
-            </div>
-          </div>
-
-          {/* 連絡先 (本人のみまたは管理者のみ閲覧可能) */}
-          <div className={styles.detailItem}>
-            <div className={styles.itemLabel}>
-              <FontAwesomeIcon icon={faPhone} className={styles.itemIcon} />
-              <span>電話番号</span>
-            </div>
-            <div className={styles.itemValue}>
-              {targetUser.phoneNumber ? (
-                <a href={`tel:${targetUser.phoneNumber}`} className={styles.telLink}>
-                  {targetUser.phoneNumber}
-                </a>
-              ) : (
-                <span className={styles.unregistered}>未設定</span>
-              )}
-            </div>
-          </div>
-
-          {/* PayPay ID */}
-          <div className={styles.detailItem}>
-            <div className={styles.itemLabel}>
-              <FontAwesomeIcon icon={faCreditCard} className={styles.itemIcon} />
-              <span>PayPay ID (精算用)</span>
-            </div>
-            <div className={styles.itemValue}>
-              {targetUser.paypayId ? (
-                <span className={styles.paypayId}>{targetUser.paypayId}</span>
+              {targetUser.enrollmentYear ? (
+                <span>
+                  {targetUser.enrollmentYear}年度入学 ({getGradeFromEnrollmentYear(targetUser.enrollmentYear)})
+                </span>
               ) : (
                 <span className={styles.unregistered}>未設定</span>
               )}

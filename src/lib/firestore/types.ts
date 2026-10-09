@@ -6,14 +6,15 @@ import { Timestamp, FieldValue } from "firebase/firestore";
 export interface UserDoc {
   uid: string;
   id?: string; // uid との互換性用
-  displayName: string;
+  displayName?: string;
   kana?: string;
   abbreviation: string;
   pictureUrl?: string;
   sectionId?: string; // 1: Sax, 2: Tmp, 3: Trb, 4: Rhythm, etc.
   roleId?: string;    // 1: 代表, 2: バンマス, 3: コンマス, etc.
   instrumentIds?: string[];
-  grade?: string;     // B1, B2, B3, B4, M1, OB/OG etc.
+  enrollmentYear?: number; // 入学年度 (例: 2024 -> 3回生)
+  grade?: string;     // 旧互換用
   phoneNumber?: string;
   paypayId?: string;
   agreedAt?: number | Timestamp;

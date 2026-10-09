@@ -26,11 +26,17 @@ export async function POST(req: NextRequest) {
         instrumentIds: ["as"],
         agreedAt: Date.now(),
         isSystemAdmin,
-        paypayId: "solu_paypay_test",
-        grade: "学部3年 (B3)",
+        enrollmentYear: 2024,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
+    } else {
+      await userRef.set(
+        {
+          enrollmentYear: 2024,
+        },
+        { merge: true }
+      );
     }
 
     return NextResponse.json({ customToken, uid: testUid });

@@ -49,16 +49,13 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
 
     // 3. 必須プロフィール入力チェック
-    // 氏名、パート、役職、略称、楽器が未入力なら /user/edit へ
+    // 略称、パート、役職、楽器が未入力なら /user/edit へ
     const isProfileComplete = Boolean(
-      userData.displayName &&
+      userData.abbreviation &&
       userData.sectionId &&
       userData.roleId &&
-      userData.abbreviation &&
       userData.instrumentIds &&
-      userData.instrumentIds.length > 0 &&
-      // サックスパート (sectionId === "1") は paypayId 必須
-      (userData.sectionId !== "1" || Boolean(userData.paypayId))
+      userData.instrumentIds.length > 0
     );
 
     if (!isProfileComplete && pathname !== "/user/edit") {

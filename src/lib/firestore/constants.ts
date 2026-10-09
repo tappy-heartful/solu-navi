@@ -1,11 +1,11 @@
 import { SectionDoc, RoleDoc, InstrumentDoc } from "./types";
 
 export const DEFAULT_SECTIONS: SectionDoc[] = [
-  { id: "1", name: "Saxophone (サックス)", shortName: "Sax", order: 1, color: "#f59e0b" },
-  { id: "2", name: "Trumpet (トランペット)", shortName: "Tmp", order: 2, color: "#ef4444" },
-  { id: "3", name: "Trombone (トロンボーン)", shortName: "Trb", order: 3, color: "#3b82f6" },
-  { id: "4", name: "Rhythm (リズム)", shortName: "Rhy", order: 4, color: "#10b981" },
-  { id: "5", name: "Guest / OB・OG", shortName: "Other", order: 5, color: "#8b5cf6" },
+  { id: "1", name: "サックス", shortName: "サックス", order: 1, color: "#f59e0b" },
+  { id: "2", name: "トランペット", shortName: "トランペット", order: 2, color: "#ef4444" },
+  { id: "3", name: "トロンボーン", shortName: "トロンボーン", order: 3, color: "#3b82f6" },
+  { id: "4", name: "リズム", shortName: "リズム", order: 4, color: "#10b981" },
+  { id: "5", name: "OB・OG / その他", shortName: "OB・OG", order: 5, color: "#8b5cf6" },
 ];
 
 export const DEFAULT_ROLES: RoleDoc[] = [

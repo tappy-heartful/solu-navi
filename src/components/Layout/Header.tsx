@@ -101,7 +101,7 @@ export function Header() {
                   {userData?.pictureUrl ? (
                     <Image
                       src={userData.pictureUrl}
-                      alt={userData.displayName}
+                      alt={userData.abbreviation || userData.displayName || "アバター"}
                       width={44}
                       height={44}
                       className={styles.avatarImg}
@@ -109,14 +109,14 @@ export function Header() {
                     />
                   ) : (
                     <span className={styles.avatarInitial}>
-                      {userData?.displayName?.charAt(0) || "U"}
+                      {(userData?.abbreviation || userData?.displayName)?.charAt(0) || "U"}
                     </span>
                   )}
                 </div>
                 <div>
-                  <div className={styles.userName}>{userData?.displayName || "メンバー"}</div>
+                  <div className={styles.userName}>{userData?.abbreviation || userData?.displayName || "メンバー"}</div>
                   <div className={styles.userRole}>
-                    {section?.name || "パート未設定"} {userData?.abbreviation ? `(${userData.abbreviation})` : ""}
+                    {section?.name || "パート未設定"}
                   </div>
                 </div>
               </div>

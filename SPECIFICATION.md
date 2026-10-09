@@ -106,9 +106,14 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
   - 日程調整回答: `/event/adjust-answer?eventId=xxx`
 
 ### 3.5. ユーザー・プロフィール管理 (`/user`)
-- 名簿一覧: `/user` (パート別タブフィルター、名前・略称検索、連絡先確認)
-- マイプロフィール: `/user/detail` (自身の登録情報の詳細確認)
-- 登録変更: `/user/edit` (氏名、ふりがな、略称、パート、役職、担当楽器、学年、電話番号、PayPay ID)
+- 名簿一覧: `/user` (パート別タブフィルター、略称検索、回生バッジ)
+- マイプロフィール: `/user/detail` (自身の登録情報の詳細確認、入学年度と自動判定された回生表示)
+- 登録変更: `/user/edit` (略称、役職、パート、担当楽器、入学年度)
+  - **項目順序**: 「略称」→「役職」→「所属パート」→「担当楽器」→「入学年度」の順で入力・表示。
+  - **名前**: 本名（フルネーム氏名）の管理は行わず、部内で呼び合う「略称（呼び名）」に一本化。
+  - **入学年度**: プルダウンは現役生向け（新入生および1回生〜4回生）に限定し、それ以前のOB/OGは「その他」から西暦年を直接入力可能。選択・入力された入学年度と日本標準時の現会計年度（4月1日基準）から「1回生」「2回生」「3回生」「4回生」「OB/OG」を自動算出・表示。
+  - **パート名称**: 英語表記を廃止し、すべて日本語表記（サックス、トランペット、トロンボーン、リズム、OB・OG / その他）に統一。
+  - **氏名・ふりがな・旧学年/所属・電話番号・PayPay ID**: 不要のため廃止。
 
 ---
 
@@ -116,7 +121,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 
 | コレクション名 | ドキュメントID | 主なフィールド | 読み取り | 書き込み/編集 |
 | :--- | :--- | :--- | :--- | :--- |
-| `users` | `uid` | `displayName`, `kana`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `grade`, `phoneNumber`, `paypayId`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
+| `users` | `uid` | `displayName`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `enrollmentYear`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |
 | `roles` | `id` (例: `1`) | `name`, `order`, `description` | 認証済部員 | `isMasterAdmin` |
