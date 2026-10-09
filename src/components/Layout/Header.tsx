@@ -20,8 +20,27 @@ export function Header() {
 
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.left}>
+      <header
+        className={styles.headerBar}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "nowrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          className={styles.headerLeft}
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
           <Link href="/" className={styles.logoLink} prefetch={false} onClick={closeDrawer}>
             <div className={styles.logoWrapper}>
               <Image
@@ -41,7 +60,17 @@ export function Header() {
         </div>
 
         {user && (
-          <div className={styles.right}>
+          <div
+            className={styles.headerRight}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "0.75rem",
+              flexShrink: 0,
+              marginLeft: "auto",
+            }}
+          >
             {section && (
               <span
                 className={styles.sectionBadge}

@@ -3,7 +3,6 @@
 import React, { ReactNode } from "react";
 import Link from "next/link";
 import { Header } from "./Header";
-import { Footer } from "./Footer";
 import { CommonDialog } from "../Common/CommonDialog";
 import { Spinner } from "../Common/Spinner";
 import { useBreadcrumb } from "../../contexts/BreadcrumbContext";
@@ -50,7 +49,6 @@ export function BaseLayout({ children, title, showBreadcrumbs = true }: BaseLayo
         <div className={styles.content}>{children}</div>
       </main>
 
-      <Footer />
       <CommonDialog />
       <Spinner />
     </div>
