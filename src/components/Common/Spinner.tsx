@@ -70,7 +70,7 @@ export function Spinner() {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.container}>
+      <div className={styles.spinnerCard || styles.container}>
         <div className={styles.pulseRing}>
           <div className={styles.iconContainer}>
             <span className={styles.noteIcon}>🎷</span>

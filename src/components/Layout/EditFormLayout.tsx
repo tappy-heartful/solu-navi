@@ -160,7 +160,7 @@ export function EditFormLayout<T extends Record<string, any>>({
           {displayTitle}
         </h1>
       </div>
-      <div className="container" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div className={styles.formContainer}>
         {children}
         <FormButtons mode={mode} onSave={handleSave} onClear={form?.resetForm || (() => {})} />
       </div>

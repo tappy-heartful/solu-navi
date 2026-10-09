@@ -180,7 +180,6 @@ export function UserEditClient() {
       showSpinner("プロフィールを保存しています...");
 
       await updateUserProfile(targetUid, {
-        displayName: formData.abbreviation.trim(),
         abbreviation: formData.abbreviation.trim(),
         sectionId: formData.sectionId,
         roleId: formData.roleId,

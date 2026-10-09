@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,19 @@ import {
   getClientSections,
   getClientInstruments,
 } from "@/features/master/api/master-client-service";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSliders,
+  faShieldHalved,
+  faLock,
+  faDatabase,
+  faPlus,
+  faLayerGroup,
+  faGuitar,
+  faFolderOpen,
+  faPenToSquare,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 import styles from "./MasterMaintenance.module.css";
 
 type Props = {
@@ -316,16 +329,16 @@ export function MasterMaintenanceClient({
         <div className={styles.header}>
           <div className={styles.titleArea}>
             <h1 className={styles.title}>
-              <i className="fa-solid fa-sliders" />
+              <FontAwesomeIcon icon={faSliders} />
               マスタ管理
             </h1>
             {canEdit ? (
               <span className={`${styles.badge} ${styles.badgeAdmin}`}>
-                <i className="fa-solid fa-shield-halved" /> 管理者モード
+                <FontAwesomeIcon icon={faShieldHalved} /> 管理者モード
               </span>
             ) : (
               <span className={`${styles.badge} ${styles.badgeReadOnly}`}>
-                <i className="fa-solid fa-lock" /> 閲覧のみ
+                <FontAwesomeIcon icon={faLock} /> 閲覧のみ
               </span>
             )}
           </div>
@@ -339,7 +352,7 @@ export function MasterMaintenanceClient({
                   onClick={handleSeed}
                   title="初期データをFirestoreに投入します"
                 >
-                  <i className="fa-solid fa-database" /> 初期データ投入
+                  <FontAwesomeIcon icon={faDatabase} /> 初期データ投入
                 </button>
                 {currentTab === "sections" ? (
                   <button
@@ -347,7 +360,7 @@ export function MasterMaintenanceClient({
                     className={styles.btnPrimary}
                     onClick={handleOpenAddSection}
                   >
-                    <i className="fa-solid fa-plus" /> パート追加
+                    <FontAwesomeIcon icon={faPlus} /> パート追加
                   </button>
                 ) : (
                   <button
@@ -355,7 +368,7 @@ export function MasterMaintenanceClient({
                     className={styles.btnPrimary}
                     onClick={handleOpenAddInstrument}
                   >
-                    <i className="fa-solid fa-plus" /> 楽器追加
+                    <FontAwesomeIcon icon={faPlus} /> 楽器追加
                   </button>
                 )}
               </>
@@ -370,8 +383,8 @@ export function MasterMaintenanceClient({
             className={`${styles.tabItem} ${currentTab === "sections" ? styles.tabItemActive : ""}`}
             onClick={() => setCurrentTab("sections")}
           >
-            <i className="fa-solid fa-layer-group" />
-            パート (セクション)
+            <FontAwesomeIcon icon={faLayerGroup} />
+            パート
             <span className={styles.tabBadge}>{sections.length}</span>
           </button>
           <button
@@ -379,7 +392,7 @@ export function MasterMaintenanceClient({
             className={`${styles.tabItem} ${currentTab === "instruments" ? styles.tabItemActive : ""}`}
             onClick={() => setCurrentTab("instruments")}
           >
-            <i className="fa-solid fa-guitar" />
+            <FontAwesomeIcon icon={faGuitar} />
             楽器
             <span className={styles.tabBadge}>{instruments.length}</span>
           </button>
@@ -394,7 +407,7 @@ export function MasterMaintenanceClient({
             {sections.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
-                  <i className="fa-solid fa-folder-open" />
+                  <FontAwesomeIcon icon={faFolderOpen} />
                 </div>
                 <p>登録されているパートはありません</p>
               </div>
@@ -403,12 +416,12 @@ export function MasterMaintenanceClient({
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th style={{ width: "70px" }}>ID</th>
-                      <th>パート名</th>
-                      <th style={{ width: "100px" }}>略称</th>
-                      <th style={{ width: "90px" }}>表示色</th>
-                      <th style={{ width: "80px", textAlign: "center" }}>並び順</th>
-                      {canEdit && <th style={{ width: "130px", textAlign: "right" }}>操作</th>}
+                      <th style={{ width: "70px", minWidth: "70px" }}>ID</th>
+                      <th style={{ minWidth: "150px" }}>パート名</th>
+                      <th style={{ width: "130px", minWidth: "130px" }}>略称</th>
+                      <th style={{ width: "130px", minWidth: "130px" }}>表示色</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -423,7 +436,7 @@ export function MasterMaintenanceClient({
                           <strong>{sec.name}</strong>
                         </td>
                         <td>
-                          <span style={{ color: "#64748b" }}>{sec.shortName}</span>
+                          <span style={{ color: "#475569", fontWeight: 600 }}>{sec.shortName}</span>
                         </td>
                         <td>
                           {sec.color ? (
@@ -449,14 +462,18 @@ export function MasterMaintenanceClient({
                                 className={styles.btnActionEdit}
                                 onClick={() => handleOpenEditSection(sec)}
                               >
-                                <i className="fa-solid fa-pen-to-square" /> 編集
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
                               </button>
                               <button
                                 type="button"
                                 className={styles.btnActionDelete}
                                 onClick={() => handleDeleteSection(sec)}
+                                title="削除"
+                                aria-label="削除"
                               >
-                                <i className="fa-solid fa-trash-can" />
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
                               </button>
                             </div>
                           </td>
@@ -479,7 +496,7 @@ export function MasterMaintenanceClient({
             {instruments.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
-                  <i className="fa-solid fa-guitar" />
+                  <FontAwesomeIcon icon={faGuitar} />
                 </div>
                 <p>登録されている楽器はありません</p>
               </div>
@@ -488,11 +505,11 @@ export function MasterMaintenanceClient({
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      <th style={{ width: "90px" }}>ID</th>
-                      <th>楽器名</th>
-                      <th style={{ width: "200px" }}>所属パート</th>
-                      <th style={{ width: "80px", textAlign: "center" }}>並び順</th>
-                      {canEdit && <th style={{ width: "130px", textAlign: "right" }}>操作</th>}
+                      <th style={{ width: "80px", minWidth: "80px" }}>ID</th>
+                      <th style={{ minWidth: "160px" }}>楽器名</th>
+                      <th style={{ width: "180px", minWidth: "180px" }}>所属パート</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -522,14 +539,18 @@ export function MasterMaintenanceClient({
                                 className={styles.btnActionEdit}
                                 onClick={() => handleOpenEditInstrument(inst)}
                               >
-                                <i className="fa-solid fa-pen-to-square" /> 編集
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
                               </button>
                               <button
                                 type="button"
                                 className={styles.btnActionDelete}
                                 onClick={() => handleDeleteInstrument(inst)}
+                                title="削除"
+                                aria-label="削除"
                               >
-                                <i className="fa-solid fa-trash-can" />
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
                               </button>
                             </div>
                           </td>

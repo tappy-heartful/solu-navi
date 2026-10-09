@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUsers, faSearch, faUser, faPhone, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
+import { UserAvatar } from "@/components/Common/UserAvatar";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { UserDoc } from "../types";
 import { fetchUsers } from "../api/user-client-service";
@@ -133,25 +134,17 @@ export function UserListClient() {
                   className={styles.userCard}
                 >
                   <div className={styles.avatarWrapper}>
-                    {user.pictureUrl ? (
-                      <Image
-                        src={user.pictureUrl}
-                        alt={user.abbreviation || user.displayName || "部員アバター"}
-                        width={48}
-                        height={48}
-                        className={styles.avatarImg}
-                        unoptimized
-                      />
-                    ) : (
-                      <div className={styles.avatarFallback}>
-                        <FontAwesomeIcon icon={faUser} />
-                      </div>
-                    )}
+                    <UserAvatar
+                      src={user.pictureUrl}
+                      alt={user.displayName || user.abbreviation || "部員アバター"}
+                      size={48}
+                      className={styles.avatarImg}
+                    />
                   </div>
 
                   <div className={styles.cardContent}>
                     <div className={styles.nameRow}>
-                      <span className={styles.displayName}>{user.abbreviation || user.displayName}</span>
+                      <span className={styles.displayName}>{user.displayName || user.abbreviation}</span>
                       {sec && (
                         <span
                           className={styles.sectionBadge}

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark, faUser, faRightFromBracket, faHome, faUsers, faFileShield } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { UserAvatar } from "../Common/UserAvatar";
 import styles from "./Header.module.css";
 import { DEFAULT_SECTIONS } from "../../lib/firestore/constants";
 
@@ -98,23 +99,15 @@ export function Header() {
             <div className={styles.drawerHeader}>
               <div className={styles.userInfo}>
                 <div className={styles.avatar}>
-                  {userData?.pictureUrl ? (
-                    <Image
-                      src={userData.pictureUrl}
-                      alt={userData.abbreviation || userData.displayName || "アバター"}
-                      width={44}
-                      height={44}
-                      className={styles.avatarImg}
-                      unoptimized
-                    />
-                  ) : (
-                    <span className={styles.avatarInitial}>
-                      {(userData?.abbreviation || userData?.displayName)?.charAt(0) || "U"}
-                    </span>
-                  )}
+                  <UserAvatar
+                    src={userData?.pictureUrl}
+                    alt={userData?.displayName || userData?.abbreviation || "アバター"}
+                    size={44}
+                    className={styles.avatarImg}
+                  />
                 </div>
                 <div>
-                  <div className={styles.userName}>{userData?.abbreviation || userData?.displayName || "メンバー"}</div>
+                  <div className={styles.userName}>{userData?.displayName || userData?.abbreviation || "メンバー"}</div>
                   <div className={styles.userRole}>
                     {section?.name || "パート未設定"}
                   </div>

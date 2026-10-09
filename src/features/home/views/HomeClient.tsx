@@ -19,6 +19,8 @@ import {
   faBullhorn,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
+import { UserAvatar } from "@/components/Common/UserAvatar";
+import { PwaInstallHint } from "../components/PwaInstallHint";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
@@ -69,11 +71,10 @@ export function HomeClient() {
         <div className={styles.welcomeCard}>
           <div className={styles.welcomeHeader}>
             <div className={styles.logoBadge}>
-              <Image
-                src="/sso-logo.jpg"
-                alt="SSO Logo"
-                width={56}
-                height={56}
+              <UserAvatar
+                src={userData?.pictureUrl}
+                alt={userData?.displayName || userData?.abbreviation || "ユーザー"}
+                size={56}
                 className={styles.logoImg}
                 priority
               />
@@ -81,8 +82,8 @@ export function HomeClient() {
             <div className={styles.welcomeText}>
               <span className={styles.greeting}>Sound Solition Orchestra</span>
               <h2 className={styles.userName}>
-                {userData?.abbreviation || userData?.displayName
-                  ? `${userData.abbreviation || userData.displayName} さん`
+                {userData?.displayName || userData?.abbreviation
+                  ? `${userData.displayName || userData.abbreviation} さん`
                   : "部員メンバー さん"}
               </h2>
             </div>
@@ -118,6 +119,9 @@ export function HomeClient() {
             </div>
           </div>
         </div>
+
+        {/* PWA ホーム画面アイコン追加ヒント */}
+        <PwaInstallHint />
 
         {/* クイックアクセスグリッド */}
         <div className={styles.sectionTitleRow}>

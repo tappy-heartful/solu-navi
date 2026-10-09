@@ -27,7 +27,7 @@ import { showSpinner, hideSpinner } from "@/components/Common/Spinner";
 export const isTest = typeof window !== "undefined" && window.location.hostname.includes("test");
 export const isLocal = typeof window !== "undefined" && window.location.hostname.includes("localhost");
 export const globalAppName = isLocal ? "soluNaviLocal" : isTest ? "soluNaviTest" : "soluNavi";
-export const globalLineDefaultImage = "https://tappy-heartful.github.io/streak-images/navi/line-profile-unset.png";
+export const globalLineDefaultImage = "/default-avatar.svg";
 
 // --- セッション管理 (localStorage/sessionStorage) ---
 const getStorageKey = (key: string) => `${globalAppName}.${key}`;
@@ -288,28 +288,77 @@ export function getDayOfWeek(dateStr: string, short = false): string {
 /**
  * 現在の年度 (4月〜翌年3月) を取得 (JST基準)
  */
+/**
+ * 日本標準時 (Asia/Tokyo) における学年・年度（4月1日〜翌年3月31日）を取得
+ * 4月1日 00:00:00 (JST) を迎えた瞬間に当年年度へ確実に切り替わる
+ */
 export function getCurrentAcademicYear(dateInput?: any): number {
-  const jst = getJSTDate(dateInput);
-  const year = jst.getUTCFullYear();
-  const month = jst.getUTCMonth() + 1; // 1-12
-  return month >= 4 ? year : year - 1;
+  let targetDate: Date;
+  if (!dateInput) {
+    targetDate = new Date();
+  } else if (typeof dateInput.toDate === "function") {
+    targetDate = dateInput.toDate();
+  } else if (dateInput instanceof Date) {
+    targetDate = dateInput;
+  } else if (dateInput.seconds !== undefined) {
+    targetDate = new Date(dateInput.seconds * 1000);
+  } else if (typeof dateInput === "number") {
+    targetDate = new Date(dateInput);
+  } else if (typeof dateInput === "string") {
+    const normalized = dateInput.replace(/\./g, "-");
+    targetDate = new Date(normalized);
+  } else {
+    targetDate = new Date();
+  }
+
+  if (isNaN(targetDate.getTime())) {
+    targetDate = new Date();
+  }
+
+  try {
+    // 日本標準時 (Asia/Tokyo) の年月日を厳密に分解取得
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(targetDate);
+
+    const yearPart = parts.find((p) => p.type === "year")?.value;
+    const monthPart = parts.find((p) => p.type === "month")?.value;
+    const year = yearPart ? parseInt(yearPart, 10) : targetDate.getFullYear();
+    const month = monthPart ? parseInt(monthPart, 10) : targetDate.getMonth() + 1;
+
+    // 4月1日〜12月31日は当年年度、1月1日〜3月31日は前年年度
+    return month >= 4 ? year : year - 1;
+  } catch (err) {
+    // Intl フォールバック
+    const jst = getJSTDate(targetDate);
+    const year = jst.getUTCFullYear();
+    const month = jst.getUTCMonth() + 1;
+    return month >= 4 ? year : year - 1;
+  }
 }
 
 /**
  * 入学年度から現在の回生・学年を算出
- * 例 (2026年度の場合):
- * 2026年入学 -> 1回生
- * 2025年入学 -> 2回生
- * 2024年入学 -> 3回生
- * 2023年入学 -> 4回生
+ * 4月1日 00:00:00 (JST) に進級し、回生が自動的に切り替わる
+ * 例 (2026年度 = 2026年4月1日〜2027年3月31日の場合):
+ * 2026年入学 -> 1回生 (2026年3月31日までは「新入生」)
+ * 2025年入学 -> 2回生 (2026年3月31日までは「1回生」)
+ * 2024年入学 -> 3回生 (2026年3月31日までは「2回生」)
+ * 2023年入学 -> 4回生 (2026年3月31日までは「3回生」)
  * 2022年以前 -> OB/OG
  */
-export function getGradeFromEnrollmentYear(enrollmentYear?: number | string | null): string {
+export function getGradeFromEnrollmentYear(
+  enrollmentYear?: number | string | null,
+  dateInput?: any
+): string {
   if (!enrollmentYear) return "未設定";
   const yearNum = typeof enrollmentYear === "string" ? parseInt(enrollmentYear, 10) : enrollmentYear;
   if (isNaN(yearNum) || yearNum <= 0) return "未設定";
 
-  const currentAcademicYear = getCurrentAcademicYear();
+  const currentAcademicYear = getCurrentAcademicYear(dateInput);
   const diff = currentAcademicYear - yearNum + 1;
 
   if (diff <= 0) {

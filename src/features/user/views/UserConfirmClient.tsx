@@ -14,6 +14,7 @@ import {
   faIdCard,
 } from "@fortawesome/free-solid-svg-icons";
 import { ConfirmLayout } from "@/components/Layout/ConfirmLayout";
+import { UserAvatar } from "@/components/Common/UserAvatar";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserDoc } from "../types";
@@ -108,24 +109,16 @@ export function UserConfirmClient() {
         {/* プロフィール基本カード */}
         <div className={styles.profileHeader}>
           <div className={styles.avatarWrapper}>
-            {targetUser.pictureUrl ? (
-              <Image
-                src={targetUser.pictureUrl}
-                alt={targetUser.abbreviation || targetUser.displayName || "部員アバター"}
-                width={80}
-                height={80}
-                className={styles.avatarImg}
-                unoptimized
-              />
-            ) : (
-              <div className={styles.avatarFallback}>
-                <FontAwesomeIcon icon={faUser} />
-              </div>
-            )}
+            <UserAvatar
+              src={targetUser.pictureUrl}
+              alt={targetUser.displayName || targetUser.abbreviation || "部員アバター"}
+              size={80}
+              className={styles.avatarImg}
+            />
           </div>
 
           <div className={styles.headerInfo}>
-            <h2 className={styles.displayName}>{targetUser.abbreviation || targetUser.displayName}</h2>
+            <h2 className={styles.displayName}>{targetUser.displayName || targetUser.abbreviation}</h2>
             <div className={styles.tagsRow}>
               {role && <span className={styles.roleBadge}>{role.name}</span>}
               {section && (
