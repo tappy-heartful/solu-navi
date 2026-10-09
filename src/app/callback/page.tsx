@@ -61,8 +61,8 @@ function CallbackContent() {
   }, [searchParams, loginWithCustomToken, router]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
+    <div className={styles.callbackContainer || styles.container}>
+      <div className={styles.callbackCard || styles.card}>
         {errorMsg ? (
           <>
             <h2 className={styles.errorTitle}>ログインエラー</h2>
@@ -89,7 +89,7 @@ function CallbackContent() {
 
 export default function CallbackPage() {
   return (
-    <Suspense fallback={<div className={styles.container}>読み込み中...</div>}>
+    <Suspense fallback={<div className={styles.callbackContainer || styles.container}>読み込み中...</div>}>
       <CallbackContent />
     </Suspense>
   );

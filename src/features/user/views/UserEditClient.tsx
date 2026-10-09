@@ -32,7 +32,7 @@ export function UserEditClient() {
   const [formData, setFormData] = useState<UserFormData>({
     abbreviation: "",
     sectionId: "",
-    roleId: "6", // デフォルトはメンバー
+    roleId: "4", // デフォルトはメンバー (🎵メンバー)
     instrumentIds: [],
     enrollmentYear: "",
   });
@@ -76,7 +76,7 @@ export function UserEditClient() {
         setFormData({
           abbreviation: data.abbreviation || "",
           sectionId: data.sectionId || "",
-          roleId: data.roleId || "6",
+          roleId: data.roleId || "4",
           instrumentIds: data.instrumentIds || [],
           enrollmentYear: data.enrollmentYear ?? "",
         });
@@ -147,6 +147,15 @@ export function UserEditClient() {
     }
     if (formData.instrumentIds.length === 0) {
       errs.instrumentIds = "担当楽器を1つ以上選択してください。";
+    }
+    if (!formData.enrollmentYear) {
+      errs.enrollmentYear = "入学年度を選択または直接入力してください。";
+    } else {
+      const yearNum = Number(formData.enrollmentYear);
+      const currentYear = new Date().getFullYear();
+      if (isNaN(yearNum) || yearNum < 1950 || yearNum > currentYear + 1) {
+        errs.enrollmentYear = `正しい入学年度（1950年〜${currentYear + 1}年）を入力してください。`;
+      }
     }
 
     setErrors(errs);
@@ -245,7 +254,7 @@ export function UserEditClient() {
       >
         <AppInput
           type="text"
-          placeholder="タロウ"
+          placeholder="例: タロウ（タップして入力）"
           value={formData.abbreviation}
           onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })}
           error={Boolean(errors.abbreviation)}
@@ -351,6 +360,8 @@ export function UserEditClient() {
       {/* 入学年度 */}
       <FormField
         label="入学年度"
+        required
+        error={errors.enrollmentYear}
         description="入学年度を選択してください（4回生まで選択可。それ以前のOB/OGは「その他」から直接入力）"
       >
         <select

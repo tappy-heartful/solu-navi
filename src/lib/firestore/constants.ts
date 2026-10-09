@@ -9,12 +9,11 @@ export const DEFAULT_SECTIONS: SectionDoc[] = [
 ];
 
 export const DEFAULT_ROLES: RoleDoc[] = [
-  { id: "1", name: "代表", order: 1, description: "サークル代表・統括" },
-  { id: "2", name: "バンドマスター (バンマス)", order: 2, description: "音楽監督・練習進行" },
-  { id: "3", name: "コンサートマスター (コンマス)", order: 3, description: "演奏指導・アンサンブル調整" },
-  { id: "4", name: "会計マネージャー", order: 4, description: "部費管理・精算" },
-  { id: "5", name: "パートリーダー", order: 5, description: "パート統括" },
-  { id: "6", name: "メンバー", order: 6, description: "一般メンバー" },
+  { id: "1", name: "👑バンマス", order: 1, description: "バンドマスター / 音楽監督・進行" },
+  { id: "2", name: "🎼コンマス", order: 2, description: "コンサートマスター / 演奏指導" },
+  { id: "3", name: "✨パートリーダー", order: 3, description: "パート統括" },
+  { id: "4", name: "🎵メンバー", order: 4, description: "一般メンバー" },
+  { id: "5", name: "🎉ゲスト", order: 5, description: "ゲスト・客演奏者" },
 ];
 
 export const DEFAULT_INSTRUMENTS: InstrumentDoc[] = [

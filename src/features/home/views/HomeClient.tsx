@@ -42,8 +42,9 @@ export function HomeClient() {
   // プロフィール未完了判定
   const isProfileIncomplete = !Boolean(
     userData?.abbreviation &&
-    userData?.sectionId &&
     userData?.roleId &&
+    userData?.sectionId &&
+    userData?.enrollmentYear &&
     userData?.instrumentIds?.length
   );
 

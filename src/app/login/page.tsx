@@ -61,8 +61,8 @@ function LoginContent() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
+    <div className={styles.loginContainer || styles.container}>
+      <div className={styles.loginCard || styles.card}>
         {/* ロゴ & タイトル */}
         <div className={styles.logoWrapper}>
           <Image
@@ -136,7 +136,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className={styles.container}>読み込み中...</div>}>
+    <Suspense fallback={<div className={styles.loginContainer || styles.container}>読み込み中...</div>}>
       <LoginContent />
     </Suspense>
   );

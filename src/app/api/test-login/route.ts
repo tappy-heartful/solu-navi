@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         displayName,
         abbreviation: isSystemAdmin ? "管理者" : "テスト",
         sectionId: "1", // Sax
-        roleId: isSystemAdmin ? "1" : "6", // 代表 or メンバー
+        roleId: isSystemAdmin ? "1" : "4", // バンマス or メンバー
         instrumentIds: ["as"],
         agreedAt: Date.now(),
         isSystemAdmin,

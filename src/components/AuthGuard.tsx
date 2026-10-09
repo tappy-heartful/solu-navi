@@ -49,11 +49,12 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
 
     // 3. 必須プロフィール入力チェック
-    // 略称、パート、役職、楽器が未入力なら /user/edit へ
+    // 略称、役職、パート、入学年度、楽器が未入力なら /user/edit へ
     const isProfileComplete = Boolean(
       userData.abbreviation &&
-      userData.sectionId &&
       userData.roleId &&
+      userData.sectionId &&
+      userData.enrollmentYear &&
       userData.instrumentIds &&
       userData.instrumentIds.length > 0
     );

@@ -1,20 +1,31 @@
-﻿.container {
+.loginContainer,
+.container {
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  width: 100vw;
+  box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 2rem 1.25rem;
   background: linear-gradient(135deg, #0f172a 0%, #146081 100%);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
+.loginCard,
 .card {
+  margin: auto;
   background: #ffffff;
   border-radius: 1.5rem;
   padding: 2.5rem 2rem;
   max-width: 26rem;
   width: 100%;
   text-align: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
 .logoWrapper {
