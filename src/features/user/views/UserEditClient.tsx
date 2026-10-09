@@ -137,7 +137,9 @@ export function UserEditClient() {
     const errs: Record<string, string> = {};
 
     if (!formData.abbreviation.trim()) {
-      errs.abbreviation = "略称（サークル内での呼び名）を入力してください。";
+      errs.abbreviation = "略称（譜割り用ニックネーム）を入力してください。";
+    } else if (formData.abbreviation.trim().length > 2) {
+      errs.abbreviation = "略称は譜割りに表示するため【2文字以内】で入力してください。";
     }
     if (!formData.sectionId) {
       errs.sectionId = "所属パートを選択してください。";
@@ -244,17 +246,18 @@ export function UserEditClient() {
         </div>
       )}
 
-      {/* 略称・呼び名 */}
+      {/* 略称 (譜割り用) */}
       <FormField
-        label="略称 (呼び名)"
+        label="略称 (譜割り用・2文字以内)"
         required
         error={errors.abbreviation}
-        description="譜割りや出欠表、部内で呼び合う名前（例: タロウ, ヤマダ, TP1）"
+        description="譜割り（パート割り）等で使用する2文字の略称（例: たぴ、田、太 等）"
       >
         <AppInput
           type="text"
-          placeholder="例: タロウ（タップして入力）"
+          placeholder="例: たぴ（2文字以内）"
           value={formData.abbreviation}
+          maxLength={2}
           onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })}
           error={Boolean(errors.abbreviation)}
         />

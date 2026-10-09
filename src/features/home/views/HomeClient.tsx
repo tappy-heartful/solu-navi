@@ -73,7 +73,7 @@ export function HomeClient() {
             <div className={styles.logoBadge}>
               <UserAvatar
                 src={userData?.pictureUrl}
-                alt={userData?.displayName || userData?.abbreviation || "ユーザー"}
+                alt={userData?.displayName || "ユーザー"}
                 size={56}
                 className={styles.logoImg}
                 priority
@@ -82,8 +82,8 @@ export function HomeClient() {
             <div className={styles.welcomeText}>
               <span className={styles.greeting}>Sound Solition Orchestra</span>
               <h2 className={styles.userName}>
-                {userData?.displayName || userData?.abbreviation
-                  ? `${userData.displayName || userData.abbreviation} さん`
+                {userData?.displayName
+                  ? `${userData.displayName} さん`
                   : "部員メンバー さん"}
               </h2>
             </div>

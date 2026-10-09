@@ -111,14 +111,14 @@ export function UserConfirmClient() {
           <div className={styles.avatarWrapper}>
             <UserAvatar
               src={targetUser.pictureUrl}
-              alt={targetUser.displayName || targetUser.abbreviation || "部員アバター"}
+              alt={targetUser.displayName || "部員アバター"}
               size={80}
               className={styles.avatarImg}
             />
           </div>
 
           <div className={styles.headerInfo}>
-            <h2 className={styles.displayName}>{targetUser.displayName || targetUser.abbreviation}</h2>
+            <h2 className={styles.displayName}>{targetUser.displayName || "メンバー"}</h2>
             <div className={styles.tagsRow}>
               {role && <span className={styles.roleBadge}>{role.name}</span>}
               {section && (
@@ -172,6 +172,21 @@ export function UserConfirmClient() {
                 <span>
                   {targetUser.enrollmentYear}年度入学 ({getGradeFromEnrollmentYear(targetUser.enrollmentYear)})
                 </span>
+              ) : (
+                <span className={styles.unregistered}>未設定</span>
+              )}
+            </div>
+          </div>
+
+          {/* 略称 (譜割り用) */}
+          <div className={styles.detailItem}>
+            <div className={styles.itemLabel}>
+              <FontAwesomeIcon icon={faIdCard} className={styles.itemIcon} />
+              <span>略称 (譜割り用)</span>
+            </div>
+            <div className={styles.itemValue}>
+              {targetUser.abbreviation ? (
+                <span>{targetUser.abbreviation}</span>
               ) : (
                 <span className={styles.unregistered}>未設定</span>
               )}

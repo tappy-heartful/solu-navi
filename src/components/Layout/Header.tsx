@@ -101,13 +101,13 @@ export function Header() {
                 <div className={styles.avatar}>
                   <UserAvatar
                     src={userData?.pictureUrl}
-                    alt={userData?.displayName || userData?.abbreviation || "アバター"}
+                    alt={userData?.displayName || "アバター"}
                     size={44}
                     className={styles.avatarImg}
                   />
                 </div>
                 <div>
-                  <div className={styles.userName}>{userData?.displayName || userData?.abbreviation || "メンバー"}</div>
+                  <div className={styles.userName}>{userData?.displayName || "メンバー"}</div>
                   <div className={styles.userRole}>
                     {section?.name || "パート未設定"}
                   </div>

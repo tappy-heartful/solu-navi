@@ -136,7 +136,7 @@ export function UserListClient() {
                   <div className={styles.avatarWrapper}>
                     <UserAvatar
                       src={user.pictureUrl}
-                      alt={user.displayName || user.abbreviation || "部員アバター"}
+                      alt={user.displayName || "部員アバター"}
                       size={48}
                       className={styles.avatarImg}
                     />
@@ -144,7 +144,7 @@ export function UserListClient() {
 
                   <div className={styles.cardContent}>
                     <div className={styles.nameRow}>
-                      <span className={styles.displayName}>{user.displayName || user.abbreviation}</span>
+                      <span className={styles.displayName}>{user.displayName || "メンバー"}</span>
                       {sec && (
                         <span
                           className={styles.sectionBadge}
