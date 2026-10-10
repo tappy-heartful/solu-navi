@@ -16,7 +16,6 @@ import {
   faFileShield,
   faTriangleExclamation,
   faArrowRight,
-  faBullhorn,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { PwaInstallHint } from "../components/PwaInstallHint";
@@ -120,9 +119,6 @@ export function HomeClient() {
           </div>
         </div>
 
-        {/* PWA ホーム画面アイコン追加ヒント */}
-        <PwaInstallHint />
-
         {/* クイックアクセスグリッド */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>クイックアクセス</h3>
@@ -210,17 +206,8 @@ export function HomeClient() {
           </Link>
         </div>
 
-        {/* お知らせ・今後の機能案内 */}
-        <div className={styles.noticeSection}>
-          <div className={styles.noticeHeader}>
-            <FontAwesomeIcon icon={faBullhorn} className={styles.noticeIcon} />
-            <h4>Solu Navi 稼働案内</h4>
-          </div>
-          <p className={styles.noticeText}>
-            愛媛大学軽音楽部 Sound Solition Orchestra の新活動ポータル「Solu Navi」が立ち上がりました！
-            社会人ビッグバンド Swing Streak Jazz Orchestra 向け「Streak Navi」の姉妹システムとして、順次出欠連絡・楽譜管理・選曲投票・会計清算機能が追加される予定です。
-          </p>
-        </div>
+        {/* PWA ホーム画面アイコン追加ヒント */}
+        <PwaInstallHint />
       </div>
     </BaseLayout>
   );
