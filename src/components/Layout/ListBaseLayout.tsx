@@ -3,9 +3,10 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faHouse } from "@fortawesome/free-solid-svg-icons";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { BackNavigation } from "@/components/Common/BackNavigation";
 import styles from "./ListBaseLayout.module.css";
 
 type Props = {
@@ -59,12 +60,7 @@ export const ListBaseLayout = ({
         {children}
       </div>
 
-      <div className={styles.footer}>
-        <Link href="/" prefetch={false} className={styles.backLink}>
-          <FontAwesomeIcon icon={faHouse} />
-          <span>ホームに戻る</span>
-        </Link>
-      </div>
+      <BackNavigation href="/" label="ホーム" />
     </div>
   );
 };

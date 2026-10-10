@@ -92,6 +92,8 @@ export function UserConfirmClient() {
     <ConfirmLayout
       title="部員詳細"
       icon={<FontAwesomeIcon icon={faIdCard} />}
+      backHref="/user"
+      backText="部員一覧"
       actions={
         canEdit && (
           <Link

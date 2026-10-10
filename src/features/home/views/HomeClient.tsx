@@ -19,7 +19,6 @@ import {
   faBullhorn,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
-import { UserAvatar } from "@/components/Common/UserAvatar";
 import { PwaInstallHint } from "../components/PwaInstallHint";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -71,10 +70,11 @@ export function HomeClient() {
         <div className={styles.welcomeCard}>
           <div className={styles.welcomeHeader}>
             <div className={styles.logoBadge}>
-              <UserAvatar
-                src={userData?.pictureUrl}
-                alt={userData?.displayName || "ユーザー"}
-                size={56}
+              <Image
+                src="/sso-logo.jpg"
+                alt="Sound Solition Orchestra Logo"
+                width={56}
+                height={56}
                 className={styles.logoImg}
                 priority
               />

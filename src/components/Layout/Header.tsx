@@ -72,14 +72,24 @@ export function Header() {
               marginLeft: "auto",
             }}
           >
-            {section && (
-              <span
-                className={styles.sectionBadge}
-                style={{ backgroundColor: section.color || "#3b82f6" }}
-              >
-                {section.shortName}
-              </span>
-            )}
+            <div
+              onClick={toggleDrawer}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              title="メニューを開く"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") toggleDrawer();
+              }}
+            >
+              <UserAvatar
+                src={userData?.pictureUrl}
+                alt={userData?.displayName || "ユーザー"}
+                size={34}
+                className={styles.headerAvatar}
+                priority
+              />
+            </div>
             <button
               type="button"
               className={styles.menuButton}

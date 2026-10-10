@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
+import { BackNavigation } from "@/components/Common/BackNavigation";
 import { Modal } from "@/components/Modal";
 import { SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -289,6 +290,7 @@ export function MasterMaintenanceClient({
       const res = await seedMasterData();
       await writeLog({
         action: "マスタデータ初期投入",
+        dataId: "seed",
       });
       const [newSecs, newInsts] = await Promise.all([
         getClientSections(),
@@ -306,6 +308,7 @@ export function MasterMaintenanceClient({
       hideSpinner();
       await writeLog({
         action: "マスタデータ初期投入",
+        dataId: "seed",
         status: "error",
         errorDetail: { message: (err as Error).message },
       });
@@ -763,6 +766,8 @@ export function MasterMaintenanceClient({
           </Modal>
         )}
       </div>
+
+      <BackNavigation href="/" label="ホーム" />
     </BaseLayout>
   );
 }

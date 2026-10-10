@@ -71,36 +71,67 @@ export function AppInput({
 
   const strValue = value !== undefined && value !== null ? String(value) : "";
   const errorMessage = typeof error === "string" ? error : undefined;
+  const isError = Boolean(error);
 
-  // テキストエリア
-  if (type === "textarea") {
-    return (
-      <FormField label={label || ""} required={required} error={errorMessage}>
+  // label が未指定の場合は FormField で二重ラップせず入力欄のみを返す
+  if (!label) {
+    if (type === "textarea") {
+      return (
         <textarea
-          className="form-control"
+          className={`${styles.textarea} ${isError ? styles.hasError : ""} ${className}`}
           value={strValue}
           rows={4}
           placeholder={placeholder}
           disabled={disabled}
-          onChange={(e) => updateField(field, e.target.value)}
-          style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "6px" }}
+          onChange={(e) => updateField?.(field, e.target.value)}
+          {...(rest as any)}
+        />
+      );
+    }
+
+    return (
+      <input
+        type={type}
+        className={`${styles.input} ${isError ? styles.hasError : ""} ${className}`}
+        value={strValue}
+        placeholder={placeholder}
+        disabled={disabled}
+        min={min}
+        max={max}
+        onChange={(e) => updateField?.(field, type === "number" ? Number(e.target.value) : e.target.value)}
+        {...rest}
+      />
+    );
+  }
+
+  // label が指定されている場合は FormField でラップして返す
+  if (type === "textarea") {
+    return (
+      <FormField label={label} required={required} error={errorMessage}>
+        <textarea
+          className={`${styles.textarea} ${isError ? styles.hasError : ""} ${className}`}
+          value={strValue}
+          rows={4}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={(e) => updateField?.(field, e.target.value)}
+          {...(rest as any)}
         />
       </FormField>
     );
   }
 
   return (
-    <FormField label={label || ""} required={required} error={errorMessage}>
+    <FormField label={label} required={required} error={errorMessage}>
       <input
         type={type}
-        className="form-control"
+        className={`${styles.input} ${isError ? styles.hasError : ""} ${className}`}
         value={strValue}
         placeholder={placeholder}
         disabled={disabled}
         min={min}
         max={max}
-        onChange={(e) => updateField(field, type === "number" ? Number(e.target.value) : e.target.value)}
-        style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "6px" }}
+        onChange={(e) => updateField?.(field, type === "number" ? Number(e.target.value) : e.target.value)}
         {...rest}
       />
     </FormField>

@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUsers, faSearch, faUser, faPhone, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { UserAvatar } from "@/components/Common/UserAvatar";
+import { BackNavigation } from "@/components/Common/BackNavigation";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { UserDoc } from "../types";
 import { fetchUsers } from "../api/user-client-service";
@@ -179,6 +180,8 @@ export function UserListClient() {
           </div>
         )}
       </div>
+
+      <BackNavigation href="/" label="ホーム" />
     </BaseLayout>
   );
 }

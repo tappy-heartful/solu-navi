@@ -1,4 +1,4 @@
-import { db } from "./firebase";
+import { db, auth } from "./firebase";
 import {
   doc,
   getDoc,
@@ -135,10 +135,21 @@ export function formatDateToYMDDot(dateInput: any): string {
 }
 
 // --- ログ記録 ---
-export async function writeLog({ dataId, action, status = "success", errorDetail = {} }: any) {
+export async function writeLog({
+  dataId = null,
+  action = "",
+  status = "success",
+  errorDetail = {},
+}: {
+  dataId?: string | null;
+  action?: string;
+  status?: string;
+  errorDetail?: Record<string, any>;
+}) {
   try {
-    const uid = getSession("uid") || "unknown";
-    const userName = getSession("displayName") || "";
+    const currentAuthUser = auth.currentUser;
+    const uid = currentAuthUser?.uid || getSession("uid") || "unknown";
+    const userName = currentAuthUser?.displayName || getSession("displayName") || "";
     const now = new Date();
     const dateStr =
       now.getFullYear() +
@@ -154,15 +165,29 @@ export async function writeLog({ dataId, action, status = "success", errorDetail
       String(now.getMilliseconds()).padStart(3, "0");
     const logId = `${dateStr}_${uid}`;
     const colName = status === "success" ? "logs" : "errorLogs";
-    await setDoc(doc(db, colName, logId), {
-      uid,
-      userName,
-      action,
-      dataId,
-      status,
-      errorDetail,
+
+    const logData: Record<string, any> = {
+      uid: uid || "unknown",
+      userName: userName || "",
+      action: action || "",
+      dataId: dataId ?? null,
+      status: status || "success",
       createdAt: serverTimestamp(),
-    });
+    };
+
+    if (errorDetail && typeof errorDetail === "object" && Object.keys(errorDetail).length > 0) {
+      const sanitizedError: Record<string, any> = {};
+      for (const [k, v] of Object.entries(errorDetail)) {
+        if (v !== undefined) {
+          sanitizedError[k] = v;
+        }
+      }
+      logData.errorDetail = sanitizedError;
+    } else {
+      logData.errorDetail = {};
+    }
+
+    await setDoc(doc(db, colName, logId), logData);
   } catch (e) {
     console.error("Log failed", e);
   }

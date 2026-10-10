@@ -12,17 +12,19 @@ interface FormFieldProps {
 export function FormField({ label, required, error, description, children }: FormFieldProps) {
   return (
     <div className={styles.field}>
-      <div className={styles.labelWrapper}>
-        <label className={styles.label}>
-          {label}
-          {required && <span className={styles.required}>*</span>}
-        </label>
-        {required ? (
-          <span className={styles.requiredBadge}>必須</span>
-        ) : (
-          <span className={styles.optionalBadge}>任意</span>
-        )}
-      </div>
+      {label && (
+        <div className={styles.labelWrapper}>
+          <label className={styles.label}>
+            {label}
+            {required && <span className={styles.required}>*</span>}
+          </label>
+          {required ? (
+            <span className={styles.requiredBadge}>必須</span>
+          ) : (
+            <span className={styles.optionalBadge}>任意</span>
+          )}
+        </div>
+      )}
 
       {description && <p className={styles.description}>{description}</p>}
 

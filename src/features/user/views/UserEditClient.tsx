@@ -403,6 +403,8 @@ export function UserEditClient() {
         submitText="保存する"
         onCancel={() => router.back()}
         submitting={submitting}
+        backHref={!isInitial ? "/user" : undefined}
+        backText="部員一覧"
       />
     </EditFormLayout>
   );

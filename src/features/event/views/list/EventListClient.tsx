@@ -8,6 +8,7 @@ import { Event } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
+import { BackNavigation } from "@/components/Common/BackNavigation";
 import { isInTerm, getDayOfWeek, format } from "@/lib/functions";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -364,6 +365,8 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
           </div>
         )}
       </div>
+
+      <BackNavigation href="/" label="ホーム" />
     </BaseLayout>
   );
 }

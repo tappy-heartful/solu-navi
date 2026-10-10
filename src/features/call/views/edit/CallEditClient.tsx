@@ -1,6 +1,5 @@
 "use client";
 
-import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { EditFormLayout } from "@/components/Layout/EditFormLayout";
 import { AppInput } from "@/components/Form/AppInput";
 import { FormField } from "@/components/Form/FormField";
@@ -93,8 +92,7 @@ export function CallEditClient({ mode, callId, initialCall }: Props) {
   };
 
   return (
-    <BaseLayout>
-      <EditFormLayout
+    <EditFormLayout
         featureName="曲募集"
         icon="fa-solid fa-bullhorn"
         featureIdKey="callId"
@@ -183,6 +181,5 @@ export function CallEditClient({ mode, callId, initialCall }: Props) {
           </label>
         </FormField>
       </EditFormLayout>
-    </BaseLayout>
   );
 }

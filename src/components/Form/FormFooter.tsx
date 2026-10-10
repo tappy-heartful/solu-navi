@@ -12,6 +12,9 @@ export interface FormFooterProps {
   disabled?: boolean;
 }
 
+/**
+ * 送信ボタンエリアおよび前の画面に戻るナビゲーションボタン
+ */
 export function FormFooter({
   backHref,
   backText = "戻る",
@@ -21,8 +24,10 @@ export function FormFooter({
   submitting = false,
   disabled = false,
 }: FormFooterProps) {
+  const cleanBackText = backText.replace(/に戻る$/, "");
+
   return (
-    <div className={styles.footer} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%" }}>
       {(submitText || onCancel) && (
         <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
           {onCancel && (
@@ -47,21 +52,11 @@ export function FormFooter({
         </div>
       )}
 
+      {/* 前の画面に戻るボタン (中央配置・大きく表示・streak-navi同等デザイン) */}
       {backHref && (
-        <div style={{ marginTop: "8px" }}>
-          <Link
-            href={backHref}
-            style={{
-              color: "var(--primary, #146081)",
-              textDecoration: "none",
-              fontSize: "14px",
-              fontWeight: 500,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            ← {backText}に戻る
+        <div className="back-nav-area">
+          <Link href={backHref} className="back-link" prefetch={false}>
+            ← {cleanBackText}に戻る
           </Link>
         </div>
       )}
