@@ -321,7 +321,7 @@ Googleが提供するクラウド基盤「Firebase」を開設します。
 4. **「LINEログイン設定」** タブを開く：
    - **コールバックURL** の「編集」をクリックし、以下を入力して更新：
      ```text
-     http://localhost:3000/callback
+     http://localhost:3003/callback
      ```
      *(※本番公開後に、VercelのURL `https://xxx.vercel.app/callback` もここに追加します)*
 5. **「リンクされた公式アカウント」の設定（超重要）**:
@@ -408,7 +408,7 @@ GROQ_API_KEY="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 # =============================================================
 # 5. アプリケーション基底URL (ローカル環境)
 # =============================================================
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+NEXT_PUBLIC_BASE_URL="http://localhost:3003"
 ```
 
 > **SALTとPEPPERとは？**:
@@ -421,7 +421,7 @@ npm run dev
 ```
 
 ターミナルに `Ready in ...ms` と表示されたら、ブラウザ（Chrome等）を開いて以下のアドレスにアクセスします：
-👉 **http://localhost:3000**
+👉 **http://localhost:3003**
 
 ログイン画面やトップ画面が正常に表示されれば、ローカル環境の構築は大成功です！
 
@@ -498,7 +498,7 @@ AWS や VPS などの常時起動サーバーを契約すると月額費用が�
 
 アプリに最初にログインしたユーザーは一般権限です。全体の管理（マスタ設定、ユーザー承認、スコア管理等）を行えるように特権管理者に昇格させます。
 
-1. スマートフォンまたはPCから、本番URL（または `http://localhost:3000`）を開く。
+1. スマートフォンまたはPCから、本番URL（または `http://localhost:3003`）を開く。
 2. LINEログインを実行し、初期プロフィール（氏名、パートなど）を登録。
 3. [Firebase Console](https://console.firebase.google.com/) を開く。
 4. **「Firestore Database」** → **`users`** コレクションを開く。
@@ -527,7 +527,7 @@ AWS や VPS などの常時起動サーバーを契約すると月額費用が�
 ### Q2. LINEログインボタンを押すと「400 Bad Request」と表示される！
 - **原因**: LINE Developers に登録した「コールバックURL」と、ブラウザでアクセスしているURLが一致していません。
 - **解決策**:
-  - ローカルの場合: `http://localhost:3000/callback`
+  - ローカルの場合: `http://localhost:3003/callback`
   - 本番の場合: `https://あなたのアプリ.vercel.app/callback`
   - ※末尾にスラッシュ（`/`）が付いているかいないかも厳密にチェックされます。
 
