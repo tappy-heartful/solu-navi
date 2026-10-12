@@ -23,32 +23,46 @@ export function PwaInstallHint() {
   useEffect(() => {
     setIsMounted(true);
 
-    // スタンドアロン（PWA ホーム画面から起動）判定
-    const isStandaloneMode =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    const checkPwaStatus = () => {
+      // 1. streak-navi 準拠の PWA Standalone モード検知
+      // ホーム画面に追加されたアプリとして起動している場合を網羅的に検知
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches;
 
-    // モバイル端末判定 (スマホ / タブレット)
-    const ua = window.navigator.userAgent.toLowerCase();
-    const isMobile =
-      /iphone|ipad|ipod|android/.test(ua) ||
-      (window.navigator.maxTouchPoints > 1 && /macintosh/.test(ua));
+      // すでに PWA（スタンドアロン）で起動している場合は非表示
+      if (isStandalone) {
+        setShouldShow(false);
+        return;
+      }
 
-    // PCで開いている時、またはすでにスマホでPWA起動している時は非表示
-    if (!isMobile || isStandaloneMode) {
-      setShouldShow(false);
-      return;
-    }
+      // 2. モバイルアクセス / 画面幅判定
+      // 実機スマートフォンはもちろん、開発者ツールのスマホエミュレーション（幅768px以下）でも確実に表示
+      const ua = window.navigator.userAgent.toLowerCase();
+      const isMobileUA =
+        /iphone|ipad|ipod|android|mobile/.test(ua) ||
+        (window.navigator.maxTouchPoints > 1 && /macintosh/.test(ua));
+      const isMobileScreen = window.innerWidth <= 768;
 
-    // スマホのブラウザで開いている場合のみ表示
-    setShouldShow(true);
+      if (isMobileUA || isMobileScreen) {
+        setShouldShow(true);
+      } else {
+        setShouldShow(false);
+      }
 
-    // デバイス種別（iOS vs Android）の初期判定
-    if (/iphone|ipad|ipod/.test(ua) || (window.navigator.maxTouchPoints > 1 && /macintosh/.test(ua))) {
-      setDeviceType("ios");
-    } else if (/android/.test(ua)) {
-      setDeviceType("android");
-    }
+      // 3. デバイス種別（iOS vs Android）の初期タブ判定
+      if (/android/.test(ua)) {
+        setDeviceType("android");
+      } else {
+        setDeviceType("ios");
+      }
+    };
+
+    checkPwaStatus();
+    window.addEventListener("resize", checkPwaStatus);
+    return () => window.removeEventListener("resize", checkPwaStatus);
   }, []);
 
   // SSR時、またはPCアクセス時、またはスマホPWA起動時は何も描画しない
