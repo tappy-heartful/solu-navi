@@ -4,7 +4,21 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faXmark, faUser, faRightFromBracket, faHome, faUsers, faFileShield } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faXmark,
+  faUser,
+  faRightFromBracket,
+  faHome,
+  faUsers,
+  faFileShield,
+  faCalendarDays,
+  faMusic,
+  faSquarePollVertical,
+  faSliders,
+  faIdCard,
+  faUserPen,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
 import styles from "./Header.module.css";
@@ -106,6 +120,7 @@ export function Header() {
       {drawerOpen && user && (
         <div className={styles.drawerOverlay} onClick={closeDrawer}>
           <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+            {/* スライドメニュー本体 */}
             <div className={styles.drawerHeader}>
               <div className={styles.userInfo}>
                 <div className={styles.avatar}>
@@ -116,60 +131,90 @@ export function Header() {
                     className={styles.avatarImg}
                   />
                 </div>
-                <div>
+                <div className={styles.userTextInfo}>
                   <div className={styles.userName}>{userData?.displayName || "メンバー"}</div>
-                  <div className={styles.userRole}>
-                    {section?.name || "パート未設定"}
+                  <div className={styles.userRoleRow}>
+                    <span
+                      className={styles.sectionTag}
+                      style={{ backgroundColor: section?.color || "#146081" }}
+                    >
+                      {section?.name || "パート未設定"}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.smallLogoutBtn}
+                      onClick={async () => {
+                        closeDrawer();
+                        await logout();
+                      }}
+                      title="ログアウト"
+                    >
+                      <FontAwesomeIcon icon={faRightFromBracket} /> ログアウト
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <nav className={styles.drawerNav}>
-              <Link href="/" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <FontAwesomeIcon icon={faHome} className={styles.navIcon} />
-                <span>ホーム</span>
-              </Link>
-              <Link href="/event" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <i className="fa-solid fa-calendar-days" style={{ width: "20px", textAlign: "center" }} />
-                <span>イベント・練習予定</span>
-              </Link>
-              <Link href="/call" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <i className="fa-solid fa-music" style={{ width: "20px", textAlign: "center" }} />
-                <span>曲募集</span>
-              </Link>
-              <Link href="/vote" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <i className="fa-solid fa-square-poll-vertical" style={{ width: "20px", textAlign: "center" }} />
-                <span>曲投票</span>
-              </Link>
-              <Link href="/master" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <i className="fa-solid fa-sliders" style={{ width: "20px", textAlign: "center" }} />
-                <span>マスタ管理 (パート・楽器)</span>
-              </Link>
-              <Link href="/user" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <FontAwesomeIcon icon={faUsers} className={styles.navIcon} />
-                <span>部員名簿 (ユーザー一覧)</span>
-              </Link>
-              <Link href="/user/detail" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <FontAwesomeIcon icon={faUser} className={styles.navIcon} />
-                <span>マイプロフィール</span>
-              </Link>
-              <Link href="/agreement" className={styles.navItem} prefetch={false} onClick={closeDrawer}>
-                <FontAwesomeIcon icon={faFileShield} className={styles.navIcon} />
-                <span>利用規約</span>
-              </Link>
               <button
                 type="button"
-                className={`${styles.navItem} ${styles.logoutBtn}`}
-                onClick={async () => {
-                  closeDrawer();
-                  await logout();
-                }}
+                className={styles.closeDrawerBtn}
+                onClick={closeDrawer}
+                aria-label="メニューを閉じる"
               >
-                <FontAwesomeIcon icon={faRightFromBracket} className={styles.navIcon} />
-                <span>ログアウト</span>
+                <FontAwesomeIcon icon={faXmark} />
               </button>
-            </nav>
+            </div>
+
+            <div className={styles.drawerBody}>
+              {/* ホーム（1列・フル幅カード） */}
+              <div className={styles.homeSection}>
+                <Link href="/" className={styles.homeCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faHome} className={styles.homeIcon} />
+                  <span className={styles.homeLabel}>ホーム</span>
+                </Link>
+              </div>
+
+              {/* メインメニュー（2列グリッド・主要活動） */}
+              <div className={styles.menuDivider}>メインメニュー</div>
+              <div className={styles.mainGrid}>
+                <Link href="/event" className={styles.mainCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faCalendarDays} className={`${styles.mainIcon} ${styles.iconTeal}`} />
+                  <span className={styles.mainLabel}>イベント・出欠</span>
+                </Link>
+                <Link href="/call" className={styles.mainCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faMusic} className={`${styles.mainIcon} ${styles.iconAmber}`} />
+                  <span className={styles.mainLabel}>曲募集</span>
+                </Link>
+                <Link href="/vote" className={styles.mainCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faSquarePollVertical} className={`${styles.mainIcon} ${styles.iconPurple}`} />
+                  <span className={styles.mainLabel}>曲投票</span>
+                </Link>
+                <Link href="/user" className={styles.mainCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faUsers} className={`${styles.mainIcon} ${styles.iconEmerald}`} />
+                  <span className={styles.mainLabel}>部員名簿</span>
+                </Link>
+              </div>
+
+              {/* サブメニュー（3列グリッド・設定＆管理） */}
+              <div className={styles.menuDivider}>設定・マスタ</div>
+              <div className={styles.subGrid}>
+                <Link href="/master" className={styles.subCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faSliders} className={styles.subIcon} />
+                  <span className={styles.subLabel}>マスタ管理</span>
+                </Link>
+                <Link href="/user/detail" className={styles.subCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faIdCard} className={styles.subIcon} />
+                  <span className={styles.subLabel}>マイプロフ</span>
+                </Link>
+                <Link href="/user/edit" className={styles.subCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faUserPen} className={styles.subIcon} />
+                  <span className={styles.subLabel}>情報変更</span>
+                </Link>
+                <Link href="/agreement" className={styles.subCard} prefetch={false} onClick={closeDrawer}>
+                  <FontAwesomeIcon icon={faFileShield} className={styles.subIcon} />
+                  <span className={styles.subLabel}>利用規約</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       )}

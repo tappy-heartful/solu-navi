@@ -262,34 +262,33 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
             <FontAwesomeIcon icon={faCalendarCheck} className={styles.sectionIcon} />
             今後の予定
           </h3>
-          <div className="table-wrapper">
-            <table className="list-table">
-              <thead>
-                <tr>
-                  <th>イベント名</th>
-                  <th>回答</th>
-                  <th>
-                    出欠確認
-                    <br />
-                    受付期間
-                  </th>
-                  <th>
-                    都道府県
-                    <br />
-                    市区町村
-                  </th>
-                  <th>場所</th>
-                </tr>
-              </thead>
-              <tbody>
-                {futureList.length === 0 ? (
+          {futureList.length === 0 ? (
+            <div className={styles.emptyCard}>
+              <FontAwesomeIcon icon={faCalendarDays} className={styles.emptyIcon} />
+              <p className={styles.emptyText}>予定されているイベントはありません</p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="list-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>
-                      予定されているイベントはありません
-                    </td>
+                    <th>イベント名</th>
+                    <th>回答</th>
+                    <th>
+                      出欠確認
+                      <br />
+                      受付期間
+                    </th>
+                    <th>
+                      都道府県
+                      <br />
+                      市区町村
+                    </th>
+                    <th>場所</th>
                   </tr>
-                ) : (
-                  futureList.map((e) => (
+                </thead>
+                <tbody>
+                  {futureList.map((e) => (
                     <tr key={e.id}>
                       <td>
                         {e.date && (
@@ -320,11 +319,11 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                         )}
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* 終了したイベント */}

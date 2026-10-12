@@ -119,90 +119,109 @@ export function HomeClient() {
           </div>
         </div>
 
-        {/* クイックアクセスグリッド */}
+        {/* 活動・音楽メニュー */}
         <div className={styles.sectionTitleRow}>
-          <h3 className={styles.sectionTitle}>クイックアクセス</h3>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>🎷</span> 活動・音楽メニュー
+          </h3>
         </div>
 
         <div className={styles.quickGrid}>
-          <Link href="/event" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.blue}`}>
+          <Link href="/event" prefetch={false} className={`${styles.quickCard} ${styles.cardTeal}`}>
+            <div className={`${styles.quickIcon} ${styles.iconTealBg}`}>
               <FontAwesomeIcon icon={faCalendarDays} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>イベント・出欠</span>
-              <span className={styles.quickSub}>練習日程・本番・出欠回答</span>
+              <span className={styles.quickKeyword}>練習日程・回答</span>
             </div>
+            <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/call" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.amber}`}>
+          <Link href="/call" prefetch={false} className={`${styles.quickCard} ${styles.cardAmber}`}>
+            <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
               <FontAwesomeIcon icon={faMusic} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>曲募集</span>
-              <span className={styles.quickSub}>ライブ選曲のリクエスト応募</span>
+              <span className={styles.quickKeyword}>リクエスト応募</span>
             </div>
+            <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/vote" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.purple}`}>
+          <Link href="/vote" prefetch={false} className={`${styles.quickCard} ${styles.cardPurple}`}>
+            <div className={`${styles.quickIcon} ${styles.iconPurpleBg}`}>
               <FontAwesomeIcon icon={faSquarePollVertical} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>曲投票</span>
-              <span className={styles.quickSub}>候補曲の単一・ボルダ投票</span>
+              <span className={styles.quickKeyword}>選曲・順位投票</span>
             </div>
+            <FontAwesomeIcon icon={faSquarePollVertical} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/master" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.emerald}`}>
+          <Link href="/master" prefetch={false} className={`${styles.quickCard} ${styles.cardEmerald}`}>
+            <div className={`${styles.quickIcon} ${styles.iconEmeraldBg}`}>
               <FontAwesomeIcon icon={faSliders} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>マスタ管理</span>
-              <span className={styles.quickSub}>パート・楽器一覧と管理</span>
+              <span className={styles.quickKeyword}>パート・楽器設定</span>
             </div>
+            <FontAwesomeIcon icon={faSliders} className={styles.watermarkIcon} />
           </Link>
+        </div>
 
-          <Link href="/user" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.blue}`}>
+        {/* 部員・サークル設定メニュー */}
+        <div className={styles.sectionTitleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>👥</span> 部員・サークル設定
+          </h3>
+        </div>
+
+        <div className={styles.quickGrid}>
+          <Link href="/user" prefetch={false} className={`${styles.quickCard} ${styles.cardBlue}`}>
+            <div className={`${styles.quickIcon} ${styles.iconBlueBg}`}>
               <FontAwesomeIcon icon={faUsers} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>部員名簿</span>
-              <span className={styles.quickSub}>メンバー連絡先・パート一覧</span>
+              <span className={styles.quickKeyword}>メンバー一覧</span>
             </div>
+            <FontAwesomeIcon icon={faUsers} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/user/detail" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.amber}`}>
+          <Link href="/user/detail" prefetch={false} className={`${styles.quickCard} ${styles.cardCyan}`}>
+            <div className={`${styles.quickIcon} ${styles.iconCyanBg}`}>
               <FontAwesomeIcon icon={faIdCard} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>マイプロフィール</span>
-              <span className={styles.quickSub}>自身の登録情報の確認</span>
+              <span className={styles.quickKeyword}>登録情報確認</span>
             </div>
+            <FontAwesomeIcon icon={faIdCard} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/user/edit" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.emerald}`}>
+          <Link href="/user/edit" prefetch={false} className={`${styles.quickCard} ${styles.cardIndigo}`}>
+            <div className={`${styles.quickIcon} ${styles.iconIndigoBg}`}>
               <FontAwesomeIcon icon={faUserPen} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>登録情報変更</span>
-              <span className={styles.quickSub}>パート・担当楽器・連絡先</span>
+              <span className={styles.quickKeyword}>パート・楽器変更</span>
             </div>
+            <FontAwesomeIcon icon={faUserPen} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/agreement" prefetch={false} className={styles.quickCard}>
-            <div className={`${styles.quickIcon} ${styles.purple}`}>
+          <Link href="/agreement" prefetch={false} className={`${styles.quickCard} ${styles.cardSlate}`}>
+            <div className={`${styles.quickIcon} ${styles.iconSlateBg}`}>
               <FontAwesomeIcon icon={faFileShield} />
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>サークル利用規約</span>
-              <span className={styles.quickSub}>活動ルールと個人情報</span>
+              <span className={styles.quickKeyword}>活動ルールと規程</span>
             </div>
+            <FontAwesomeIcon icon={faFileShield} className={styles.watermarkIcon} />
           </Link>
         </div>
 

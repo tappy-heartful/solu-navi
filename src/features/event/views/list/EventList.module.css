@@ -142,3 +142,32 @@
   white-space: nowrap;
   text-align: left;
 }
+
+/* データなし（空状態）カード */
+.emptyCard {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 2.25rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.emptyIcon {
+  font-size: 1.75rem;
+  color: #94a3b8;
+}
+
+.emptyText {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  font-weight: 600;
+}

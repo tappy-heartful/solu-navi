@@ -116,6 +116,36 @@ textarea:focus {
   border-bottom: none;
 }
 
+/* データなし表示カード（スマホ見切れ防止・画面幅フィット） */
+.table-empty-card {
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 2.25rem 1rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.table-empty-text {
+  font-size: 0.9375rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* テーブル内で直接colSpan空メッセージが使われた場合のフォールバック */
+.list-table td.empty-text {
+  text-align: center;
+  padding: 2.25rem 1rem !important;
+  color: #64748b;
+  font-weight: 600;
+  background-color: #ffffff;
+}
+
 /* 前の画面に戻るボタン (streak-navi同等デザイン & Solu Navi テーマカラー) */
 .back-nav-area {
   max-width: 768px;

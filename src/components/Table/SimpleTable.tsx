@@ -18,6 +18,14 @@ export const SimpleTable = ({
   hasData,
   children,
 }: Props) => {
+  if (!hasData) {
+    return (
+      <div className="table-empty-card">
+        <span className="table-empty-text">{emptyMessage}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="table-wrapper">
       <table className="list-table">
@@ -28,17 +36,7 @@ export const SimpleTable = ({
             ))}
           </tr>
         </thead>
-        <tbody>
-          {hasData ? (
-            children
-          ) : (
-            <tr>
-              <td colSpan={headers.length} style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>
-                {emptyMessage}
-              </td>
-            </tr>
-          )}
-        </tbody>
+        <tbody>{children}</tbody>
       </table>
     </div>
   );
