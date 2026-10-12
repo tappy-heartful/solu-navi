@@ -464,14 +464,14 @@ export function VoteEditClient({ mode, voteId, initialVote, callData, callAnswer
             <div className={styles.dateRow}>
               <input
                 type="date"
-                className={styles.input}
+                className={styles.dateInput}
                 value={values.acceptStartDate}
                 onChange={(e) => handleChange("acceptStartDate", e.target.value)}
               />
-              <span>～</span>
+              <span className={styles.dateSeparator}>～</span>
               <input
                 type="date"
-                className={styles.input}
+                className={styles.dateInput}
                 value={values.acceptEndDate}
                 onChange={(e) => handleChange("acceptEndDate", e.target.value)}
               />

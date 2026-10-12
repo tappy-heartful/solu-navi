@@ -119,18 +119,26 @@ export function CallEditClient({ mode, callId, initialCall }: Props) {
           />
         </FormField>
 
-        <FormField label="受付期間（開始）" required error={form.errors.acceptStartDate}>
-          <AppInput
-            {...inputProps("acceptStartDate")}
-            type="date"
-          />
-        </FormField>
-
-        <FormField label="受付期間（終了）" required error={form.errors.acceptEndDate}>
-          <AppInput
-            {...inputProps("acceptEndDate")}
-            type="date"
-          />
+        <FormField
+          label="受付期間"
+          required
+          error={form.errors.acceptStartDate || form.errors.acceptEndDate}
+        >
+          <div className={styles.dateRow}>
+            <input
+              type="date"
+              value={form.formData.acceptStartDate}
+              onChange={(e) => form.updateField("acceptStartDate", e.target.value)}
+              className={styles.dateInput}
+            />
+            <span className={styles.dateSeparator}>～</span>
+            <input
+              type="date"
+              value={form.formData.acceptEndDate}
+              onChange={(e) => form.updateField("acceptEndDate", e.target.value)}
+              className={styles.dateInput}
+            />
+          </div>
         </FormField>
 
         <FormField label="募集ジャンル" required error={form.errors.items as string}>

@@ -99,3 +99,39 @@
   accent-color: #146081;
   cursor: pointer;
 }
+
+/* 受付期間（開始・終了）の同一行横並びスタイル (streak-navi準拠) */
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+.dateInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #94a3b8;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.dateInput:focus {
+  border-color: #146081;
+  box-shadow: 0 0 0 3px rgba(20, 96, 129, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dateSeparator {
+  font-weight: 700;
+  color: #64748b;
+  flex-shrink: 0;
+  font-size: 1rem;
+}

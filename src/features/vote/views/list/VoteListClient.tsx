@@ -99,8 +99,7 @@ export function VoteListClient({ votes, participantCountMap }: Props) {
         </td>
         <td className={styles.countCol}>{participantCount}人</td>
         <td className={styles.termCol}>
-          {vote.acceptStartDate} ～<br />
-          {vote.acceptEndDate}
+          {vote.acceptStartDate} ～ {vote.acceptEndDate}
         </td>
         <td className={styles.itemsCol}>{itemsSummary || "-"}</td>
       </tr>

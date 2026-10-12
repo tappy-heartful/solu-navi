@@ -108,8 +108,7 @@ export function CallListClient({ initialData }: Props) {
         </td>
         <td className={styles.countCol}>{count}人</td>
         <td className={styles.termCol}>
-          {call.acceptStartDate} ～<br />
-          {call.acceptEndDate}
+          {call.acceptStartDate} ～ {call.acceptEndDate}
         </td>
         <td className={styles.itemsCol} style={{ whiteSpace: "pre-wrap" }}>
           {itemsHtml || "-"}
