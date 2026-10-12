@@ -19,13 +19,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { PwaInstallHint } from "../components/PwaInstallHint";
+import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
+import { HomeAnnouncement } from "../types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
 import { getGradeFromEnrollmentYear } from "@/lib/functions";
 import styles from "./HomeClient.module.css";
 
-export function HomeClient() {
+interface HomeClientProps {
+  initialAnnouncements?: HomeAnnouncement[];
+}
+
+export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
   const { userData } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
 
@@ -118,6 +124,9 @@ export function HomeClient() {
             </div>
           </div>
         </div>
+
+        {/* 受付中のお知らせ (曲募集・曲投票) */}
+        <HomeAnnouncementSection announcements={initialAnnouncements} />
 
         {/* 活動・音楽メニュー */}
         <div className={styles.sectionTitleRow}>

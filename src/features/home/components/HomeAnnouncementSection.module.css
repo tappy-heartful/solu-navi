@@ -1,0 +1,149 @@
+.announcementContainer {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.announcementHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.headerTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.headerIcon {
+  color: #146081;
+  font-size: 1rem;
+}
+
+.notificationList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.emptyItem {
+  width: 100%;
+}
+
+.emptyMessage {
+  padding: 1.1rem 1rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+.pendingItem {
+  margin-top: 0.25rem;
+}
+
+.pendingItem:first-child {
+  margin-top: 0;
+}
+
+.pendingMessage {
+  padding: 0.55rem 0.85rem;
+  font-weight: 700;
+  color: #c2410c;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fff7ed;
+  border: 1px solid #ffedd5;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.pendingIcon {
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+.linkItem {
+  margin-bottom: 0.125rem;
+}
+
+.notificationLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.notificationLink:hover {
+  background-color: #f8fafc;
+  border-color: #146081;
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(20, 96, 129, 0.12);
+}
+
+.itemIconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.voteIconBg {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+.callIconBg {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.defaultIconBg {
+  background-color: #e8f4f8;
+  color: #146081;
+}
+
+.itemLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #146081;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.notificationLink:hover .chevron {
+  transform: translateX(3px);
+  color: #146081;
+}
