@@ -76,3 +76,37 @@ export function formatJSTDate(timestamp?: number | Timestamp | null, format = "Y
     .replace("HH", hh)
     .replace("mm", min);
 }
+
+/**
+ * オブジェクトおよびネストされた配列・オブジェクトから undefined なプロパティを再帰的に除去する
+ * Firestore への書き込み時に "Function addDoc() called with invalid data. Unsupported field value: undefined" エラーを防止する
+ */
+export function removeUndefined<T>(obj: T): T {
+  if (obj === null || obj === undefined || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj
+      .filter((item) => item !== undefined)
+      .map((item) => removeUndefined(item)) as unknown as T;
+  }
+
+  // 特殊オブジェクト (Date, Timestamp, FieldValue など) はそのまま返す
+  if (
+    obj instanceof Date ||
+    obj instanceof Timestamp ||
+    ("_methodName" in (obj as Record<string, unknown>))
+  ) {
+    return obj;
+  }
+
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = removeUndefined(value);
+    }
+  }
+  return cleaned as T;
+}
+

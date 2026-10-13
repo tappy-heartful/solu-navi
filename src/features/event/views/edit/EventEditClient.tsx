@@ -32,6 +32,7 @@ import {
 import { SetlistEdit } from "@/components/Setlist/SetlistEdit";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { removeUndefined } from "@/lib/firestore/utils";
 import styles from "./EventEdit.module.css";
 
 type Props = {
@@ -249,43 +250,48 @@ export function EventEditClient({
       for (const [secId, parts] of Object.entries(instrumentConfig)) {
         const validParts = parts
           .filter((p) => p.partName.trim() !== "")
-          .map((p) => ({
-            partName: p.partName.trim(),
-            instrumentId: p.instrumentId || undefined,
-          }));
+          .map((p) => {
+            const partObj: InstrumentPart = {
+              partName: p.partName.trim(),
+            };
+            if (p.instrumentId) {
+              partObj.instrumentId = p.instrumentId;
+            }
+            return partObj;
+          });
         if (validParts.length > 0) {
           cleanedConfig[secId] = validParts;
         }
       }
 
-      const payload: Partial<Event> = {
-        title,
+      const payload: Partial<Event> = removeUndefined({
+        title: title.trim(),
         attendanceType,
-        date: attendanceType === "attendance" ? hyphenDateToDot(date) : undefined,
+        date: attendanceType === "attendance" ? hyphenDateToDot(date) : "",
         candidateDates:
           attendanceType === "schedule"
-            ? candidateDates.filter((d) => d.trim() !== "").map(hyphenDateToDot)
-            : undefined,
+            ? candidateDates.filter((d) => d.trim() !== "").map(hyphenDateToDot).sort()
+            : [],
         acceptStartDate: hyphenDateToDot(acceptStartDate),
         acceptEndDate: hyphenDateToDot(acceptEndDate),
-        placeName,
-        prefectureId,
-        municipalityId,
-        website,
-        access,
-        googleMap,
-        youtubeUrl,
+        placeName: placeName.trim(),
+        prefectureId: prefectureId || "",
+        municipalityId: municipalityId || "",
+        website: website.trim(),
+        access: access.trim(),
+        googleMap: googleMap.trim(),
+        youtubeUrl: youtubeUrl.trim(),
         rentTimeRanges: rentTimeRanges.filter((r) => r.startTime && r.endTime),
-        schedule,
-        dress,
-        bring,
-        rent,
-        other,
-        allowAssign,
-        isVenueReserved,
-        setlist,
+        schedule: schedule.trim(),
+        dress: dress.trim(),
+        bring: bring.trim(),
+        rent: rent.trim(),
+        other: other.trim(),
+        allowAssign: !!allowAssign,
+        isVenueReserved: !!isVenueReserved,
+        setlist: setlist || [],
         instrumentConfig: cleanedConfig,
-      };
+      });
 
       let newId = eventId;
       if (isEdit && eventId) {

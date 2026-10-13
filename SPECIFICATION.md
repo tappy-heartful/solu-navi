@@ -185,8 +185,11 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 ### 3.4. イベント・出欠・日程調整機能 (`/event`)
 - **目的**: 練習、合宿、本番、総会などの日程連絡、出欠確認、日程調整、施設アクセス、録音共有を一元管理。
 - **種別**:
-  - **出欠確認 (`attendance`)**: 特定日の出席・欠席・保留を回答。
-  - **日程調整 (`schedule`)**: 複数の候補日に対する可否をマトリクス形式で回答。
+  - **出欠確認 (`attendance`)**: 特定日の出席・欠席・保留を回答（`date`: "yyyy.MM.dd", `candidateDates`: []）。
+  - **日程調整 (`schedule`)**: 複数の候補日に対する可否をマトリクス形式で回答（`date`: "", `candidateDates`: ["yyyy.MM.dd", ...]）。
+- **Firestore書き込み安全性（undefined完全防止機構）**:
+  - Firestore SDK の `Unsupported field value: undefined` エラーを未然に防止するため、クライアントサービス層（`addEvent`, `updateEvent`, `submitAttendanceAnswer`, `submitAdjustAnswer`, `addRecording`）および編集画面ビュー（`EventEditClient`）において、共通ユーティリティ `removeUndefined` による再帰的サニタイズ処理を適用。
+  - 出欠タイプ登録時は `candidateDates` を空配列 `[]` に、日程調整タイプ登録時は `date` を空文字 `""` に初期化し、オプショナルな楽器IDや備考コメントの `undefined` 混入を二重防壁で完全に遮断。
 - **画面構成**:
   - 一覧: `/event` (日付順、都道府県/市区町村バッジ、出欠ステータス)
   - 作成・編集: `/event/edit` (タイトル、日時/候補日、受付期間（streak-navi 準拠の同一行インライン横並び入力）、場所・Google Map・アクセス、施設利用時間、会場押さえ状況、セットリスト、楽器構成)

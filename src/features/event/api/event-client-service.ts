@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { Event, EventRecording } from "@/lib/firestore/types";
 import { archiveAndDeleteDoc } from "@/lib/functions";
+import { removeUndefined } from "@/lib/firestore/utils";
 
 // ===== 出欠回答 =====
 
@@ -23,9 +24,16 @@ export async function submitAttendanceAnswer(
   status: string,
   comment?: string
 ): Promise<void> {
+  const payload = removeUndefined({
+    eventId,
+    uid,
+    status,
+    comment: comment?.trim() || "",
+    updatedAt: serverTimestamp(),
+  });
   await setDoc(
     doc(db, "eventAttendanceAnswers", `${eventId}_${uid}`),
-    { eventId, uid, status, comment, updatedAt: serverTimestamp() },
+    payload,
     { merge: true }
   );
 }
@@ -42,9 +50,16 @@ export async function submitAdjustAnswer(
   answers: Record<string, string>,
   comment?: string
 ): Promise<void> {
+  const payload = removeUndefined({
+    eventId,
+    uid,
+    answers,
+    comment: comment?.trim() || "",
+    updatedAt: serverTimestamp(),
+  });
   await setDoc(
     doc(db, "eventAdjustAnswers", `${eventId}_${uid}`),
-    { eventId, uid, answers, comment, updatedAt: serverTimestamp() },
+    payload,
     { merge: true }
   );
 }
@@ -56,16 +71,21 @@ export async function deleteMyAdjustAnswer(eventId: string, uid: string): Promis
 // ===== イベント本体 =====
 
 export async function addEvent(data: Omit<Event, "id">): Promise<string> {
-  const ref = await addDoc(collection(db, "events"), {
+  const payload = removeUndefined({
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  const ref = await addDoc(collection(db, "events"), payload);
   return ref.id;
 }
 
 export async function updateEvent(id: string, data: Partial<Event>): Promise<void> {
-  await updateDoc(doc(db, "events", id), { ...data, updatedAt: serverTimestamp() });
+  const payload = removeUndefined({
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+  await updateDoc(doc(db, "events", id), payload);
 }
 
 export async function deleteEventWithAnswers(eventId: string): Promise<void> {
@@ -90,13 +110,14 @@ export async function addRecording(
   title: string,
   url: string
 ): Promise<EventRecording> {
-  const ref = await addDoc(collection(db, "eventRecordings"), {
+  const payload = removeUndefined({
     eventId,
     uid,
     title,
     url,
     createdAt: serverTimestamp(),
   });
+  const ref = await addDoc(collection(db, "eventRecordings"), payload);
   return { id: ref.id, eventId, uid, title, url, createdAt: Date.now() };
 }
 

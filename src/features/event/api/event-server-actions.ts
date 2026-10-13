@@ -210,7 +210,7 @@ export async function fetchEventConfirmData(eventId: string): Promise<EventConfi
     fetchScoresPromise(),
     getAttendanceStatusesServer(),
     getEventAdjustStatusesServer(),
-    adminDb.collection("eventRecordings").where("eventId", "==", eventId).orderBy("createdAt", "asc").get(),
+    adminDb.collection("eventRecordings").where("eventId", "==", eventId).get(),
   ]);
 
   const attendanceAnswers = attendanceAnswersSnap.docs
@@ -278,14 +278,16 @@ export async function fetchEventConfirmData(eventId: string): Promise<EventConfi
     } as Score;
   });
 
-  const recordings: EventRecording[] = recordingsSnap.docs.map((d) => ({
-    id: d.id,
-    eventId: d.data().eventId || eventId,
-    uid: d.data().uid || "",
-    title: d.data().title || "",
-    url: d.data().url || "",
-    createdAt: d.data().createdAt?.toMillis?.() ?? 0,
-  }));
+  const recordings: EventRecording[] = recordingsSnap.docs
+    .map((d) => ({
+      id: d.id,
+      eventId: d.data().eventId || eventId,
+      uid: d.data().uid || "",
+      title: d.data().title || "",
+      url: d.data().url || "",
+      createdAt: d.data().createdAt?.toMillis?.() ?? 0,
+    }))
+    .sort((a, b) => a.createdAt - b.createdAt);
 
   let prefectureName = "";
   let municipalityName = "";
