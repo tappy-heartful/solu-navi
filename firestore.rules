@@ -85,11 +85,11 @@ service cloud.firestore {
     }
     match /prefectures/{id} {
       allow read: if isAuthenticated();
-      allow write: if isSystemAdmin();
+      allow write: if isMasterAdmin();
     }
     match /municipalities/{id} {
       allow read: if isAuthenticated();
-      allow write: if isSystemAdmin();
+      allow write: if isMasterAdmin();
     }
     match /attendanceStatuses/{id} {
       allow read: if isAuthenticated();

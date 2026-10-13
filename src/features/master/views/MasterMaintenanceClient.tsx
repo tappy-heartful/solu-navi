@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { BackNavigation } from "@/components/Common/BackNavigation";
 import { Modal } from "@/components/Modal";
-import { SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
+import { SectionDoc, RoleDoc, InstrumentDoc, Prefecture, Municipality } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import {
@@ -17,11 +17,21 @@ import {
 import {
   saveSection,
   deleteSection,
+  saveRole,
+  deleteRole,
   saveInstrument,
   deleteInstrument,
+  savePrefecture,
+  deletePrefecture,
+  saveMunicipality,
+  deleteMunicipality,
   seedMasterData,
   getClientSections,
+  getClientRoles,
   getClientInstruments,
+  getClientPrefectures,
+  getClientMunicipalities,
+  getClientMunicipalitiesTotalCount,
 } from "@/features/master/api/master-client-service";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -35,23 +45,39 @@ import {
   faFolderOpen,
   faPenToSquare,
   faTrashCan,
+  faUserGear,
+  faLocationDot,
+  faBuilding,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MasterMaintenance.module.css";
 
 type Props = {
   initialSections: SectionDoc[];
+  initialRoles?: RoleDoc[];
   initialInstruments: InstrumentDoc[];
+  initialPrefectures?: Prefecture[];
+  initialPrefecturesCount?: number;
+  initialMunicipalitiesCount?: number;
   isSectionsFromDefault: boolean;
+  isRolesFromDefault?: boolean;
   isInstrumentsFromDefault: boolean;
+  isPrefecturesFromDefault?: boolean;
 };
 
-type TabType = "sections" | "instruments";
+type TabType = "sections" | "roles" | "instruments" | "prefectures" | "municipalities";
 
 export function MasterMaintenanceClient({
   initialSections,
+  initialRoles = [],
   initialInstruments,
+  initialPrefectures = [],
+  initialPrefecturesCount = 0,
+  initialMunicipalitiesCount = 0,
   isSectionsFromDefault,
+  isRolesFromDefault,
   isInstrumentsFromDefault,
+  isPrefecturesFromDefault,
 }: Props) {
   const router = useRouter();
   const { userData } = useAuth();
@@ -62,7 +88,29 @@ export function MasterMaintenanceClient({
 
   const [currentTab, setCurrentTab] = useState<TabType>("sections");
   const [sections, setSections] = useState<SectionDoc[]>(initialSections);
+  const [roles, setRoles] = useState<RoleDoc[]>(initialRoles);
   const [instruments, setInstruments] = useState<InstrumentDoc[]>(initialInstruments);
+  const [prefectures, setPrefectures] = useState<Prefecture[]>(initialPrefectures);
+  const [municipalitiesCount, setMunicipalitiesCount] = useState<number>(initialMunicipalitiesCount);
+
+  // 役職編集・作成モーダル用
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Partial<RoleDoc> | null>(null);
+  const [isRoleNew, setIsRoleNew] = useState(false);
+
+  // 都道府県編集・作成モーダル用
+  const [prefectureModalOpen, setPrefectureModalOpen] = useState(false);
+  const [editingPrefecture, setEditingPrefecture] = useState<Partial<Prefecture> | null>(null);
+  const [isPrefectureNew, setIsPrefectureNew] = useState(false);
+
+  // 市区町村管理用
+  const [selectedPrefectureCode, setSelectedPrefectureCode] = useState<string>("38"); // 初期値: 愛媛県
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  const [municipalitySearchQuery, setMunicipalitySearchQuery] = useState("");
+  const [municipalityModalOpen, setMunicipalityModalOpen] = useState(false);
+  const [editingMunicipality, setEditingMunicipality] = useState<Partial<Municipality> | null>(null);
+  const [isMunicipalityNew, setIsMunicipalityNew] = useState(false);
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
 
   // パート編集・作成モーダル用
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
@@ -80,6 +128,28 @@ export function MasterMaintenanceClient({
       { label: "マスタ管理", href: "/master" },
     ]);
   }, [setBreadcrumbs]);
+
+  // 市区町村一覧の取得 (市区町村タブ表示中または都道府県選択変更時)
+  useEffect(() => {
+    if (currentTab === "municipalities" && selectedPrefectureCode) {
+      let isCancelled = false;
+      setIsLoadingMunicipalities(true);
+      getClientMunicipalities(selectedPrefectureCode)
+        .then((list) => {
+          if (!isCancelled) {
+            setMunicipalities(list);
+            setIsLoadingMunicipalities(false);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load municipalities:", err);
+          if (!isCancelled) setIsLoadingMunicipalities(false);
+        });
+      return () => {
+        isCancelled = true;
+      };
+    }
+  }, [currentTab, selectedPrefectureCode]);
 
   // ---- パート (Section) のハンドラ ----
 
@@ -280,31 +350,338 @@ export function MasterMaintenanceClient({
     }
   };
 
+  // ---- 役職 (Role) のハンドラ ----
+
+  const handleOpenAddRole = () => {
+    if (!canEdit) return;
+    const nextOrder = roles.length > 0 ? Math.max(...roles.map((r) => r.order || 0)) + 1 : 1;
+    setEditingRole({
+      id: String(nextOrder),
+      name: "",
+      description: "",
+      order: nextOrder,
+    });
+    setIsRoleNew(true);
+    setRoleModalOpen(true);
+  };
+
+  const handleOpenEditRole = (role: RoleDoc) => {
+    if (!canEdit) return;
+    setEditingRole({ ...role });
+    setIsRoleNew(false);
+    setRoleModalOpen(true);
+  };
+
+  const handleSaveRole = async () => {
+    if (!canEdit || !editingRole) return;
+    if (!editingRole.id?.trim()) {
+      await showDialog("役職IDを入力してください", true);
+      return;
+    }
+    if (!editingRole.name?.trim()) {
+      await showDialog("役職名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `役職「${editingRole.name}」を${isRoleNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setRoleModalOpen(false);
+    showSpinner();
+    try {
+      await saveRole(editingRole as RoleDoc);
+      await writeLog({
+        dataId: editingRole.id,
+        action: `役職マスタ${isRoleNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientRoles();
+      setRoles(updated);
+      hideSpinner();
+      await showDialog(`役職を${isRoleNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 役職マスタ保存エラー:", err);
+      await writeLog({
+        dataId: editingRole.id,
+        action: `役職マスタ${isRoleNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteRole = async (role: RoleDoc) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`役職「${role.name}」を削除しますか？`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteRole(role.id);
+      await writeLog({
+        dataId: role.id,
+        action: "役職マスタ削除",
+      });
+      const updated = await getClientRoles();
+      setRoles(updated);
+      hideSpinner();
+      await showDialog("役職を削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 役職マスタ削除エラー:", err);
+      await writeLog({
+        dataId: role.id,
+        action: "役職マスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
+  // ---- 都道府県 (Prefecture) のハンドラ ----
+
+  const handleOpenAddPrefecture = () => {
+    if (!canEdit) return;
+    const nextOrder = prefectures.length > 0 ? Math.max(...prefectures.map((p) => p.order || 0)) + 1 : 1;
+    const padId = String(nextOrder).padStart(2, "0");
+    setEditingPrefecture({
+      id: padId,
+      name: "",
+      order: nextOrder,
+    });
+    setIsPrefectureNew(true);
+    setPrefectureModalOpen(true);
+  };
+
+  const handleOpenEditPrefecture = (pref: Prefecture) => {
+    if (!canEdit) return;
+    setEditingPrefecture({ ...pref });
+    setIsPrefectureNew(false);
+    setPrefectureModalOpen(true);
+  };
+
+  const handleSavePrefecture = async () => {
+    if (!canEdit || !editingPrefecture) return;
+    if (!editingPrefecture.id?.trim()) {
+      await showDialog("都道府県コード（2桁）を入力してください", true);
+      return;
+    }
+    if (!editingPrefecture.name?.trim()) {
+      await showDialog("都道府県名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `都道府県「${editingPrefecture.name}」を${isPrefectureNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setPrefectureModalOpen(false);
+    showSpinner();
+    try {
+      await savePrefecture(editingPrefecture as Prefecture);
+      await writeLog({
+        dataId: editingPrefecture.id,
+        action: `都道府県マスタ${isPrefectureNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientPrefectures();
+      setPrefectures(updated);
+      hideSpinner();
+      await showDialog(`都道府県を${isPrefectureNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 都道府県マスタ保存エラー:", err);
+      await writeLog({
+        dataId: editingPrefecture.id,
+        action: `都道府県マスタ${isPrefectureNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeletePrefecture = async (pref: Prefecture) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`都道府県「${pref.name}」を削除しますか？`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deletePrefecture(pref.id);
+      await writeLog({
+        dataId: pref.id,
+        action: "都道府県マスタ削除",
+      });
+      const updated = await getClientPrefectures();
+      setPrefectures(updated);
+      hideSpinner();
+      await showDialog("都道府県を削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 都道府県マスタ削除エラー:", err);
+      await writeLog({
+        dataId: pref.id,
+        action: "都道府県マスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
+  // ---- 市区町村 (Municipality) のハンドラ ----
+
+  const handleOpenAddMunicipality = () => {
+    if (!canEdit) return;
+    setEditingMunicipality({
+      id: `${selectedPrefectureCode || "01"}000`,
+      name: "",
+      prefectureCode: selectedPrefectureCode || "01",
+    });
+    setIsMunicipalityNew(true);
+    setMunicipalityModalOpen(true);
+  };
+
+  const handleOpenEditMunicipality = (mun: Municipality) => {
+    if (!canEdit) return;
+    setEditingMunicipality({ ...mun });
+    setIsMunicipalityNew(false);
+    setMunicipalityModalOpen(true);
+  };
+
+  const handleSaveMunicipality = async () => {
+    if (!canEdit || !editingMunicipality) return;
+    if (!editingMunicipality.id?.trim()) {
+      await showDialog("市区町村コードを入力してください", true);
+      return;
+    }
+    if (!editingMunicipality.name?.trim()) {
+      await showDialog("市区町村名を入力してください", true);
+      return;
+    }
+    if (!editingMunicipality.prefectureCode?.trim()) {
+      await showDialog("都道府県を選択してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `市区町村「${editingMunicipality.name}」を${isMunicipalityNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setMunicipalityModalOpen(false);
+    showSpinner();
+    try {
+      await saveMunicipality(editingMunicipality as Municipality);
+      await writeLog({
+        dataId: editingMunicipality.id,
+        action: `市区町村マスタ${isMunicipalityNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientMunicipalities(editingMunicipality.prefectureCode);
+      if (editingMunicipality.prefectureCode === selectedPrefectureCode) {
+        setMunicipalities(updated);
+      }
+      const newTotal = await getClientMunicipalitiesTotalCount();
+      setMunicipalitiesCount(newTotal);
+      hideSpinner();
+      await showDialog(`市区町村を${isMunicipalityNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 市区町村マスタ保存エラー:", err);
+      await writeLog({
+        dataId: editingMunicipality.id,
+        action: `市区町村マスタ${isMunicipalityNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteMunicipality = async (mun: Municipality) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`市区町村「${mun.name}」を削除しますか？`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteMunicipality(mun.id);
+      await writeLog({
+        dataId: mun.id,
+        action: "市区町村マスタ削除",
+      });
+      const updated = await getClientMunicipalities(mun.prefectureCode);
+      setMunicipalities(updated);
+      const newTotal = await getClientMunicipalitiesTotalCount();
+      setMunicipalitiesCount(newTotal);
+      hideSpinner();
+      await showDialog("市区町村を削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 市区町村マスタ削除エラー:", err);
+      await writeLog({
+        dataId: mun.id,
+        action: "市区町村マスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
   // ---- 初期マスタシード投入 ----
 
   const handleSeed = async () => {
     if (!canEdit) return;
     const confirmed = await showDialog(
-      "標準のパート・楽器データを Firestore に一括登録しますか？\n（既存データがある場合は上書き・追加されます）"
+      "全マスタデータ（パート、役職、楽器、都道府県、市区町村）を Firestore に一括登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）"
     );
     if (!confirmed) return;
 
     showSpinner();
     try {
-      const res = await seedMasterData();
-      await writeLog({
-        action: "マスタデータ初期投入",
-        dataId: "seed",
+      const res = await seedMasterData({
+        onProgress: (msg) => {
+          // 進捗ログ
+          console.log(msg);
+        },
       });
-      const [newSecs, newInsts] = await Promise.all([
+      await writeLog({
+        action: "マスタデータ一括初期投入",
+        dataId: "seed-all",
+      });
+      const [newSecs, newRoles, newInsts, newPrefs, newMunCount] = await Promise.all([
         getClientSections(),
+        getClientRoles(),
         getClientInstruments(),
+        getClientPrefectures(),
+        getClientMunicipalitiesTotalCount(),
       ]);
       setSections(newSecs);
+      setRoles(newRoles);
       setInstruments(newInsts);
+      setPrefectures(newPrefs);
+      setMunicipalitiesCount(newMunCount);
+
+      if (selectedPrefectureCode) {
+        const updatedMuns = await getClientMunicipalities(selectedPrefectureCode);
+        setMunicipalities(updatedMuns);
+      }
+
       hideSpinner();
       await showDialog(
-        `初期マスタを登録しました。\n（パート: ${res.sectionsCount}件、楽器: ${res.instrumentsCount}件）`,
+        `初期マスタを一括登録しました。\n・パート: ${res.sectionsCount}件\n・役職: ${res.rolesCount}件\n・楽器: ${res.instrumentsCount}件\n・都道府県: ${res.prefecturesCount}件\n・市区町村: ${res.municipalitiesCount}件`,
         true
       );
       router.refresh();
@@ -312,8 +689,8 @@ export function MasterMaintenanceClient({
       hideSpinner();
       console.error("[MasterMaintenanceClient] マスタデータ初期投入エラー:", err);
       await writeLog({
-        action: "マスタデータ初期投入",
-        dataId: "seed",
+        action: "マスタデータ一括初期投入",
+        dataId: "seed-all",
         status: "error",
         errorDetail: { message: (err as Error).message },
       });
@@ -329,6 +706,17 @@ export function MasterMaintenanceClient({
     });
     return map;
   }, [sections]);
+
+  // 市区町村の検索フィルター
+  const filteredMunicipalities = React.useMemo(() => {
+    if (!municipalitySearchQuery.trim()) return municipalities;
+    const q = municipalitySearchQuery.trim().toLowerCase();
+    return municipalities.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.id.toLowerCase().includes(q)
+    );
+  }, [municipalities, municipalitySearchQuery]);
 
   return (
     <BaseLayout>
@@ -358,11 +746,11 @@ export function MasterMaintenanceClient({
                   type="button"
                   className={styles.btnSecondary}
                   onClick={handleSeed}
-                  title="初期データをFirestoreに投入します"
+                  title="全マスタの初期データをFirestoreに一括投入します"
                 >
                   <FontAwesomeIcon icon={faDatabase} /> 初期データ投入
                 </button>
-                {currentTab === "sections" ? (
+                {currentTab === "sections" && (
                   <button
                     type="button"
                     className={styles.btnPrimary}
@@ -370,13 +758,41 @@ export function MasterMaintenanceClient({
                   >
                     <FontAwesomeIcon icon={faPlus} /> パート追加
                   </button>
-                ) : (
+                )}
+                {currentTab === "roles" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddRole}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 役職追加
+                  </button>
+                )}
+                {currentTab === "instruments" && (
                   <button
                     type="button"
                     className={styles.btnPrimary}
                     onClick={handleOpenAddInstrument}
                   >
                     <FontAwesomeIcon icon={faPlus} /> 楽器追加
+                  </button>
+                )}
+                {currentTab === "prefectures" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddPrefecture}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 都道府県追加
+                  </button>
+                )}
+                {currentTab === "municipalities" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddMunicipality}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 市区町村追加
                   </button>
                 )}
               </>
@@ -397,12 +813,39 @@ export function MasterMaintenanceClient({
           </button>
           <button
             type="button"
+            className={`${styles.tabItem} ${currentTab === "roles" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("roles")}
+          >
+            <FontAwesomeIcon icon={faUserGear} />
+            役職
+            <span className={styles.tabBadge}>{roles.length}</span>
+          </button>
+          <button
+            type="button"
             className={`${styles.tabItem} ${currentTab === "instruments" ? styles.tabItemActive : ""}`}
             onClick={() => setCurrentTab("instruments")}
           >
             <FontAwesomeIcon icon={faGuitar} />
             楽器
             <span className={styles.tabBadge}>{instruments.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabItem} ${currentTab === "prefectures" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("prefectures")}
+          >
+            <FontAwesomeIcon icon={faLocationDot} />
+            都道府県
+            <span className={styles.tabBadge}>{prefectures.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabItem} ${currentTab === "municipalities" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("municipalities")}
+          >
+            <FontAwesomeIcon icon={faBuilding} />
+            市区町村
+            <span className={styles.tabBadge}>{municipalitiesCount}</span>
           </button>
         </div>
 
@@ -495,6 +938,81 @@ export function MasterMaintenanceClient({
           </div>
         )}
 
+        {/* タブコンテンツ: 役職一覧 */}
+        {currentTab === "roles" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>役職一覧</h2>
+            </div>
+            {roles.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されている役職はありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "70px", minWidth: "70px" }}>ID</th>
+                      <th style={{ minWidth: "160px" }}>役職名</th>
+                      <th style={{ minWidth: "220px" }}>説明</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roles.map((role) => (
+                      <tr key={role.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {role.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{role.name}</strong>
+                        </td>
+                        <td>
+                          <span style={{ color: "#475569" }}>{role.description || "-"}</span>
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {role.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditRole(role)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteRole(role)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* タブコンテンツ: 楽器一覧 */}
         {currentTab === "instruments" && (
           <div className={styles.contentCard}>
@@ -554,6 +1072,181 @@ export function MasterMaintenanceClient({
                                 type="button"
                                 className={styles.btnActionDelete}
                                 onClick={() => handleDeleteInstrument(inst)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: 都道府県一覧 */}
+        {currentTab === "prefectures" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>都道府県一覧（全{prefectures.length}件）</h2>
+            </div>
+            {prefectures.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されている都道府県はありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "90px", minWidth: "90px" }}>コード</th>
+                      <th style={{ minWidth: "180px" }}>都道府県名</th>
+                      <th style={{ width: "90px", minWidth: "90px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {prefectures.map((pref) => (
+                      <tr key={pref.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {pref.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{pref.name}</strong>
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {pref.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditPrefecture(pref)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeletePrefecture(pref)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: 市区町村一覧 */}
+        {currentTab === "municipalities" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>
+                市区町村一覧（マスタ総数: {municipalitiesCount}件）
+              </h2>
+            </div>
+            {/* 検索・絞り込みフィルターバー */}
+            <div className={styles.filterBar}>
+              <select
+                value={selectedPrefectureCode}
+                onChange={(e) => setSelectedPrefectureCode(e.target.value)}
+                className={styles.filterSelect}
+                aria-label="都道府県を選択"
+              >
+                {prefectures.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.id}: {p.name}
+                  </option>
+                ))}
+              </select>
+              <div className={styles.filterSearch}>
+                <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: "#94a3b8" }} />
+                <input
+                  type="text"
+                  placeholder="市区町村名・コードで絞り込み..."
+                  value={municipalitySearchQuery}
+                  onChange={(e) => setMunicipalitySearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {isLoadingMunicipalities ? (
+              <div className={styles.emptyState}>
+                <p>市区町村データを読み込み中...</p>
+              </div>
+            ) : filteredMunicipalities.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>該当する市区町村はありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "100px", minWidth: "100px" }}>コード</th>
+                      <th style={{ minWidth: "180px" }}>市区町村名</th>
+                      <th style={{ width: "120px", minWidth: "120px" }}>都道府県</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMunicipalities.map((mun) => (
+                      <tr key={mun.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {mun.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{mun.name}</strong>
+                        </td>
+                        <td>
+                          <span style={{ color: "#64748b" }}>
+                            {prefectures.find((p) => p.id === mun.prefectureCode)?.name || mun.prefectureCode}
+                          </span>
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditMunicipality(mun)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteMunicipality(mun)}
                                 title="削除"
                                 aria-label="削除"
                               >
@@ -765,6 +1458,239 @@ export function MasterMaintenanceClient({
                   onClick={handleSaveInstrument}
                 >
                   {isInstrumentNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* 役職追加・編集モーダル */}
+        {roleModalOpen && editingRole && (
+          <Modal
+            onClose={() => setRoleModalOpen(false)}
+            title={isRoleNew ? "役職の追加" : "役職の編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>役職ID (半角英数字)</label>
+                <input
+                  type="text"
+                  value={editingRole.id || ""}
+                  onChange={(e) =>
+                    setEditingRole((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isRoleNew}
+                  className={styles.formInput}
+                  placeholder="例: 1, leader"
+                />
+                {!isRoleNew && (
+                  <p className={styles.formHelp}>※一度作成したIDは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>役職名</label>
+                <input
+                  type="text"
+                  value={editingRole.name || ""}
+                  onChange={(e) =>
+                    setEditingRole((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 👑バンマス"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>説明</label>
+                <input
+                  type="text"
+                  value={editingRole.description || ""}
+                  onChange={(e) =>
+                    setEditingRole((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: バンドマスター / 音楽監督・進行"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingRole.order ?? 0}
+                  onChange={(e) =>
+                    setEditingRole((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 1"
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setRoleModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveRole}
+                >
+                  {isRoleNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* 都道府県追加・編集モーダル */}
+        {prefectureModalOpen && editingPrefecture && (
+          <Modal
+            onClose={() => setPrefectureModalOpen(false)}
+            title={isPrefectureNew ? "都道府県の追加" : "都道府県の編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>都道府県コード (2桁数値 例: 01, 38)</label>
+                <input
+                  type="text"
+                  value={editingPrefecture.id || ""}
+                  onChange={(e) =>
+                    setEditingPrefecture((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isPrefectureNew}
+                  className={styles.formInput}
+                  placeholder="例: 38"
+                />
+                {!isPrefectureNew && (
+                  <p className={styles.formHelp}>※一度作成したコードは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>都道府県名</label>
+                <input
+                  type="text"
+                  value={editingPrefecture.name || ""}
+                  onChange={(e) =>
+                    setEditingPrefecture((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 愛媛県"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingPrefecture.order ?? 0}
+                  onChange={(e) =>
+                    setEditingPrefecture((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 38"
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setPrefectureModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSavePrefecture}
+                >
+                  {isPrefectureNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* 市区町村追加・編集モーダル */}
+        {municipalityModalOpen && editingMunicipality && (
+          <Modal
+            onClose={() => setMunicipalityModalOpen(false)}
+            title={isMunicipalityNew ? "市区町村の追加" : "市区町村の編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>市区町村コード (5桁数値 例: 38201)</label>
+                <input
+                  type="text"
+                  value={editingMunicipality.id || ""}
+                  onChange={(e) =>
+                    setEditingMunicipality((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isMunicipalityNew}
+                  className={styles.formInput}
+                  placeholder="例: 38201"
+                />
+                {!isMunicipalityNew && (
+                  <p className={styles.formHelp}>※一度作成したコードは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>市区町村名</label>
+                <input
+                  type="text"
+                  value={editingMunicipality.name || ""}
+                  onChange={(e) =>
+                    setEditingMunicipality((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 松山市"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>所属都道府県</label>
+                <select
+                  value={editingMunicipality.prefectureCode || selectedPrefectureCode}
+                  onChange={(e) =>
+                    setEditingMunicipality((prev) => ({ ...prev, prefectureCode: e.target.value }))
+                  }
+                  className={styles.formInput}
+                >
+                  {prefectures.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.id}: {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setMunicipalityModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveMunicipality}
+                >
+                  {isMunicipalityNew ? "追加する" : "保存する"}
                 </button>
               </div>
             </div>

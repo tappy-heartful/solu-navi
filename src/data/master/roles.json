@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "name": "👑バンマス",
+    "order": 1,
+    "description": "バンドマスター / 音楽監督・進行"
+  },
+  {
+    "id": "2",
+    "name": "🎼コンマス",
+    "order": 2,
+    "description": "コンサートマスター / 演奏指導"
+  },
+  {
+    "id": "3",
+    "name": "✨パートリーダー",
+    "order": 3,
+    "description": "パート統括"
+  },
+  {
+    "id": "4",
+    "name": "🎵メンバー",
+    "order": 4,
+    "description": "一般メンバー"
+  },
+  {
+    "id": "5",
+    "name": "🎉ゲスト",
+    "order": 5,
+    "description": "ゲスト・客演奏者"
+  }
+]

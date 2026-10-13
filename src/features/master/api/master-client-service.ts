@@ -1,4 +1,4 @@
-﻿import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import {
   doc,
   setDoc,
@@ -6,9 +6,18 @@ import {
   writeBatch,
   getDocs,
   collection,
+  query,
+  where,
+  getCountFromServer,
 } from "firebase/firestore";
-import { SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
-import { DEFAULT_SECTIONS, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { SectionDoc, RoleDoc, InstrumentDoc, Prefecture, Municipality } from "@/lib/firestore/types";
+import {
+  DEFAULT_SECTIONS,
+  DEFAULT_ROLES,
+  DEFAULT_INSTRUMENTS,
+  DEFAULT_PREFECTURES,
+  DEFAULT_MUNICIPALITIES,
+} from "@/lib/firestore/constants";
 
 /**
  * パート (セクション) の保存（新規または更新）
@@ -35,6 +44,29 @@ export async function deleteSection(sectionId: string): Promise<void> {
 }
 
 /**
+ * 役職 (ロール) の保存（新規または更新）
+ */
+export async function saveRole(role: RoleDoc): Promise<void> {
+  const ref = doc(db, "roles", role.id);
+  await setDoc(
+    ref,
+    {
+      name: role.name,
+      description: role.description || "",
+      order: Number(role.order) || 0,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 役職 (ロール) の削除
+ */
+export async function deleteRole(roleId: string): Promise<void> {
+  await deleteDoc(doc(db, "roles", roleId));
+}
+
+/**
  * 楽器の保存（新規または更新）
  */
 export async function saveInstrument(instrument: InstrumentDoc): Promise<void> {
@@ -58,37 +90,202 @@ export async function deleteInstrument(instrumentId: string): Promise<void> {
 }
 
 /**
- * デフォルトのマスタデータを Firestore に初期投入
+ * 都道府県の保存（新規または更新）
  */
-export async function seedMasterData(): Promise<{ sectionsCount: number; instrumentsCount: number }> {
-  const batch = writeBatch(db);
+export async function savePrefecture(prefecture: Prefecture): Promise<void> {
+  const ref = doc(db, "prefectures", prefecture.id);
+  await setDoc(
+    ref,
+    {
+      name: prefecture.name,
+      order: Number(prefecture.order) || 0,
+    },
+    { merge: true }
+  );
+}
 
-  // sections 投入
-  for (const s of DEFAULT_SECTIONS) {
-    const sRef = doc(db, "sections", s.id);
-    batch.set(sRef, {
-      name: s.name,
-      shortName: s.shortName,
-      order: s.order,
-      color: s.color,
-    }, { merge: true });
+/**
+ * 都道府県の削除
+ */
+export async function deletePrefecture(prefectureId: string): Promise<void> {
+  await deleteDoc(doc(db, "prefectures", prefectureId));
+}
+
+/**
+ * 市区町村の保存（新規または更新）
+ */
+export async function saveMunicipality(municipality: Municipality): Promise<void> {
+  const ref = doc(db, "municipalities", municipality.id);
+  await setDoc(
+    ref,
+    {
+      name: municipality.name,
+      prefectureCode: municipality.prefectureCode,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 市区町村の削除
+ */
+export async function deleteMunicipality(municipalityId: string): Promise<void> {
+  await deleteDoc(doc(db, "municipalities", municipalityId));
+}
+
+export interface SeedOptions {
+  includeSections?: boolean;
+  includeRoles?: boolean;
+  includeInstruments?: boolean;
+  includePrefectures?: boolean;
+  includeMunicipalities?: boolean;
+  onProgress?: (message: string) => void;
+}
+
+export interface SeedResult {
+  sectionsCount: number;
+  rolesCount: number;
+  instrumentsCount: number;
+  prefecturesCount: number;
+  municipalitiesCount: number;
+}
+
+/**
+ * JSON初期マスタデータを Firestore に一括投入
+ * (パート、役職、楽器、都道府県、市区町村)
+ */
+export async function seedMasterData(options: SeedOptions = {}): Promise<SeedResult> {
+  const {
+    includeSections = true,
+    includeRoles = true,
+    includeInstruments = true,
+    includePrefectures = true,
+    includeMunicipalities = true,
+    onProgress,
+  } = options;
+
+  let sectionsCount = 0;
+  let rolesCount = 0;
+  let instrumentsCount = 0;
+  let prefecturesCount = 0;
+  let municipalitiesCount = 0;
+
+  // 1. sections 投入
+  if (includeSections) {
+    onProgress?.("パートマスタを登録中...");
+    const batch = writeBatch(db);
+    for (const s of DEFAULT_SECTIONS) {
+      const sRef = doc(db, "sections", s.id);
+      batch.set(
+        sRef,
+        {
+          name: s.name,
+          shortName: s.shortName,
+          order: s.order,
+          color: s.color,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    sectionsCount = DEFAULT_SECTIONS.length;
   }
 
-  // instruments 投入
-  for (const inst of DEFAULT_INSTRUMENTS) {
-    const instRef = doc(db, "instruments", inst.id);
-    batch.set(instRef, {
-      name: inst.name,
-      sectionId: inst.sectionId,
-      order: inst.order,
-    }, { merge: true });
+  // 2. roles 投入
+  if (includeRoles) {
+    onProgress?.("役職マスタを登録中...");
+    const batch = writeBatch(db);
+    for (const r of DEFAULT_ROLES) {
+      const rRef = doc(db, "roles", r.id);
+      batch.set(
+        rRef,
+        {
+          name: r.name,
+          description: r.description || "",
+          order: r.order,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    rolesCount = DEFAULT_ROLES.length;
   }
 
-  await batch.commit();
+  // 3. instruments 投入
+  if (includeInstruments) {
+    onProgress?.("楽器マスタを登録中...");
+    const batch = writeBatch(db);
+    for (const inst of DEFAULT_INSTRUMENTS) {
+      const instRef = doc(db, "instruments", inst.id);
+      batch.set(
+        instRef,
+        {
+          name: inst.name,
+          sectionId: inst.sectionId,
+          order: inst.order,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    instrumentsCount = DEFAULT_INSTRUMENTS.length;
+  }
+
+  // 4. prefectures 投入
+  if (includePrefectures) {
+    onProgress?.("都道府県マスタを登録中 (47件)...");
+    const batch = writeBatch(db);
+    for (const pref of DEFAULT_PREFECTURES) {
+      const prefRef = doc(db, "prefectures", pref.id);
+      batch.set(
+        prefRef,
+        {
+          name: pref.name,
+          order: pref.order,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    prefecturesCount = DEFAULT_PREFECTURES.length;
+  }
+
+  // 5. municipalities 投入 (チャンク分割: 400件単位)
+  if (includeMunicipalities) {
+    const chunkSize = 400;
+    const total = DEFAULT_MUNICIPALITIES.length;
+    const chunks: Municipality[][] = [];
+    for (let i = 0; i < total; i += chunkSize) {
+      chunks.push(DEFAULT_MUNICIPALITIES.slice(i, i + chunkSize));
+    }
+
+    for (let c = 0; c < chunks.length; c++) {
+      onProgress?.(
+        `市区町村マスタを登録中 (${c + 1}/${chunks.length} バッチ - 計${total}件)...`
+      );
+      const batch = writeBatch(db);
+      for (const mun of chunks[c]) {
+        const munRef = doc(db, "municipalities", mun.id);
+        batch.set(
+          munRef,
+          {
+            name: mun.name,
+            prefectureCode: mun.prefectureCode,
+          },
+          { merge: true }
+        );
+      }
+      await batch.commit();
+    }
+    municipalitiesCount = total;
+  }
 
   return {
-    sectionsCount: DEFAULT_SECTIONS.length,
-    instrumentsCount: DEFAULT_INSTRUMENTS.length,
+    sectionsCount,
+    rolesCount,
+    instrumentsCount,
+    prefecturesCount,
+    municipalitiesCount,
   };
 }
 
@@ -99,6 +296,17 @@ export async function getClientSections(): Promise<SectionDoc[]> {
   const snap = await getDocs(collection(db, "sections"));
   if (snap.empty) return [...DEFAULT_SECTIONS];
   const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as SectionDoc[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+
+/**
+ * クライアント側での最新役職一覧再取得
+ */
+export async function getClientRoles(): Promise<RoleDoc[]> {
+  const snap = await getDocs(collection(db, "roles"));
+  if (snap.empty) return [...DEFAULT_ROLES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as RoleDoc[];
   list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   return list;
 }
@@ -115,4 +323,46 @@ export async function getClientInstruments(): Promise<InstrumentDoc[]> {
     return (a.order ?? 999) - (b.order ?? 999);
   });
   return list;
+}
+
+/**
+ * クライアント側での最新都道府県一覧再取得
+ */
+export async function getClientPrefectures(): Promise<Prefecture[]> {
+  const snap = await getDocs(collection(db, "prefectures"));
+  if (snap.empty) return [...DEFAULT_PREFECTURES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Prefecture[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+
+/**
+ * クライアント側での指定都道府県の市区町村一覧取得
+ */
+export async function getClientMunicipalities(prefectureCode: string): Promise<Municipality[]> {
+  if (!prefectureCode) return [];
+  const q = query(
+    collection(db, "municipalities"),
+    where("prefectureCode", "==", prefectureCode)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) {
+    return DEFAULT_MUNICIPALITIES.filter((m) => m.prefectureCode === prefectureCode);
+  }
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Municipality[];
+  list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "ja"));
+  return list;
+}
+
+/**
+ * クライアント側での市区町村総件数取得
+ */
+export async function getClientMunicipalitiesTotalCount(): Promise<number> {
+  try {
+    const snap = await getCountFromServer(collection(db, "municipalities"));
+    return snap.data().count;
+  } catch (err) {
+    console.error("Failed to get municipalities count:", err);
+    return DEFAULT_MUNICIPALITIES.length;
+  }
 }

@@ -200,6 +200,29 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
   - **パート名称**: 英語表記を廃止し、すべて日本語表記（サックス、トランペット、トロンボーン、リズム、OB・OG / その他）に統一。
   - **氏名・ふりがな・旧学年/所属・電話番号・PayPay ID**: 不要のため廃止。
 
+### 3.6. マスタ管理 (`/master`)
+- **概要**:
+  - パート、役職、楽器、都道府県、市区町村のサークル活動の基盤となる全マスタデータを一元管理・編集できる管理画面。
+  - マスタ管理者（`isMasterAdmin`）またはシステム管理者（`isSystemAdmin`）のみが追加・編集・削除・初期データ投入を実行可能（一般部員は閲覧のみ）。
+- **タブ切り替え（モバイルファースト横スクロール設計）**:
+  - **パート (`sections`)**: ID、パート名、略称、表示色（カラーピッカー）、並び順
+  - **役職 (`roles`)**: ID、役職名、説明、並び順
+  - **楽器 (`instruments`)**: ID、楽器名、所属パート、並び順
+  - **都道府県 (`prefectures`)**: 都道府県コード（2桁）、都道府県名、並び順
+  - **市区町村 (`municipalities`)**: 市区町村コード（5桁）、市区町村名、所属都道府県（都道府県選択プルダウンおよびキーワード検索フィルター付き、全1,892件対応）
+- **初期データ管理 (`src/data/master/` JSON Single Source of Truth)**:
+  - サークル初期構築時およびリセット時用の初期マスタを JSON ファイルとして保管・管理：
+    - `sections.json`: 標準パート定義（5件）
+    - `roles.json`: 標準役職定義（5件）
+    - `instruments.json`: 標準ビッグバンド楽器定義（15件）
+    - `prefectures.json`: 全国47都道府県（47件）
+    - `municipalities.json`: 全国市区町村（1,892件）
+    - `grades.json`: 学年表記リスト（8件）
+  - `@/lib/firestore/constants.ts` はこれら JSON ファイルを直接インポートして定数エクスポートを行い、コードと初期データの完全同期を保証。
+- **全マスタ一括初期投入 (`seedMasterData`)**:
+  - 管理画面ヘッダーの「初期データ投入」ボタンより、上記 JSON に定義された全マスタ（パート・役職・楽器・都道府県・市区町村：計1,959件）を Firestore に一括投入可能。
+  - 市区町村データ（1,892件）は Firestore の `writeBatch` 上限（500件）を超えないよう400件単位でチャンク分割コミットを行い、処理中のプログレスメッセージ表示および監査ログ（`logs`）への記録を自動実行。
+
 ---
 
 ## 4. データモデル (Cloud Firestore)
@@ -210,6 +233,8 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |
 | `roles` | `id` (例: `1`) | `name`, `order`, `description` | 認証済部員 | `isMasterAdmin` |
+| `prefectures` | `id` (例: `38`) | `name`, `order` | 認証済部員 | `isMasterAdmin` |
+| `municipalities` | `id` (例: `38201`) | `name`, `prefectureCode` | 認証済部員 | `isMasterAdmin` |
 | `events` | 自動採番 | `title`, `attendanceType`, `date`, `candidateDates`, `placeName`, `prefectureId`, `municipalityId`, `website`, `googleMap`, `access`, `rentTimeRanges`, `isVenueReserved`, `schedule`, `dress`, `bring`, `rent`, `youtubeUrl`, `youtubeTimestamps`, `setlist`, `instrumentConfig`, `acceptStartDate`, `acceptEndDate` | 認証済部員 | `isEventAdmin` |
 | `eventAttendanceAnswers` | `{eventId}_{uid}` | `eventId`, `uid`, `status`, `comment` | 認証済部員 | 本人 / `isEventAdmin` |
 | `eventAdjustAnswers` | `{eventId}_{uid}` | `eventId`, `uid`, `answers` (`{ [date]: statusId }`), `comment` | 認証済部員 | 本人 / `isEventAdmin` |
