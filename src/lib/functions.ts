@@ -187,10 +187,49 @@ export async function writeLog({
       logData.errorDetail = {};
     }
 
+    // エラー時は自動的にブラウザコンソールにも明確に出力
+    if (status !== "success") {
+      console.error(
+        `[ErrorLog] action="${action}", dataId="${dataId}", user="${userName}(${uid})":`,
+        logData.errorDetail
+      );
+    }
+
     await setDoc(doc(db, colName, logId), logData);
   } catch (e) {
     console.error("Log failed", e);
   }
+}
+
+/**
+ * エラーログ記録ヘルパー
+ * コンソールへの詳細出力（console.error）と errorLogs コレクションへの保存を同時に実施
+ */
+export async function writeErrorLog({
+  action,
+  error,
+  dataId = null,
+  extra = {},
+}: {
+  action: string;
+  error: unknown;
+  dataId?: string | null;
+  extra?: Record<string, any>;
+}) {
+  const message = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+  console.error(`[Error] ${action} (dataId=${dataId}):`, error);
+
+  await writeLog({
+    dataId,
+    action,
+    status: "error",
+    errorDetail: {
+      message,
+      ...(stack ? { stack } : {}),
+      ...extra,
+    },
+  });
 }
 
 export async function archiveAndDeleteDoc(collectionName: string, docId: string) {

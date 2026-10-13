@@ -7,7 +7,7 @@ import { AnswerEditLayout } from "@/components/Layout/AnswerEditLayout";
 import { DisplayField } from "@/components/Form/DisplayField";
 import { Call, ScoreStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
-import { showDialog } from "@/lib/functions";
+import { showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
 import { getMyCallAnswer, saveCallAnswer } from "@/features/call/api/call-client-service";
 import styles from "./CallAnswer.module.css";
 
@@ -136,10 +136,29 @@ export function CallAnswerClient({ callData, callId, scoreStatuses }: Props) {
       }
     }
 
-    await saveCallAnswer(callId, uid, cleanAnswers);
-    await showDialog("回答を保存しました", true);
-    router.refresh();
-    router.push(`/call/confirm?callId=${callId}`);
+    showSpinner();
+    try {
+      await saveCallAnswer(callId, uid, cleanAnswers);
+      hideSpinner();
+      await writeLog({
+        dataId: callId,
+        action: `曲募集回答${mode === "edit" ? "修正" : "登録"}`,
+      });
+      await showDialog("回答を保存しました", true);
+      router.refresh();
+      showSpinner();
+      router.push(`/call/confirm?callId=${callId}`);
+    } catch (e) {
+      hideSpinner();
+      console.error("[CallAnswerClient] 回答保存エラー:", e);
+      await writeLog({
+        dataId: callId,
+        action: `曲募集回答${mode === "edit" ? "修正" : "登録"}`,
+        status: "error",
+        errorDetail: { message: (e as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
   };
 
   return (

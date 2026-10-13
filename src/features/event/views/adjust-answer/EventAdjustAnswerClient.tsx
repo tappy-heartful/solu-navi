@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -76,6 +76,7 @@ export function EventAdjustAnswerClient({ eventId, event, adjustStatuses }: Prop
       router.push(`/event/confirm?eventId=${eventId}`);
     } catch (e) {
       hideSpinner();
+      console.error("[EventAdjustAnswerClient] 日程調整回答保存エラー:", e);
       await writeLog({
         dataId: eventId,
         action: `イベント回答（調整）${isEdit ? "修正" : "登録"}`,

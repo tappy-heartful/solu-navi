@@ -95,6 +95,7 @@ export function VoteLinkEditClient({ vote, voteId }: Props) {
       router.push(`/vote/confirm?voteId=${voteId}`);
     } catch (e) {
       hideSpinner();
+      console.error("[VoteLinkEditClient] 音源リンク更新エラー:", e);
       await writeLog({
         dataId: voteId,
         action: "曲投票リンク更新",

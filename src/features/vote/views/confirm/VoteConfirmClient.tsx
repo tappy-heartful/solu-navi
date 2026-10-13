@@ -97,6 +97,7 @@ export function VoteConfirmClient({ voteData, voteId, voteAnswers, usersMap }: P
       router.push("/vote");
     } catch (e) {
       hideSpinner();
+      console.error("[VoteConfirmClient] 曲投票削除エラー:", e);
       await writeLog({
         dataId: voteId,
         action: "曲投票削除",
@@ -121,6 +122,7 @@ export function VoteConfirmClient({ voteData, voteId, voteAnswers, usersMap }: P
       router.refresh();
     } catch (e) {
       hideSpinner();
+      console.error("[VoteConfirmClient] 曲投票回答取消エラー:", e);
       await writeLog({
         dataId: voteId,
         action: "曲投票回答取消",

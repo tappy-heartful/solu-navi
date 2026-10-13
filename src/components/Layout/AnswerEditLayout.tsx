@@ -47,6 +47,7 @@ export const AnswerEditLayout = ({
       await writeLog({ dataId, action: `${featureName}${title}` });
     } catch (e) {
       hideSpinner();
+      console.error(`[AnswerEditLayout] ${featureName} ${title} エラー:`, e);
       await writeLog({
         dataId,
         action: `${featureName}${title}`,

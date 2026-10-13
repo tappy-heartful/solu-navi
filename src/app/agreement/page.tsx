@@ -2,19 +2,39 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileShield, faCheck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFileShield,
+  faCheck,
+  faHouse,
+  faArrowLeft,
+  faCircleCheck,
+} from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveUserDoc } from "@/lib/firestore";
 import { showSpinner, hideSpinner } from "@/components/Common/Spinner";
 import { showDialog } from "@/components/Common/CommonDialog";
+import { format, writeLog } from "@/lib/functions";
 import styles from "./agreement.module.css";
 
 export default function AgreementPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, userData, refreshUserData } = useAuth();
   const [agreed, setAgreed] = useState(false);
+
+  const isAlreadyAgreed = Boolean(userData?.agreedAt);
+  const agreedDate = userData?.agreedAt
+    ? typeof userData.agreedAt === "number"
+      ? new Date(userData.agreedAt)
+      : typeof (userData.agreedAt as { toDate?: () => Date }).toDate === "function"
+      ? (userData.agreedAt as { toDate: () => Date }).toDate()
+      : typeof (userData.agreedAt as { toMillis?: () => number }).toMillis === "function"
+      ? new Date((userData.agreedAt as { toMillis: () => number }).toMillis())
+      : null
+    : null;
+  const agreedDateStr = agreedDate ? format(agreedDate, "yyyy.MM.dd") : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,16 +51,27 @@ export default function AgreementPage() {
       await saveUserDoc(user.uid, {
         agreedAt: Date.now(),
       });
+      await refreshUserData();
       hideSpinner();
+      await writeLog({
+        dataId: user.uid,
+        action: "利用規約同意",
+      });
       await showDialog({
         title: "完了",
         message: "利用規約に同意しました。Solu Naviへようこそ！",
         type: "success",
       });
-      router.replace("/");
+      router.replace("/user/edit?initial=1");
     } catch (err: unknown) {
       hideSpinner();
-      console.error("Agreement error:", err);
+      console.error("[AgreementPage] 規約同意登録エラー:", err);
+      await writeLog({
+        dataId: user.uid,
+        action: "利用規約同意",
+        status: "error",
+        errorDetail: { message: err instanceof Error ? err.message : String(err) },
+      });
       await showDialog({
         title: "エラー",
         message: "登録に失敗しました。もう一度お試しください。",
@@ -51,6 +82,15 @@ export default function AgreementPage() {
 
   return (
     <div className={styles.agreementContainer || styles.container}>
+      {user && (
+        <div style={{ maxWidth: "36rem", width: "100%", margin: "0 auto" }}>
+          <Link href="/" prefetch={false} className={styles.topBackLink}>
+            <FontAwesomeIcon icon={faArrowLeft} />
+            <span>ホームに戻る</span>
+          </Link>
+        </div>
+      )}
+
       <div className={styles.agreementCard || styles.card}>
         <div className={styles.header}>
           <div className={styles.logoBadge}>
@@ -116,28 +156,47 @@ export default function AgreementPage() {
           </section>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkboxText}>
-              上記すべての利用規約を確認し、内容に同意します
-            </span>
-          </label>
+        {isAlreadyAgreed ? (
+          <div className={styles.agreedBox}>
+            <div className={styles.agreedBanner}>
+              <div className={styles.agreedBadge}>
+                <FontAwesomeIcon icon={faCircleCheck} className={styles.checkIcon} />
+                <span>利用規約に同意済みです</span>
+              </div>
+              {agreedDateStr && (
+                <span className={styles.agreedDate}>（同意日: {agreedDateStr}）</span>
+              )}
+            </div>
 
-          <button
-            type="submit"
-            className={styles.submitBtn}
-            disabled={!agreed}
-          >
-            <FontAwesomeIcon icon={faCheck} />
-            <span>同意して利用を開始する</span>
-          </button>
-        </form>
+            <Link href="/" prefetch={false} className={styles.backHomeBtn}>
+              <FontAwesomeIcon icon={faHouse} />
+              <span>ホームに戻る</span>
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkboxText}>
+                上記すべての利用規約を確認し、内容に同意します
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={!agreed}
+            >
+              <FontAwesomeIcon icon={faCheck} />
+              <span>同意して利用を開始する</span>
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

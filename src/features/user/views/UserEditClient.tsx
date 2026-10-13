@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { fetchUserById, updateUserProfile } from "../api/user-client-service";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
-import { getEnrollmentYearOptions, getGradeFromEnrollmentYear } from "@/lib/functions";
+import { getEnrollmentYearOptions, getGradeFromEnrollmentYear, writeLog } from "@/lib/functions";
 import { UserFormData } from "../types";
 import styles from "./UserEditClient.module.css";
 
@@ -190,6 +190,10 @@ export function UserEditClient() {
       });
 
       hideSpinner();
+      await writeLog({
+        dataId: targetUid,
+        action: "ユーザー情報編集",
+      });
       await showDialog({
         title: "完了",
         message: "プロフィールを保存しました。",
@@ -199,7 +203,13 @@ export function UserEditClient() {
       router.push(`/user/detail?uid=${targetUid}`);
     } catch (err: unknown) {
       hideSpinner();
-      console.error("Save profile error:", err);
+      console.error("[UserEditClient] プロフィール保存エラー:", err);
+      await writeLog({
+        dataId: targetUid,
+        action: "ユーザー情報編集",
+        status: "error",
+        errorDetail: { message: err instanceof Error ? err.message : String(err) },
+      });
       await showDialog({
         title: "エラー",
         message: "プロフィールの更新に失敗しました。",

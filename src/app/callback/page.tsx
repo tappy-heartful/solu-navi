@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { writeLog } from "@/lib/functions";
 import styles from "./callback.module.css";
 
 function CallbackContent() {
@@ -53,6 +54,12 @@ function CallbackContent() {
         router.replace(data.redirectAfterLogin || "/");
       } catch (err: unknown) {
         console.error("Callback error:", err);
+        await writeLog({
+          dataId: state || "oauth",
+          action: "LINEログインコールバック",
+          status: "error",
+          errorDetail: { message: err instanceof Error ? err.message : String(err) },
+        });
         setErrorMsg("通信エラーが発生しました。");
       }
     }

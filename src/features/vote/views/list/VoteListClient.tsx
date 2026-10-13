@@ -65,7 +65,7 @@ export function VoteListClient({ votes, participantCountMap }: Props) {
         });
         setAnsweredVoteIds(results);
       } catch (e) {
-        console.error("Failed to fetch vote answers", e);
+        console.error("[VoteListClient] 投票回答状況取得エラー:", e);
         await writeLog({
           dataId: uid || "unknown",
           action: "投票回答状況取得",

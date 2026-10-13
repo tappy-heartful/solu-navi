@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -67,6 +67,7 @@ export function EventAttendanceAnswerClient({ eventId, event, attendanceStatuses
       router.push(`/event/confirm?eventId=${eventId}`);
     } catch (e) {
       hideSpinner();
+      console.error("[EventAttendanceAnswerClient] 出欠回答保存エラー:", e);
       await writeLog({
         dataId: eventId,
         action: `イベント回答（出欠）${isEdit ? "修正" : "登録"}`,

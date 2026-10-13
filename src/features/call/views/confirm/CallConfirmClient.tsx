@@ -98,6 +98,7 @@ export function CallConfirmClient({
       router.push("/call");
     } catch (e) {
       hideSpinner();
+      console.error("[CallConfirmClient] 曲募集削除エラー:", e);
       await writeLog({
         dataId: callId,
         action: "曲募集削除",
@@ -122,6 +123,7 @@ export function CallConfirmClient({
       router.refresh();
     } catch (e) {
       hideSpinner();
+      console.error("[CallConfirmClient] 曲募集回答取消エラー:", e);
       await writeLog({
         dataId: callId,
         action: "曲募集回答取消",

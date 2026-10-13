@@ -307,6 +307,7 @@ export function EventEditClient({
       router.push(`/event/confirm?eventId=${newId}`);
     } catch (e) {
       hideSpinner();
+      console.error("[EventEditClient] イベント保存エラー:", e);
       await writeLog({
         dataId: eventId || "event",
         action: `イベント${isEdit ? "更新" : "登録"}`,

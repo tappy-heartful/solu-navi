@@ -304,6 +304,7 @@ export function VoteEditClient({ mode, voteId, initialVote, callData, callAnswer
       }
     } catch (e) {
       hideSpinner();
+      console.error("[VoteEditClient] 曲投票保存エラー:", e);
       await writeLog({
         dataId: voteId || "new",
         action: `曲投票${isEdit ? "更新" : "登録"}`,

@@ -139,6 +139,7 @@ export function MasterMaintenanceClient({
       router.refresh();
     } catch (err) {
       hideSpinner();
+      console.error("[MasterMaintenanceClient] パートマスタ保存エラー:", err);
       await writeLog({
         dataId: editingSection.id,
         action: `パートマスタ${isSectionNew ? "追加" : "更新"}`,
@@ -170,6 +171,7 @@ export function MasterMaintenanceClient({
       router.refresh();
     } catch (err) {
       hideSpinner();
+      console.error("[MasterMaintenanceClient] パートマスタ削除エラー:", err);
       await writeLog({
         dataId: sec.id,
         action: "パートマスタ削除",
@@ -237,6 +239,7 @@ export function MasterMaintenanceClient({
       router.refresh();
     } catch (err) {
       hideSpinner();
+      console.error("[MasterMaintenanceClient] 楽器マスタ保存エラー:", err);
       await writeLog({
         dataId: editingInstrument.id,
         action: `楽器マスタ${isInstrumentNew ? "追加" : "更新"}`,
@@ -266,6 +269,7 @@ export function MasterMaintenanceClient({
       router.refresh();
     } catch (err) {
       hideSpinner();
+      console.error("[MasterMaintenanceClient] 楽器マスタ削除エラー:", err);
       await writeLog({
         dataId: inst.id,
         action: "楽器マスタ削除",
@@ -306,6 +310,7 @@ export function MasterMaintenanceClient({
       router.refresh();
     } catch (err) {
       hideSpinner();
+      console.error("[MasterMaintenanceClient] マスタデータ初期投入エラー:", err);
       await writeLog({
         action: "マスタデータ初期投入",
         dataId: "seed",

@@ -80,6 +80,7 @@ export const AnswerConfirmLayout = ({
       router.push(afterDeletePath ?? basePath);
     } catch (e) {
       hideSpinner();
+      console.error(`[AnswerConfirmLayout] ${name}削除エラー:`, e);
       await writeLog({
         dataId,
         action: `${name}削除`,

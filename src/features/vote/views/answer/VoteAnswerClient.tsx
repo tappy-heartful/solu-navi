@@ -113,6 +113,7 @@ export function VoteAnswerClient({ vote, voteId }: Props) {
       router.push(`/vote/confirm?voteId=${voteId}`);
     } catch (e) {
       hideSpinner();
+      console.error("[VoteAnswerClient] 投票回答保存エラー:", e);
       await writeLog({
         dataId: voteId,
         action: `曲投票回答${isEdit ? "修正" : "登録"}`,

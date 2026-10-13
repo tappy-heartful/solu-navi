@@ -107,6 +107,7 @@ export function EditFormLayout<T extends Record<string, any>>({
       router.push(`${basePath}/confirm?${featureIdKey}=${finalId}`);
     } catch (error) {
       hideSpinner();
+      console.error(`[EditFormLayout] ${featureName} 保存エラー:`, error);
       const msg = error instanceof Error ? error.message : "";
       await writeLog({
         dataId: dataId || "new",

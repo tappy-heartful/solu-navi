@@ -42,12 +42,6 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    // 既に同意済みで /agreement にいる場合 -> ホームへ
-    if (pathname === "/agreement") {
-      router.replace("/");
-      return;
-    }
-
     // 3. 必須プロフィール入力チェック
     // 略称、役職、パート、入学年度、楽器が未入力なら /user/edit へ
     const isProfileComplete = Boolean(

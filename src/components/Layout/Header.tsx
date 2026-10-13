@@ -23,6 +23,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
 import styles from "./Header.module.css";
 import { DEFAULT_SECTIONS } from "../../lib/firestore/constants";
+import { writeLog } from "../../lib/functions";
 
 export function Header() {
   const { user, userData, logout } = useAuth();
@@ -145,7 +146,17 @@ export function Header() {
                       className={styles.smallLogoutBtn}
                       onClick={async () => {
                         closeDrawer();
-                        await logout();
+                        try {
+                          await logout();
+                        } catch (error) {
+                          console.error("[Header] ログアウトエラー:", error);
+                          await writeLog({
+                            dataId: user?.uid || "unknown",
+                            action: "ログアウト",
+                            status: "error",
+                            errorDetail: { message: (error as Error).message },
+                          });
+                        }
                       }}
                       title="ログアウト"
                     >

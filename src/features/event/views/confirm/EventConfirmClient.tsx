@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -122,6 +122,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
       router.push("/event");
     } catch (e) {
       hideSpinner();
+      console.error("[EventConfirmClient] イベント削除エラー:", e);
       await writeLog({
         dataId: eventId,
         action: "イベント削除",
@@ -150,6 +151,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
       router.refresh();
     } catch (e) {
       hideSpinner();
+      console.error("[EventConfirmClient] 回答取消エラー:", e);
       await writeLog({
         dataId: eventId,
         action: `イベント回答${isSchedule ? "（調整）" : "（出欠）"}取消`,
@@ -181,6 +183,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
       setRecordings((prev) => [...prev, newRec]);
     } catch (e) {
       hideSpinner();
+      console.error("[EventConfirmClient] 録音リンク追加エラー:", e);
       await writeLog({
         dataId: eventId,
         action: "イベント録音リンク追加",
@@ -209,6 +212,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
       setRecordings((prev) => prev.filter((r) => r.id !== rec.id));
     } catch (e) {
       hideSpinner();
+      console.error("[EventConfirmClient] 録音リンク削除エラー:", e);
       await writeLog({
         dataId: rec.id,
         action: "イベント録音リンク削除",

@@ -175,15 +175,15 @@ service cloud.firestore {
 
     // 監査ログ
     match /logs/{logId} {
-      allow create: if isAuthenticated();
+      allow create: if true;
       allow read: if isSystemAdmin();
     }
     match /accessLogs/{logId} {
-      allow create: if isAuthenticated();
+      allow create: if true;
       allow read: if isSystemAdmin();
     }
     match /errorLogs/{logId} {
-      allow create: if isAuthenticated();
+      allow create: if true;
       allow read: if isSystemAdmin();
     }
   }
