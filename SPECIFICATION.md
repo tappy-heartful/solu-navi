@@ -183,7 +183,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
   - **日程調整 (`schedule`)**: 複数の候補日に対する可否をマトリクス形式で回答。
 - **画面構成**:
   - 一覧: `/event` (日付順、都道府県/市区町村バッジ、出欠ステータス)
-  - 作成・編集: `/event/edit` (タイトル、日時/候補日、場所・Google Map・アクセス、施設利用時間、会場押さえ状況、セットリスト、楽器構成)
+  - 作成・編集: `/event/edit` (タイトル、日時/候補日、受付期間（streak-navi 準拠の同一行インライン横並び入力）、場所・Google Map・アクセス、施設利用時間、会場押さえ状況、セットリスト、楽器構成)
   - 詳細・確認: `/event/confirm?eventId=xxx` (出欠内訳・未回答者モーダル、日程調整マトリクス集計、録音・録画リンク追加/削除、YouTubeタイムスタンプ再生)
   - 出欠回答: `/event/attendance-answer?eventId=xxx`
   - 日程調整回答: `/event/adjust-answer?eventId=xxx`

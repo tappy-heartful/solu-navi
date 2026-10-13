@@ -429,14 +429,14 @@ export function EventEditClient({
             <div className={styles.dateRow}>
               <input
                 type="date"
-                className={styles.input}
+                className={styles.dateInput}
                 value={acceptStartDate}
                 onChange={(e) => setAcceptStartDate(e.target.value)}
               />
-              <span>～</span>
+              <span className={styles.dateSeparator}>～</span>
               <input
                 type="date"
-                className={styles.input}
+                className={styles.dateInput}
                 value={acceptEndDate}
                 onChange={(e) => setAcceptEndDate(e.target.value)}
               />
