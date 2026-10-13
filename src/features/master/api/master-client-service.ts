@@ -10,14 +10,29 @@ import {
   where,
   getCountFromServer,
 } from "firebase/firestore";
-import { SectionDoc, RoleDoc, InstrumentDoc, Prefecture, Municipality } from "@/lib/firestore/types";
+import {
+  SectionDoc,
+  RoleDoc,
+  InstrumentDoc,
+  Prefecture,
+  Municipality,
+  AttendanceStatus,
+  EventAdjustStatus,
+  Genre,
+  ScoreStatus,
+} from "@/lib/firestore/types";
 import {
   DEFAULT_SECTIONS,
   DEFAULT_ROLES,
   DEFAULT_INSTRUMENTS,
   DEFAULT_PREFECTURES,
   DEFAULT_MUNICIPALITIES,
+  DEFAULT_ATTENDANCE_STATUSES,
+  DEFAULT_EVENT_ADJUST_STATUSES,
+  DEFAULT_GENRES,
+  DEFAULT_SCORE_STATUSES,
 } from "@/lib/firestore/constants";
+
 
 /**
  * パート (セクション) の保存（新規または更新）
@@ -133,12 +148,105 @@ export async function deleteMunicipality(municipalityId: string): Promise<void> 
   await deleteDoc(doc(db, "municipalities", municipalityId));
 }
 
+/**
+ * 出欠ステータスの保存（新規または更新）
+ */
+export async function saveAttendanceStatus(status: AttendanceStatus): Promise<void> {
+  const ref = doc(db, "attendanceStatuses", status.id);
+  await setDoc(
+    ref,
+    {
+      name: status.name,
+      order: Number(status.order) || 0,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 出欠ステータスの削除
+ */
+export async function deleteAttendanceStatus(statusId: string): Promise<void> {
+  await deleteDoc(doc(db, "attendanceStatuses", statusId));
+}
+
+/**
+ * 日程調整ステータスの保存（新規または更新）
+ */
+export async function saveEventAdjustStatus(status: EventAdjustStatus): Promise<void> {
+  const ref = doc(db, "eventAdjustStatus", status.id);
+  await setDoc(
+    ref,
+    {
+      name: status.name,
+      description: status.description || "",
+      order: Number(status.order) || 0,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 日程調整ステータスの削除
+ */
+export async function deleteEventAdjustStatus(statusId: string): Promise<void> {
+  await deleteDoc(doc(db, "eventAdjustStatus", statusId));
+}
+
+/**
+ * 音楽ジャンルの保存（新規または更新）
+ */
+export async function saveGenre(genre: Genre): Promise<void> {
+  const ref = doc(db, "genres", genre.id);
+  await setDoc(
+    ref,
+    {
+      name: genre.name,
+      order: Number(genre.order) || 0,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 音楽ジャンルの削除
+ */
+export async function deleteGenre(genreId: string): Promise<void> {
+  await deleteDoc(doc(db, "genres", genreId));
+}
+
+/**
+ * 譜面状況の保存（新規または更新）
+ */
+export async function saveScoreStatus(status: ScoreStatus): Promise<void> {
+  const ref = doc(db, "scoreStatus", status.id);
+  await setDoc(
+    ref,
+    {
+      name: status.name,
+      order: Number(status.order) || 0,
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * 譜面状況の削除
+ */
+export async function deleteScoreStatus(statusId: string): Promise<void> {
+  await deleteDoc(doc(db, "scoreStatus", statusId));
+}
+
 export interface SeedOptions {
   includeSections?: boolean;
   includeRoles?: boolean;
   includeInstruments?: boolean;
   includePrefectures?: boolean;
   includeMunicipalities?: boolean;
+  includeAttendanceStatuses?: boolean;
+  includeEventAdjustStatuses?: boolean;
+  includeGenres?: boolean;
+  includeScoreStatuses?: boolean;
   onProgress?: (message: string) => void;
 }
 
@@ -148,7 +256,12 @@ export interface SeedResult {
   instrumentsCount: number;
   prefecturesCount: number;
   municipalitiesCount: number;
+  attendanceStatusesCount: number;
+  eventAdjustStatusesCount: number;
+  genresCount: number;
+  scoreStatusesCount: number;
 }
+
 
 /**
  * JSON初期マスタデータを Firestore に一括投入
@@ -161,6 +274,10 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
     includeInstruments = true,
     includePrefectures = true,
     includeMunicipalities = true,
+    includeAttendanceStatuses = true,
+    includeEventAdjustStatuses = true,
+    includeGenres = true,
+    includeScoreStatuses = true,
     onProgress,
   } = options;
 
@@ -169,6 +286,10 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
   let instrumentsCount = 0;
   let prefecturesCount = 0;
   let municipalitiesCount = 0;
+  let attendanceStatusesCount = 0;
+  let eventAdjustStatusesCount = 0;
+  let genresCount = 0;
+  let scoreStatusesCount = 0;
 
   // 1. sections 投入
   if (includeSections) {
@@ -280,12 +401,93 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
     municipalitiesCount = total;
   }
 
+  // 6. attendanceStatuses 投入
+  if (includeAttendanceStatuses) {
+    onProgress?.("出欠ステータスマスタを登録中...");
+    const batch = writeBatch(db);
+    for (const att of DEFAULT_ATTENDANCE_STATUSES) {
+      const attRef = doc(db, "attendanceStatuses", att.id);
+      batch.set(
+        attRef,
+        {
+          name: att.name,
+          order: att.order ?? 0,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    attendanceStatusesCount = DEFAULT_ATTENDANCE_STATUSES.length;
+  }
+
+  // 7. eventAdjustStatus 投入
+  if (includeEventAdjustStatuses) {
+    onProgress?.("日程調整ステータスマスタを登録中...");
+    const batch = writeBatch(db);
+    for (const adj of DEFAULT_EVENT_ADJUST_STATUSES) {
+      const adjRef = doc(db, "eventAdjustStatus", adj.id);
+      batch.set(
+        adjRef,
+        {
+          name: adj.name,
+          description: adj.description || "",
+          order: adj.order ?? 0,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    eventAdjustStatusesCount = DEFAULT_EVENT_ADJUST_STATUSES.length;
+  }
+
+  // 8. genres 投入
+  if (includeGenres) {
+    onProgress?.("ジャンルマスタを登録中...");
+    const batch = writeBatch(db);
+    for (const gen of DEFAULT_GENRES) {
+      const genRef = doc(db, "genres", gen.id);
+      batch.set(
+        genRef,
+        {
+          name: gen.name,
+          order: gen.order ?? 0,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    genresCount = DEFAULT_GENRES.length;
+  }
+
+  // 9. scoreStatus 投入
+  if (includeScoreStatuses) {
+    onProgress?.("譜面状況マスタを登録中...");
+    const batch = writeBatch(db);
+    for (const sc of DEFAULT_SCORE_STATUSES) {
+      const scRef = doc(db, "scoreStatus", sc.id);
+      batch.set(
+        scRef,
+        {
+          name: sc.name,
+          order: sc.order ?? 0,
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    scoreStatusesCount = DEFAULT_SCORE_STATUSES.length;
+  }
+
   return {
     sectionsCount,
     rolesCount,
     instrumentsCount,
     prefecturesCount,
     municipalitiesCount,
+    attendanceStatusesCount,
+    eventAdjustStatusesCount,
+    genresCount,
+    scoreStatusesCount,
   };
 }
 
@@ -366,3 +568,48 @@ export async function getClientMunicipalitiesTotalCount(): Promise<number> {
     return DEFAULT_MUNICIPALITIES.length;
   }
 }
+
+/**
+ * クライアント側での出欠ステータス一覧取得
+ */
+export async function getClientAttendanceStatuses(): Promise<AttendanceStatus[]> {
+  const snap = await getDocs(collection(db, "attendanceStatuses"));
+  if (snap.empty) return [...DEFAULT_ATTENDANCE_STATUSES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as AttendanceStatus[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+
+/**
+ * クライアント側での日程調整ステータス一覧取得
+ */
+export async function getClientEventAdjustStatuses(): Promise<EventAdjustStatus[]> {
+  const snap = await getDocs(collection(db, "eventAdjustStatus"));
+  if (snap.empty) return [...DEFAULT_EVENT_ADJUST_STATUSES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as EventAdjustStatus[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+
+/**
+ * クライアント側でのジャンル一覧取得
+ */
+export async function getClientGenres(): Promise<Genre[]> {
+  const snap = await getDocs(collection(db, "genres"));
+  if (snap.empty) return [...DEFAULT_GENRES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Genre[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+
+/**
+ * クライアント側での譜面状況一覧取得
+ */
+export async function getClientScoreStatuses(): Promise<ScoreStatus[]> {
+  const snap = await getDocs(collection(db, "scoreStatus"));
+  if (snap.empty) return [...DEFAULT_SCORE_STATUSES];
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as ScoreStatus[];
+  list.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return list;
+}
+

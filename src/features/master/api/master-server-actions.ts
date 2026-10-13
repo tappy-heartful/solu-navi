@@ -1,12 +1,25 @@
 import "server-only";
 import { adminDb } from "@/lib/firebase-admin";
-import { SectionDoc, RoleDoc, InstrumentDoc, Prefecture } from "@/lib/firestore/types";
+import {
+  SectionDoc,
+  RoleDoc,
+  InstrumentDoc,
+  Prefecture,
+  AttendanceStatus,
+  EventAdjustStatus,
+  Genre,
+  ScoreStatus,
+} from "@/lib/firestore/types";
 import {
   DEFAULT_SECTIONS,
   DEFAULT_ROLES,
   DEFAULT_INSTRUMENTS,
   DEFAULT_PREFECTURES,
   DEFAULT_MUNICIPALITIES,
+  DEFAULT_ATTENDANCE_STATUSES,
+  DEFAULT_EVENT_ADJUST_STATUSES,
+  DEFAULT_GENRES,
+  DEFAULT_SCORE_STATUSES,
 } from "@/lib/firestore/constants";
 import { toPlainObject } from "@/lib/firestore/utils";
 
@@ -17,11 +30,20 @@ export interface MasterPageData {
   prefectures: Prefecture[];
   prefecturesCount: number;
   municipalitiesCount: number;
+  attendanceStatuses: AttendanceStatus[];
+  eventAdjustStatuses: EventAdjustStatus[];
+  genres: Genre[];
+  scoreStatuses: ScoreStatus[];
   isSectionsFromDefault: boolean;
   isRolesFromDefault: boolean;
   isInstrumentsFromDefault: boolean;
   isPrefecturesFromDefault: boolean;
+  isAttendanceStatusesFromDefault: boolean;
+  isEventAdjustStatusesFromDefault: boolean;
+  isGenresFromDefault: boolean;
+  isScoreStatusesFromDefault: boolean;
 }
+
 
 /**
  * サーバー側でパート、役職、楽器、都道府県、市区町村件数を取得
@@ -127,6 +149,90 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
     municipalitiesCount = DEFAULT_MUNICIPALITIES.length;
   }
 
+  // 5. attendanceStatuses
+  let attendanceStatuses: AttendanceStatus[] = [];
+  let isAttendanceStatusesFromDefault = false;
+  try {
+    const snap = await adminDb.collection("attendanceStatuses").get();
+    if (!snap.empty) {
+      attendanceStatuses = snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as AttendanceStatus[];
+    } else {
+      attendanceStatuses = [...DEFAULT_ATTENDANCE_STATUSES];
+      isAttendanceStatusesFromDefault = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch attendanceStatuses:", err);
+    attendanceStatuses = [...DEFAULT_ATTENDANCE_STATUSES];
+    isAttendanceStatusesFromDefault = true;
+  }
+  attendanceStatuses.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+  // 6. eventAdjustStatus
+  let eventAdjustStatuses: EventAdjustStatus[] = [];
+  let isEventAdjustStatusesFromDefault = false;
+  try {
+    const snap = await adminDb.collection("eventAdjustStatus").get();
+    if (!snap.empty) {
+      eventAdjustStatuses = snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as EventAdjustStatus[];
+    } else {
+      eventAdjustStatuses = [...DEFAULT_EVENT_ADJUST_STATUSES];
+      isEventAdjustStatusesFromDefault = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch eventAdjustStatus:", err);
+    eventAdjustStatuses = [...DEFAULT_EVENT_ADJUST_STATUSES];
+    isEventAdjustStatusesFromDefault = true;
+  }
+  eventAdjustStatuses.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+  // 7. genres
+  let genres: Genre[] = [];
+  let isGenresFromDefault = false;
+  try {
+    const snap = await adminDb.collection("genres").get();
+    if (!snap.empty) {
+      genres = snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as Genre[];
+    } else {
+      genres = [...DEFAULT_GENRES];
+      isGenresFromDefault = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch genres:", err);
+    genres = [...DEFAULT_GENRES];
+    isGenresFromDefault = true;
+  }
+  genres.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+  // 8. scoreStatus
+  let scoreStatuses: ScoreStatus[] = [];
+  let isScoreStatusesFromDefault = false;
+  try {
+    const snap = await adminDb.collection("scoreStatus").get();
+    if (!snap.empty) {
+      scoreStatuses = snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as ScoreStatus[];
+    } else {
+      scoreStatuses = [...DEFAULT_SCORE_STATUSES];
+      isScoreStatusesFromDefault = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch scoreStatus:", err);
+    scoreStatuses = [...DEFAULT_SCORE_STATUSES];
+    isScoreStatusesFromDefault = true;
+  }
+  scoreStatuses.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
   return {
     sections,
     roles,
@@ -134,9 +240,18 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
     prefectures,
     prefecturesCount: prefectures.length,
     municipalitiesCount,
+    attendanceStatuses,
+    eventAdjustStatuses,
+    genres,
+    scoreStatuses,
     isSectionsFromDefault,
     isRolesFromDefault,
     isInstrumentsFromDefault,
     isPrefecturesFromDefault,
+    isAttendanceStatusesFromDefault,
+    isEventAdjustStatusesFromDefault,
+    isGenresFromDefault,
+    isScoreStatusesFromDefault,
   };
 }
+

@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { BackNavigation } from "@/components/Common/BackNavigation";
 import { Modal } from "@/components/Modal";
-import { SectionDoc, RoleDoc, InstrumentDoc, Prefecture, Municipality } from "@/lib/firestore/types";
+import {
+  SectionDoc,
+  RoleDoc,
+  InstrumentDoc,
+  Prefecture,
+  Municipality,
+  AttendanceStatus,
+  EventAdjustStatus,
+  Genre,
+  ScoreStatus,
+} from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import {
@@ -25,6 +35,14 @@ import {
   deletePrefecture,
   saveMunicipality,
   deleteMunicipality,
+  saveAttendanceStatus,
+  deleteAttendanceStatus,
+  saveEventAdjustStatus,
+  deleteEventAdjustStatus,
+  saveGenre,
+  deleteGenre,
+  saveScoreStatus,
+  deleteScoreStatus,
   seedMasterData,
   getClientSections,
   getClientRoles,
@@ -32,6 +50,10 @@ import {
   getClientPrefectures,
   getClientMunicipalities,
   getClientMunicipalitiesTotalCount,
+  getClientAttendanceStatuses,
+  getClientEventAdjustStatuses,
+  getClientGenres,
+  getClientScoreStatuses,
 } from "@/features/master/api/master-client-service";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -49,6 +71,10 @@ import {
   faLocationDot,
   faBuilding,
   faMagnifyingGlass,
+  faUserCheck,
+  faCalendarDays,
+  faMusic,
+  faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MasterMaintenance.module.css";
 
@@ -59,13 +85,30 @@ type Props = {
   initialPrefectures?: Prefecture[];
   initialPrefecturesCount?: number;
   initialMunicipalitiesCount?: number;
+  initialAttendanceStatuses?: AttendanceStatus[];
+  initialEventAdjustStatuses?: EventAdjustStatus[];
+  initialGenres?: Genre[];
+  initialScoreStatuses?: ScoreStatus[];
   isSectionsFromDefault: boolean;
   isRolesFromDefault?: boolean;
   isInstrumentsFromDefault: boolean;
   isPrefecturesFromDefault?: boolean;
+  isAttendanceStatusesFromDefault?: boolean;
+  isEventAdjustStatusesFromDefault?: boolean;
+  isGenresFromDefault?: boolean;
+  isScoreStatusesFromDefault?: boolean;
 };
 
-type TabType = "sections" | "roles" | "instruments" | "prefectures" | "municipalities";
+type TabType =
+  | "sections"
+  | "roles"
+  | "instruments"
+  | "attendance"
+  | "adjust"
+  | "genres"
+  | "scoreStatus"
+  | "prefectures"
+  | "municipalities";
 
 export function MasterMaintenanceClient({
   initialSections,
@@ -74,10 +117,18 @@ export function MasterMaintenanceClient({
   initialPrefectures = [],
   initialPrefecturesCount = 0,
   initialMunicipalitiesCount = 0,
+  initialAttendanceStatuses = [],
+  initialEventAdjustStatuses = [],
+  initialGenres = [],
+  initialScoreStatuses = [],
   isSectionsFromDefault,
   isRolesFromDefault,
   isInstrumentsFromDefault,
   isPrefecturesFromDefault,
+  isAttendanceStatusesFromDefault,
+  isEventAdjustStatusesFromDefault,
+  isGenresFromDefault,
+  isScoreStatusesFromDefault,
 }: Props) {
   const router = useRouter();
   const { userData } = useAuth();
@@ -92,11 +143,35 @@ export function MasterMaintenanceClient({
   const [instruments, setInstruments] = useState<InstrumentDoc[]>(initialInstruments);
   const [prefectures, setPrefectures] = useState<Prefecture[]>(initialPrefectures);
   const [municipalitiesCount, setMunicipalitiesCount] = useState<number>(initialMunicipalitiesCount);
+  const [attendanceStatuses, setAttendanceStatuses] = useState<AttendanceStatus[]>(initialAttendanceStatuses);
+  const [eventAdjustStatuses, setEventAdjustStatuses] = useState<EventAdjustStatus[]>(initialEventAdjustStatuses);
+  const [genres, setGenres] = useState<Genre[]>(initialGenres);
+  const [scoreStatuses, setScoreStatuses] = useState<ScoreStatus[]>(initialScoreStatuses);
 
   // 役職編集・作成モーダル用
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Partial<RoleDoc> | null>(null);
   const [isRoleNew, setIsRoleNew] = useState(false);
+
+  // 出欠ステータス編集・作成モーダル用
+  const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);
+  const [editingAttendance, setEditingAttendance] = useState<Partial<AttendanceStatus> | null>(null);
+  const [isAttendanceNew, setIsAttendanceNew] = useState(false);
+
+  // 日程調整ステータス編集・作成モーダル用
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [editingAdjust, setEditingAdjust] = useState<Partial<EventAdjustStatus> | null>(null);
+  const [isAdjustNew, setIsAdjustNew] = useState(false);
+
+  // ジャンル編集・作成モーダル用
+  const [genreModalOpen, setGenreModalOpen] = useState(false);
+  const [editingGenre, setEditingGenre] = useState<Partial<Genre> | null>(null);
+  const [isGenreNew, setIsGenreNew] = useState(false);
+
+  // 譜面状況編集・作成モーダル用
+  const [scoreStatusModalOpen, setScoreStatusModalOpen] = useState(false);
+  const [editingScoreStatus, setEditingScoreStatus] = useState<Partial<ScoreStatus> | null>(null);
+  const [isScoreStatusNew, setIsScoreStatusNew] = useState(false);
 
   // 都道府県編集・作成モーダル用
   const [prefectureModalOpen, setPrefectureModalOpen] = useState(false);
@@ -121,6 +196,7 @@ export function MasterMaintenanceClient({
   const [instrumentModalOpen, setInstrumentModalOpen] = useState(false);
   const [editingInstrument, setEditingInstrument] = useState<Partial<InstrumentDoc> | null>(null);
   const [isInstrumentNew, setIsInstrumentNew] = useState(false);
+
 
   useEffect(() => {
     setBreadcrumbs([
@@ -640,12 +716,385 @@ export function MasterMaintenanceClient({
     }
   };
 
+  // ---- 出欠ステータス (AttendanceStatus) ハンドラ ----
+
+  const handleOpenAddAttendance = () => {
+    if (!canEdit) return;
+    const nextOrder = attendanceStatuses.length > 0 ? Math.max(...attendanceStatuses.map((a) => a.order || 0)) + 1 : 1;
+    setEditingAttendance({
+      id: String(nextOrder),
+      name: "",
+      order: nextOrder,
+    });
+    setIsAttendanceNew(true);
+    setAttendanceModalOpen(true);
+  };
+
+  const handleOpenEditAttendance = (att: AttendanceStatus) => {
+    if (!canEdit) return;
+    setEditingAttendance({ ...att });
+    setIsAttendanceNew(false);
+    setAttendanceModalOpen(true);
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!canEdit || !editingAttendance) return;
+    if (!editingAttendance.id?.trim()) {
+      await showDialog("ステータスIDを入力してください", true);
+      return;
+    }
+    if (!editingAttendance.name?.trim()) {
+      await showDialog("ステータス名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `出欠ステータス「${editingAttendance.name}」を${isAttendanceNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setAttendanceModalOpen(false);
+    showSpinner();
+    try {
+      await saveAttendanceStatus(editingAttendance as AttendanceStatus);
+      await writeLog({
+        dataId: editingAttendance.id,
+        action: `出欠ステータスマスタ${isAttendanceNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientAttendanceStatuses();
+      setAttendanceStatuses(updated);
+      hideSpinner();
+      await showDialog(`出欠ステータスを${isAttendanceNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 出欠ステータス保存エラー:", err);
+      await writeLog({
+        dataId: editingAttendance.id,
+        action: `出欠ステータスマスタ${isAttendanceNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteAttendance = async (att: AttendanceStatus) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`出欠ステータス「${att.name}」を削除しますか？\n※既存の出欠回答に影響する可能性があります。`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteAttendanceStatus(att.id);
+      await writeLog({
+        dataId: att.id,
+        action: "出欠ステータスマスタ削除",
+      });
+      const updated = await getClientAttendanceStatuses();
+      setAttendanceStatuses(updated);
+      hideSpinner();
+      await showDialog("出欠ステータスを削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 出欠ステータス削除エラー:", err);
+      await writeLog({
+        dataId: att.id,
+        action: "出欠ステータスマスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
+  // ---- 日程調整ステータス (EventAdjustStatus) ハンドラ ----
+
+  const handleOpenAddAdjust = () => {
+    if (!canEdit) return;
+    const nextOrder = eventAdjustStatuses.length > 0 ? Math.max(...eventAdjustStatuses.map((a) => a.order || 0)) + 1 : 1;
+    setEditingAdjust({
+      id: String(nextOrder),
+      name: "",
+      description: "",
+      order: nextOrder,
+    });
+    setIsAdjustNew(true);
+    setAdjustModalOpen(true);
+  };
+
+  const handleOpenEditAdjust = (adj: EventAdjustStatus) => {
+    if (!canEdit) return;
+    setEditingAdjust({ ...adj });
+    setIsAdjustNew(false);
+    setAdjustModalOpen(true);
+  };
+
+  const handleSaveAdjust = async () => {
+    if (!canEdit || !editingAdjust) return;
+    if (!editingAdjust.id?.trim()) {
+      await showDialog("ステータスIDを入力してください", true);
+      return;
+    }
+    if (!editingAdjust.name?.trim()) {
+      await showDialog("記号/ステータス名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `日程調整ステータス「${editingAdjust.name}」を${isAdjustNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setAdjustModalOpen(false);
+    showSpinner();
+    try {
+      await saveEventAdjustStatus(editingAdjust as EventAdjustStatus);
+      await writeLog({
+        dataId: editingAdjust.id,
+        action: `日程調整ステータスマスタ${isAdjustNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientEventAdjustStatuses();
+      setEventAdjustStatuses(updated);
+      hideSpinner();
+      await showDialog(`日程調整ステータスを${isAdjustNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 日程調整ステータス保存エラー:", err);
+      await writeLog({
+        dataId: editingAdjust.id,
+        action: `日程調整ステータスマスタ${isAdjustNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteAdjust = async (adj: EventAdjustStatus) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`日程調整ステータス「${adj.name}」を削除しますか？\n※既存の日程回答に影響する可能性があります。`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteEventAdjustStatus(adj.id);
+      await writeLog({
+        dataId: adj.id,
+        action: "日程調整ステータスマスタ削除",
+      });
+      const updated = await getClientEventAdjustStatuses();
+      setEventAdjustStatuses(updated);
+      hideSpinner();
+      await showDialog("日程調整ステータスを削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 日程調整ステータス削除エラー:", err);
+      await writeLog({
+        dataId: adj.id,
+        action: "日程調整ステータスマスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
+  // ---- 音楽ジャンル (Genre) ハンドラ ----
+
+  const handleOpenAddGenre = () => {
+    if (!canEdit) return;
+    const nextOrder = genres.length > 0 ? Math.max(...genres.map((g) => g.order || 0)) + 1 : 1;
+    setEditingGenre({
+      id: String(nextOrder),
+      name: "",
+      order: nextOrder,
+    });
+    setIsGenreNew(true);
+    setGenreModalOpen(true);
+  };
+
+  const handleOpenEditGenre = (gen: Genre) => {
+    if (!canEdit) return;
+    setEditingGenre({ ...gen });
+    setIsGenreNew(false);
+    setGenreModalOpen(true);
+  };
+
+  const handleSaveGenre = async () => {
+    if (!canEdit || !editingGenre) return;
+    if (!editingGenre.id?.trim()) {
+      await showDialog("ジャンルIDを入力してください", true);
+      return;
+    }
+    if (!editingGenre.name?.trim()) {
+      await showDialog("ジャンル名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `ジャンル「${editingGenre.name}」を${isGenreNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setGenreModalOpen(false);
+    showSpinner();
+    try {
+      await saveGenre(editingGenre as Genre);
+      await writeLog({
+        dataId: editingGenre.id,
+        action: `ジャンルマスタ${isGenreNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientGenres();
+      setGenres(updated);
+      hideSpinner();
+      await showDialog(`ジャンルを${isGenreNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] ジャンルマスタ保存エラー:", err);
+      await writeLog({
+        dataId: editingGenre.id,
+        action: `ジャンルマスタ${isGenreNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteGenre = async (gen: Genre) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`ジャンル「${gen.name}」を削除しますか？\n※楽譜や曲募集のカテゴリ参照に影響する可能性があります。`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteGenre(gen.id);
+      await writeLog({
+        dataId: gen.id,
+        action: "ジャンルマスタ削除",
+      });
+      const updated = await getClientGenres();
+      setGenres(updated);
+      hideSpinner();
+      await showDialog("ジャンルを削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] ジャンルマスタ削除エラー:", err);
+      await writeLog({
+        dataId: gen.id,
+        action: "ジャンルマスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
+  // ---- 譜面状況 (ScoreStatus) ハンドラ ----
+
+  const handleOpenAddScoreStatus = () => {
+    if (!canEdit) return;
+    const nextOrder = scoreStatuses.length > 0 ? Math.max(...scoreStatuses.map((s) => s.order || 0)) + 1 : 1;
+    setEditingScoreStatus({
+      id: String(nextOrder),
+      name: "",
+      order: nextOrder,
+    });
+    setIsScoreStatusNew(true);
+    setScoreStatusModalOpen(true);
+  };
+
+  const handleOpenEditScoreStatus = (sc: ScoreStatus) => {
+    if (!canEdit) return;
+    setEditingScoreStatus({ ...sc });
+    setIsScoreStatusNew(false);
+    setScoreStatusModalOpen(true);
+  };
+
+  const handleSaveScoreStatus = async () => {
+    if (!canEdit || !editingScoreStatus) return;
+    if (!editingScoreStatus.id?.trim()) {
+      await showDialog("状況IDを入力してください", true);
+      return;
+    }
+    if (!editingScoreStatus.name?.trim()) {
+      await showDialog("譜面状況名を入力してください", true);
+      return;
+    }
+
+    const confirmed = await showDialog(
+      `譜面状況「${editingScoreStatus.name}」を${isScoreStatusNew ? "追加" : "更新"}しますか？`
+    );
+    if (!confirmed) return;
+
+    setScoreStatusModalOpen(false);
+    showSpinner();
+    try {
+      await saveScoreStatus(editingScoreStatus as ScoreStatus);
+      await writeLog({
+        dataId: editingScoreStatus.id,
+        action: `譜面状況マスタ${isScoreStatusNew ? "追加" : "更新"}`,
+      });
+      const updated = await getClientScoreStatuses();
+      setScoreStatuses(updated);
+      hideSpinner();
+      await showDialog(`譜面状況を${isScoreStatusNew ? "追加" : "更新"}しました`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 譜面状況マスタ保存エラー:", err);
+      await writeLog({
+        dataId: editingScoreStatus.id,
+        action: `譜面状況マスタ${isScoreStatusNew ? "追加" : "更新"}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleDeleteScoreStatus = async (sc: ScoreStatus) => {
+    if (!canEdit) return;
+    const confirmed = await showDialog(`譜面状況「${sc.name}」を削除しますか？\n※既存の曲募集回答に影響する可能性があります。`);
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await deleteScoreStatus(sc.id);
+      await writeLog({
+        dataId: sc.id,
+        action: "譜面状況マスタ削除",
+      });
+      const updated = await getClientScoreStatuses();
+      setScoreStatuses(updated);
+      hideSpinner();
+      await showDialog("譜面状況を削除しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] 譜面状況マスタ削除エラー:", err);
+      await writeLog({
+        dataId: sc.id,
+        action: "譜面状況マスタ削除",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("削除に失敗しました", true);
+    }
+  };
+
   // ---- 初期マスタシード投入 ----
 
   const handleSeed = async () => {
     if (!canEdit) return;
     const confirmed = await showDialog(
-      "全マスタデータ（パート、役職、楽器、都道府県、市区町村）を Firestore に一括登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）"
+      "全マスタデータ（パート、役職、楽器、出欠、日程調整、ジャンル、譜面状況、都道府県、市区町村）を Firestore に一括登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）"
     );
     if (!confirmed) return;
 
@@ -661,18 +1110,36 @@ export function MasterMaintenanceClient({
         action: "マスタデータ一括初期投入",
         dataId: "seed-all",
       });
-      const [newSecs, newRoles, newInsts, newPrefs, newMunCount] = await Promise.all([
+      const [
+        newSecs,
+        newRoles,
+        newInsts,
+        newPrefs,
+        newMunCount,
+        newAtts,
+        newAdjs,
+        newGenres,
+        newScoreStatuses,
+      ] = await Promise.all([
         getClientSections(),
         getClientRoles(),
         getClientInstruments(),
         getClientPrefectures(),
         getClientMunicipalitiesTotalCount(),
+        getClientAttendanceStatuses(),
+        getClientEventAdjustStatuses(),
+        getClientGenres(),
+        getClientScoreStatuses(),
       ]);
       setSections(newSecs);
       setRoles(newRoles);
       setInstruments(newInsts);
       setPrefectures(newPrefs);
       setMunicipalitiesCount(newMunCount);
+      setAttendanceStatuses(newAtts);
+      setEventAdjustStatuses(newAdjs);
+      setGenres(newGenres);
+      setScoreStatuses(newScoreStatuses);
 
       if (selectedPrefectureCode) {
         const updatedMuns = await getClientMunicipalities(selectedPrefectureCode);
@@ -681,7 +1148,7 @@ export function MasterMaintenanceClient({
 
       hideSpinner();
       await showDialog(
-        `初期マスタを一括登録しました。\n・パート: ${res.sectionsCount}件\n・役職: ${res.rolesCount}件\n・楽器: ${res.instrumentsCount}件\n・都道府県: ${res.prefecturesCount}件\n・市区町村: ${res.municipalitiesCount}件`,
+        `初期マスタを一括登録しました。\n・パート: ${res.sectionsCount}件\n・役職: ${res.rolesCount}件\n・楽器: ${res.instrumentsCount}件\n・出欠: ${res.attendanceStatusesCount}件\n・日程調整: ${res.eventAdjustStatusesCount}件\n・ジャンル: ${res.genresCount}件\n・譜面状況: ${res.scoreStatusesCount}件\n・都道府県: ${res.prefecturesCount}件\n・市区町村: ${res.municipalitiesCount}件`,
         true
       );
       router.refresh();
@@ -777,6 +1244,42 @@ export function MasterMaintenanceClient({
                     <FontAwesomeIcon icon={faPlus} /> 楽器追加
                   </button>
                 )}
+                {currentTab === "attendance" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddAttendance}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 出欠ステータス追加
+                  </button>
+                )}
+                {currentTab === "adjust" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddAdjust}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 日程調整ステータス追加
+                  </button>
+                )}
+                {currentTab === "genres" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddGenre}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> ジャンル追加
+                  </button>
+                )}
+                {currentTab === "scoreStatus" && (
+                  <button
+                    type="button"
+                    className={styles.btnPrimary}
+                    onClick={handleOpenAddScoreStatus}
+                  >
+                    <FontAwesomeIcon icon={faPlus} /> 譜面状況追加
+                  </button>
+                )}
                 {currentTab === "prefectures" && (
                   <button
                     type="button"
@@ -831,6 +1334,42 @@ export function MasterMaintenanceClient({
           </button>
           <button
             type="button"
+            className={`${styles.tabItem} ${currentTab === "attendance" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("attendance")}
+          >
+            <FontAwesomeIcon icon={faUserCheck} />
+            出欠
+            <span className={styles.tabBadge}>{attendanceStatuses.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabItem} ${currentTab === "adjust" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("adjust")}
+          >
+            <FontAwesomeIcon icon={faCalendarDays} />
+            日程調整
+            <span className={styles.tabBadge}>{eventAdjustStatuses.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabItem} ${currentTab === "genres" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("genres")}
+          >
+            <FontAwesomeIcon icon={faMusic} />
+            ジャンル
+            <span className={styles.tabBadge}>{genres.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabItem} ${currentTab === "scoreStatus" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("scoreStatus")}
+          >
+            <FontAwesomeIcon icon={faFileLines} />
+            譜面状況
+            <span className={styles.tabBadge}>{scoreStatuses.length}</span>
+          </button>
+          <button
+            type="button"
             className={`${styles.tabItem} ${currentTab === "prefectures" ? styles.tabItemActive : ""}`}
             onClick={() => setCurrentTab("prefectures")}
           >
@@ -848,6 +1387,7 @@ export function MasterMaintenanceClient({
             <span className={styles.tabBadge}>{municipalitiesCount}</span>
           </button>
         </div>
+
 
         {/* タブコンテンツ: パート一覧 */}
         {currentTab === "sections" && (
@@ -1090,8 +1630,297 @@ export function MasterMaintenanceClient({
           </div>
         )}
 
+        {/* タブコンテンツ: 出欠ステータス一覧 */}
+        {currentTab === "attendance" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>出欠ステータス一覧（全{attendanceStatuses.length}件）</h2>
+            </div>
+            {attendanceStatuses.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されている出欠ステータスはありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "80px", minWidth: "80px" }}>ID</th>
+                      <th style={{ minWidth: "160px" }}>ステータス名</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceStatuses.map((att) => (
+                      <tr key={att.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {att.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{att.name}</strong>
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {att.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditAttendance(att)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteAttendance(att)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: 日程調整ステータス一覧 */}
+        {currentTab === "adjust" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>日程調整ステータス一覧（全{eventAdjustStatuses.length}件）</h2>
+            </div>
+            {eventAdjustStatuses.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されている日程調整ステータスはありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "80px", minWidth: "80px" }}>ID</th>
+                      <th style={{ width: "120px", minWidth: "120px" }}>記号 / 名称</th>
+                      <th style={{ minWidth: "180px" }}>説明</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {eventAdjustStatuses.map((adj) => (
+                      <tr key={adj.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {adj.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong style={{ fontSize: "1.1rem" }}>{adj.name}</strong>
+                        </td>
+                        <td style={{ color: "#64748b" }}>
+                          {adj.description || "-"}
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {adj.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditAdjust(adj)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteAdjust(adj)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: ジャンル一覧 */}
+        {currentTab === "genres" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>ジャンル一覧（全{genres.length}件）</h2>
+            </div>
+            {genres.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されているジャンルはありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "80px", minWidth: "80px" }}>ID</th>
+                      <th style={{ minWidth: "180px" }}>ジャンル名</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {genres.map((gen) => (
+                      <tr key={gen.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {gen.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{gen.name}</strong>
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {gen.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditGenre(gen)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteGenre(gen)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: 譜面状況一覧 */}
+        {currentTab === "scoreStatus" && (
+          <div className={styles.contentCard}>
+            <div className={styles.cardHeader}>
+              <h2 className={styles.cardTitle}>譜面状況一覧（全{scoreStatuses.length}件）</h2>
+            </div>
+            {scoreStatuses.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faFolderOpen} />
+                </div>
+                <p>登録されている譜面状況はありません</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrapper}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "80px", minWidth: "80px" }}>ID</th>
+                      <th style={{ minWidth: "200px" }}>状況名</th>
+                      <th style={{ width: "80px", minWidth: "80px", textAlign: "center" }}>並び順</th>
+                      {canEdit && <th style={{ width: "160px", minWidth: "160px", textAlign: "right" }}>操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scoreStatuses.map((sc) => (
+                      <tr key={sc.id}>
+                        <td>
+                          <code style={{ fontSize: "12px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                            {sc.id}
+                          </code>
+                        </td>
+                        <td>
+                          <strong>{sc.name}</strong>
+                        </td>
+                        <td style={{ textAlign: "center", color: "#64748b" }}>
+                          {sc.order ?? "-"}
+                        </td>
+                        {canEdit && (
+                          <td>
+                            <div className={styles.actionsCell}>
+                              <button
+                                type="button"
+                                className={styles.btnActionEdit}
+                                onClick={() => handleOpenEditScoreStatus(sc)}
+                              >
+                                <FontAwesomeIcon icon={faPenToSquare} />
+                                <span>編集</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnActionDelete}
+                                onClick={() => handleDeleteScoreStatus(sc)}
+                                title="削除"
+                                aria-label="削除"
+                              >
+                                <FontAwesomeIcon icon={faTrashCan} />
+                                <span>削除</span>
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* タブコンテンツ: 都道府県一覧 */}
         {currentTab === "prefectures" && (
+
           <div className={styles.contentCard}>
             <div className={styles.cardHeader}>
               <h2 className={styles.cardTitle}>都道府県一覧（全{prefectures.length}件）</h2>
@@ -1696,9 +2525,311 @@ export function MasterMaintenanceClient({
             </div>
           </Modal>
         )}
+
+        {/* 出欠ステータス追加・編集モーダル */}
+        {attendanceModalOpen && editingAttendance && (
+          <Modal
+            onClose={() => setAttendanceModalOpen(false)}
+            title={isAttendanceNew ? "出欠ステータスの追加" : "出欠ステータスの編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>ステータスID (数値 例: 1)</label>
+                <input
+                  type="text"
+                  value={editingAttendance.id || ""}
+                  onChange={(e) =>
+                    setEditingAttendance((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isAttendanceNew}
+                  className={styles.formInput}
+                  placeholder="例: 1"
+                />
+                {!isAttendanceNew && (
+                  <p className={styles.formHelp}>※一度作成したIDは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>ステータス名</label>
+                <input
+                  type="text"
+                  value={editingAttendance.name || ""}
+                  onChange={(e) =>
+                    setEditingAttendance((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 出席"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingAttendance.order ?? 0}
+                  onChange={(e) =>
+                    setEditingAttendance((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setAttendanceModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveAttendance}
+                >
+                  {isAttendanceNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* 日程調整ステータス追加・編集モーダル */}
+        {adjustModalOpen && editingAdjust && (
+          <Modal
+            onClose={() => setAdjustModalOpen(false)}
+            title={isAdjustNew ? "日程調整ステータスの追加" : "日程調整ステータスの編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>ステータスID (数値 例: 1)</label>
+                <input
+                  type="text"
+                  value={editingAdjust.id || ""}
+                  onChange={(e) =>
+                    setEditingAdjust((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isAdjustNew}
+                  className={styles.formInput}
+                  placeholder="例: 1"
+                />
+                {!isAdjustNew && (
+                  <p className={styles.formHelp}>※一度作成したIDは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>記号 / ステータス名</label>
+                <input
+                  type="text"
+                  value={editingAdjust.name || ""}
+                  onChange={(e) =>
+                    setEditingAdjust((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: ◯"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>説明</label>
+                <input
+                  type="text"
+                  value={editingAdjust.description || ""}
+                  onChange={(e) =>
+                    setEditingAdjust((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 参加可能"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingAdjust.order ?? 0}
+                  onChange={(e) =>
+                    setEditingAdjust((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setAdjustModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveAdjust}
+                >
+                  {isAdjustNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* ジャンル追加・編集モーダル */}
+        {genreModalOpen && editingGenre && (
+          <Modal
+            onClose={() => setGenreModalOpen(false)}
+            title={isGenreNew ? "ジャンルの追加" : "ジャンルの編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>ジャンルID (数値 例: 1)</label>
+                <input
+                  type="text"
+                  value={editingGenre.id || ""}
+                  onChange={(e) =>
+                    setEditingGenre((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isGenreNew}
+                  className={styles.formInput}
+                  placeholder="例: 1"
+                />
+                {!isGenreNew && (
+                  <p className={styles.formHelp}>※一度作成したIDは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>ジャンル名</label>
+                <input
+                  type="text"
+                  value={editingGenre.name || ""}
+                  onChange={(e) =>
+                    setEditingGenre((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: Swing"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingGenre.order ?? 0}
+                  onChange={(e) =>
+                    setEditingGenre((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setGenreModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveGenre}
+                >
+                  {isGenreNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* 譜面状況追加・編集モーダル */}
+        {scoreStatusModalOpen && editingScoreStatus && (
+          <Modal
+            onClose={() => setScoreStatusModalOpen(false)}
+            title={isScoreStatusNew ? "譜面状況の追加" : "譜面状況の編集"}
+          >
+            <div className={styles.modalForm}>
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>状況ID (数値 例: 1)</label>
+                <input
+                  type="text"
+                  value={editingScoreStatus.id || ""}
+                  onChange={(e) =>
+                    setEditingScoreStatus((prev) => ({ ...prev, id: e.target.value }))
+                  }
+                  disabled={!isScoreStatusNew}
+                  className={styles.formInput}
+                  placeholder="例: 1"
+                />
+                {!isScoreStatusNew && (
+                  <p className={styles.formHelp}>※一度作成したIDは変更できません。</p>
+                )}
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>状況名</label>
+                <input
+                  type="text"
+                  value={editingScoreStatus.name || ""}
+                  onChange={(e) =>
+                    setEditingScoreStatus((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={styles.formInput}
+                  placeholder="例: 部費で購入希望"
+                />
+              </div>
+
+              <div className={styles.formRow}>
+                <label className={styles.formLabel}>並び順 (数値)</label>
+                <input
+                  type="number"
+                  value={editingScoreStatus.order ?? 0}
+                  onChange={(e) =>
+                    setEditingScoreStatus((prev) => ({
+                      ...prev,
+                      order: parseInt(e.target.value, 10) || 0,
+                    }))
+                  }
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setScoreStatusModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveScoreStatus}
+                >
+                  {isScoreStatusNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
       </div>
 
       <BackNavigation href="/" label="ホーム" />
     </BaseLayout>
   );
 }
+

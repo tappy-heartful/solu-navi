@@ -19,10 +19,19 @@ export default async function MasterPage() {
       initialPrefectures={data.prefectures}
       initialPrefecturesCount={data.prefecturesCount}
       initialMunicipalitiesCount={data.municipalitiesCount}
+      initialAttendanceStatuses={data.attendanceStatuses}
+      initialEventAdjustStatuses={data.eventAdjustStatuses}
+      initialGenres={data.genres}
+      initialScoreStatuses={data.scoreStatuses}
       isSectionsFromDefault={data.isSectionsFromDefault}
       isRolesFromDefault={data.isRolesFromDefault}
       isInstrumentsFromDefault={data.isInstrumentsFromDefault}
       isPrefecturesFromDefault={data.isPrefecturesFromDefault}
+      isAttendanceStatusesFromDefault={data.isAttendanceStatusesFromDefault}
+      isEventAdjustStatusesFromDefault={data.isEventAdjustStatusesFromDefault}
+      isGenresFromDefault={data.isGenresFromDefault}
+      isScoreStatusesFromDefault={data.isScoreStatusesFromDefault}
     />
   );
 }
+

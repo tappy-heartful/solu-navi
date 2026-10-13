@@ -147,10 +147,18 @@ export interface CallAnswer {
   answers: { [genre: string]: CallAnswerSong[] };
 }
 
+export type Genre = {
+  id: string;
+  name: string;
+  order?: number;
+};
+
 export interface ScoreStatus {
   id: string;
   name: string;
+  order?: number;
 }
+
 
 // ===== 曲投票 =====
 export interface VoteChoice {
@@ -267,12 +275,16 @@ export interface EventAdjustAnswer {
 export interface AttendanceStatus {
   id: string;
   name: string;
+  order?: number;
 }
 
 export interface EventAdjustStatus {
   id: string;
   name: string;
+  description?: string;
+  order?: number;
 }
+
 
 export interface EventRecording {
   id: string;

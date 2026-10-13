@@ -93,12 +93,21 @@ service cloud.firestore {
     }
     match /attendanceStatuses/{id} {
       allow read: if isAuthenticated();
-      allow write: if isEventAdmin();
+      allow write: if isMasterAdmin() || isEventAdmin();
     }
     match /eventAdjustStatus/{id} {
       allow read: if isAuthenticated();
-      allow write: if isEventAdmin();
+      allow write: if isMasterAdmin() || isEventAdmin();
     }
+    match /genres/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /scoreStatus/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || isCallAdmin();
+    }
+
 
     // イベント機能
     match /events/{eventId} {

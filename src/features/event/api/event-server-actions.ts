@@ -15,7 +15,13 @@ import {
   User,
   Prefecture,
 } from "@/lib/firestore/types";
-import { DEFAULT_SECTIONS, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import {
+  DEFAULT_SECTIONS,
+  DEFAULT_INSTRUMENTS,
+  DEFAULT_ATTENDANCE_STATUSES,
+  DEFAULT_EVENT_ADJUST_STATUSES,
+} from "@/lib/firestore/constants";
+
 
 function toEventDoc(doc: FirebaseFirestore.DocumentSnapshot): Event {
   const d = doc.data()!;
@@ -94,18 +100,15 @@ export const getAttendanceStatusesServer = unstable_cache(
   async (): Promise<AttendanceStatus[]> => {
     const snap = await adminDb.collection("attendanceStatuses").get();
     if (snap.empty) {
-      return [
-        { id: "1", name: "出席" },
-        { id: "2", name: "欠席" },
-        { id: "3", name: "遅刻" },
-        { id: "4", name: "早退" },
-        { id: "5", name: "未定" },
-      ];
+      return DEFAULT_ATTENDANCE_STATUSES;
     }
-    return snap.docs.map((d) => ({
-      id: d.id,
-      name: d.data().name || "",
-    }));
+    return snap.docs
+      .map((d) => ({
+        id: d.id,
+        name: d.data().name || "",
+        order: d.data().order,
+      }))
+      .sort((a, b) => Number(a.order ?? a.id) - Number(b.order ?? b.id));
   },
   ["master-attendance-statuses"],
   { revalidate: 86400, tags: ["master-attendance-statuses"] }
@@ -115,19 +118,21 @@ export const getEventAdjustStatusesServer = unstable_cache(
   async (): Promise<EventAdjustStatus[]> => {
     const snap = await adminDb.collection("eventAdjustStatus").get();
     if (snap.empty) {
-      return [
-        { id: "1", name: "◯" },
-        { id: "2", name: "△" },
-        { id: "3", name: "×" },
-      ];
+      return DEFAULT_EVENT_ADJUST_STATUSES;
     }
     return snap.docs
-      .map((d) => ({ id: d.id, name: d.data().name || "" }))
-      .sort((a, b) => (a.id < b.id ? -1 : 1));
+      .map((d) => ({
+        id: d.id,
+        name: d.data().name || "",
+        description: d.data().description || "",
+        order: d.data().order,
+      }))
+      .sort((a, b) => Number(a.order ?? a.id) - Number(b.order ?? b.id));
   },
   ["master-event-adjust-statuses"],
   { revalidate: 86400, tags: ["master-event-adjust-statuses"] }
 );
+
 
 export async function fetchEvents(): Promise<Event[]> {
   const snap = await adminDb.collection("events").orderBy("date", "asc").get();

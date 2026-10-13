@@ -12,7 +12,10 @@ import { BackNavigation } from "@/components/Common/BackNavigation";
 import { isInTerm, getDayOfWeek, format } from "@/lib/functions";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { DEFAULT_ATTENDANCE_STATUSES, DEFAULT_EVENT_ADJUST_STATUSES } from "@/lib/firestore/constants";
 import styles from "./EventList.module.css";
+
+
 
 type Props = {
   events: Event[];
@@ -49,6 +52,11 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
       attStatusSnap.forEach((doc) => {
         attStatusMap[doc.id] = doc.data().name || "";
       });
+      if (Object.keys(attStatusMap).length === 0) {
+        DEFAULT_ATTENDANCE_STATUSES.forEach((s) => {
+          attStatusMap[s.id] = s.name;
+        });
+      }
       setAttendanceStatuses(attStatusMap);
 
       const adjStatusSnap = await getDocs(collection(db, "eventAdjustStatus"));
@@ -56,7 +64,13 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
       adjStatusSnap.forEach((doc) => {
         adjStatusMap[doc.id] = doc.data().name || "";
       });
+      if (Object.keys(adjStatusMap).length === 0) {
+        DEFAULT_EVENT_ADJUST_STATUSES.forEach((s) => {
+          adjStatusMap[s.id] = s.name;
+        });
+      }
       setAdjustStatuses(adjStatusMap);
+
 
       const attAnswersSnap = await getDocs(
         query(collection(db, "eventAttendanceAnswers"), where("uid", "==", uid))

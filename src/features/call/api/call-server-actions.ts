@@ -2,14 +2,31 @@ import "server-only";
 import { adminDb } from "@/lib/firebase-admin";
 import { toPlainObject } from "@/lib/firestore/utils";
 import { Call, CallAnswer, CallAnswerSong, ScoreStatus } from "@/lib/firestore/types";
+import { DEFAULT_SCORE_STATUSES } from "@/lib/firestore/constants";
+import { unstable_cache } from "next/cache";
 
 /**
  * 譜面ステータス一覧を取得（ID順）
  */
-export async function getScoreStatusesServer(): Promise<ScoreStatus[]> {
-  const snap = await adminDb.collection("scoreStatus").orderBy("__name__").get();
-  return snap.docs.map(toPlainObject) as ScoreStatus[];
-}
+export const getScoreStatusesServer = unstable_cache(
+  async (): Promise<ScoreStatus[]> => {
+    const snap = await adminDb.collection("scoreStatus").get();
+    if (snap.empty) {
+      return DEFAULT_SCORE_STATUSES;
+    }
+    return snap.docs
+      .map(toPlainObject)
+      .map((d: any) => ({
+        id: d.id,
+        name: d.name || "",
+        order: d.order,
+      }))
+      .sort((a: any, b: any) => Number(a.order ?? a.id) - Number(b.order ?? b.id)) as ScoreStatus[];
+  },
+  ["master-score-statuses"],
+  { revalidate: 86400, tags: ["master-score-statuses"] }
+);
+
 
 /**
  * 曲募集一覧を取得（作成日時降順）
@@ -81,9 +98,13 @@ export async function getCallConfirmDataServer(callId: string): Promise<{
   });
 
   const scoreStatusMap: Record<string, string> = {};
-  scoreStatusDocs.forEach(doc => {
-    if (doc.exists) scoreStatusMap[doc.id] = doc.data()?.name || "";
+  DEFAULT_SCORE_STATUSES.forEach((s) => {
+    scoreStatusMap[s.id] = s.name;
   });
+  scoreStatusDocs.forEach((doc) => {
+    if (doc.exists) scoreStatusMap[doc.id] = doc.data()?.name || scoreStatusMap[doc.id] || "";
+  });
+
 
   return { callAnswers, usersMap, scoreStatusMap };
 }

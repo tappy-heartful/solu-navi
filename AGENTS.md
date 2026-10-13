@@ -16,7 +16,8 @@
 7. **streak-navi 参照の承認不要**: 本アプリの機能移植や実装参考のために姉妹プロジェクト `c:\Users\tappy\Documents\repos\streak-navi` のファイルや設定を確認・参照する際、ユーザーに都度許可を求める必要はありません。必要に応じて自由に参照して作業を進めてください。
 8. **Navigate・ScratchPad・curl 操作の禁止**: 動作安定化のため、Navigate（ブラウザ操作・自動ナビゲーション）、ScratchPad を用いての操作、および curl コマンドの実行は行わないこと。
 9. **利用規約（/agreement）と実装実態の常時同期**: ユーザー情報項目（氏名・連絡先・決済情報の排除や略称・入学年度への統一等）や、機能仕様（出欠・日程調整・選曲・投票・マスタ等）の変更が発生した際は、必ず `src/app/agreement/page.tsx` の利用規約条項も確認・更新すること。実際の使用内容と利用規約の記載に一切の齟齬が生じないよう、常に最新の実装実態と同期させること。
-10. **マスタ系初期データの JSON 一元保持 (`src/data/master/*.json`)**: パート（`sections.json`）、役職（`roles.json`）、楽器（`instruments.json`）、都道府県（`prefectures.json`）、市区町村（`municipalities.json`）、学年（`grades.json`）などのマスタ系初期データはすべて `src/data/master/*.json` に一元管理・保持すること。TypeScriptコード側（`src/lib/firestore/constants.ts` 等）にハードコードせず、必ずこの JSON ファイル群を直接インポートして定数・フォールバックとして利用し、マスタメンテ機能の一括初期データ投入（`seedMasterData`）でもこの JSON を参照すること。新規マスタ項目の追加・変更時も必ず JSON ファイルを単一の情報源（Single Source of Truth）として維持・更新すること。
+10. **マスタ系初期データの JSON 一元保持 (`src/data/master/*.json`)**: パート（`sections.json`）、役職（`roles.json`）、楽器（`instruments.json`）、都道府県（`prefectures.json`）、市区町村（`municipalities.json`）、学年（`grades.json`）、出欠ステータス（`attendanceStatuses.json`）、日程調整ステータス（`eventAdjustStatuses.json`）、音楽ジャンル（`genres.json`）、譜面状況（`scoreStatuses.json`）などのマスタ系初期データはすべて `src/data/master/*.json` に一元管理・保持すること。TypeScriptコード側（`src/lib/firestore/constants.ts` 等）にハードコードせず、必ずこの JSON ファイル群を直接インポートして定数・フォールバックとして利用し、マスタメンテ機能の一括初期データ投入（`seedMasterData`）でもこの JSON を参照すること。新規マスタ項目の追加・変更時も必ず JSON ファイルを単一の情報源（Single Source of Truth）として維持・更新すること。
+
 
 ---
 
