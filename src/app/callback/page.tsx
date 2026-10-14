@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { writeLog } from "@/lib/functions";
+import { showDialog } from "@/components/Common/CommonDialog";
 import styles from "./callback.module.css";
 
 function CallbackContent() {
@@ -11,6 +12,7 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const { loginWithCustomToken } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isPwaSuccess, setIsPwaSuccess] = useState(false);
   const hasCalled = useRef(false);
 
   useEffect(() => {
@@ -53,10 +55,19 @@ function CallbackContent() {
           return;
         }
 
-        // Firebase Custom Token でサインイン
-        await loginWithCustomToken(data.customToken);
+        // PWA ログインの場合（外部ブラウザから PWA アプリ本体へ戻す）
+        if (data.isPwaLogin) {
+          setIsPwaSuccess(true);
+          await showDialog({
+            title: "ログイン成功！",
+            message: "認証が完了しました！Solu Naviアプリに戻り、画面左上の「完了」ボタン（またはブラウザを閉じて）アプリをご確認ください。",
+            type: "success",
+          });
+          return;
+        }
 
-        // 成功時のリダイレクト
+        // 通常ブラウザでのログイン：Firebase Custom Token でサインインして遷移
+        await loginWithCustomToken(data.customToken);
         router.replace(data.redirectAfterLogin || "/");
       } catch (err: unknown) {
         console.error("Callback error:", err);
@@ -87,6 +98,20 @@ function CallbackContent() {
             >
               ログイン画面に戻る
             </button>
+          </>
+        ) : isPwaSuccess ? (
+          <>
+            <h2 className={styles.successTitle} style={{ color: "#16a34a", fontSize: "1.25rem", fontWeight: 800 }}>
+              ✓ ログイン成功！
+            </h2>
+            <p className={styles.loadingText} style={{ marginTop: "0.75rem", lineHeight: 1.6 }}>
+              LINE認証が正常に完了しました。
+              <br />
+              <strong>「Solu Navi」アプリ</strong>に戻ってください。自動的にログイン後の画面へ切り替わります。
+            </p>
+            <p style={{ fontSize: "0.8125rem", color: "#64748b", marginTop: "1rem" }}>
+              ※画面左上の「完了」やブラウザの閉じるボタンを押してアプリにお戻りいただけます。
+            </p>
           </>
         ) : (
           <>

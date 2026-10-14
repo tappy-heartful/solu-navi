@@ -9,7 +9,7 @@ import {
   faArrowUpRightFromSquare,
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
-import { doc, onSnapshot, deleteDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import styles from "./login.module.css";
@@ -30,6 +30,28 @@ function LoginContent() {
   const [pwaLoginUrl, setPwaLoginUrl] = useState<string | null>(null);
   const [showPwaGuide, setShowPwaGuide] = useState(false);
   const isRedirectingRef = useRef(false);
+
+  // トークンによるログイン完了処理ヘルパー
+  const completePwaLogin = useCallback(
+    async (token: string, sid: string) => {
+      setLoading(true);
+      try {
+        await loginWithCustomToken(token);
+        try {
+          await deleteDoc(doc(db, "pwaAuthSessions", sid));
+        } catch {
+          // 削除失敗はクリティカルではないため無視
+        }
+        localStorage.removeItem("pwa_session_id");
+        router.replace(redirectPath);
+      } catch (err: unknown) {
+        console.error("PWA custom token login error:", err);
+        setError(err instanceof Error ? err.message : "ログイン処理エラー");
+        setLoading(false);
+      }
+    },
+    [loginWithCustomToken, redirectPath, router]
+  );
 
   // 1. PWA スタンドアロン判定 & pwaSessionId 初期化
   useEffect(() => {
@@ -55,43 +77,70 @@ function LoginContent() {
       }
       setPwaSessionId(sid);
 
+      // PWA用のLINEログイン認可URLを事前取得
       fetch(`/api/line/get-url?redirect=${encodeURIComponent(redirectPath)}&pwaSessionId=${sid}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data?.url) {
-            setPwaLoginUrl(data.url);
+          const authUrl = data?.loginUrl || data?.url;
+          if (authUrl) {
+            setPwaLoginUrl(authUrl);
           }
         })
         .catch((err) => {
           console.error("Failed to pre-fetch PWA login URL:", err);
         });
 
+      // セッションドキュメントの直接チェック関数（フォアグラウンド復帰時にも使用）
+      const checkSessionDocDirect = async () => {
+        try {
+          const snap = await getDoc(doc(db, "pwaAuthSessions", sid));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data?.status === "completed" && data?.customToken) {
+              if (unsub) unsub();
+              await completePwaLogin(data.customToken, sid);
+            }
+          }
+        } catch (err) {
+          console.error("Direct session check error:", err);
+        }
+      };
+
+      // Firestore の pwaAuthSessions をリアルタイム監視
       unsub = onSnapshot(doc(db, "pwaAuthSessions", sid), async (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data?.status === "completed" && data?.customToken) {
-            setLoading(true);
-            try {
-              if (unsub) unsub();
-              await loginWithCustomToken(data.customToken);
-              await deleteDoc(doc(db, "pwaAuthSessions", sid));
-              localStorage.removeItem("pwa_session_id");
-              router.replace(redirectPath);
-            } catch (err: unknown) {
-              console.error("PWA token login error:", err);
-              setError(err instanceof Error ? err.message : "PWAセッション同期エラー");
-              setLoading(false);
-            }
+            if (unsub) unsub();
+            await completePwaLogin(data.customToken, sid);
           }
         }
       });
+
+      // iOS PWA がバックグラウンド（Safari）からフォアグラウンドに復帰した瞬間に即時チェック
+      const handleVisibilityOrFocus = () => {
+        if (document.visibilityState === "visible") {
+          checkSessionDocDirect();
+        }
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.addEventListener("focus", handleVisibilityOrFocus);
+
+      return () => {
+        if (unsub) unsub();
+        document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+        window.removeEventListener("focus", handleVisibilityOrFocus);
+      };
     } else if (urlPwaSessionId && !isRedirectingRef.current) {
+      // 外部ブラウザで pwaSessionId 付きで開かれた場合、即座にLINE認可URLへ自動リダイレクト
       isRedirectingRef.current = true;
       fetch(`/api/line/get-url?redirect=${encodeURIComponent(redirectPath)}&pwaSessionId=${urlPwaSessionId}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data?.url) {
-            window.location.href = data.url;
+          const authUrl = data?.loginUrl || data?.url;
+          if (authUrl) {
+            window.location.href = authUrl;
           }
         })
         .catch((err) => {
@@ -102,7 +151,7 @@ function LoginContent() {
     return () => {
       if (unsub) unsub();
     };
-  }, [redirectPath, urlPwaSessionId, loginWithCustomToken, router]);
+  }, [redirectPath, urlPwaSessionId, completePwaLogin]);
 
   // すでにログイン済みの場合はリダイレクト
   useEffect(() => {
@@ -118,10 +167,11 @@ function LoginContent() {
       setError(null);
       const res = await fetch(`/api/line/get-url?redirect=${encodeURIComponent(redirectPath)}`);
       const data = await res.json();
-      if (!res.ok || !data.url) {
+      const authUrl = data?.loginUrl || data?.url;
+      if (!res.ok || !authUrl) {
         throw new Error(data.error || "認可URLの取得に失敗しました");
       }
-      window.location.href = data.url;
+      window.location.href = authUrl;
     } catch (err: unknown) {
       console.error("Login redirect error:", err);
       setError(err instanceof Error ? err.message : "ログイン開始エラー");
@@ -129,15 +179,36 @@ function LoginContent() {
     }
   };
 
-  // PWA での手動確認・遷移
-  const handlePwaManualConfirm = useCallback(() => {
+  // PWA での手動確認・遷移（ボタン押下時）
+  const handlePwaManualConfirm = useCallback(async () => {
     if (user) {
       localStorage.removeItem("pwa_session_id");
       router.replace(redirectPath);
-    } else {
-      setError("ブラウザでのログイン完了をお待ちいただくか、再度お試しください。");
+      return;
     }
-  }, [user, redirectPath, router]);
+
+    // まだユーザーが反映されていない場合、Firestore を直接確認
+    const sid = pwaSessionId || localStorage.getItem("pwa_session_id");
+    if (sid) {
+      setLoading(true);
+      try {
+        const snap = await getDoc(doc(db, "pwaAuthSessions", sid));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data?.status === "completed" && data?.customToken) {
+            await completePwaLogin(data.customToken, sid);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Manual confirm session check error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    setError("ブラウザでのログイン完了をお待ちいただくか、Safari等でログイン完了後に再度このボタンを押してください。");
+  }, [user, pwaSessionId, completePwaLogin, redirectPath, router]);
 
   return (
     <div className={styles.loginPage}>
@@ -198,9 +269,10 @@ function LoginContent() {
                 type="button"
                 className={styles.pwaConfirmBtn}
                 onClick={handlePwaManualConfirm}
+                disabled={loading}
               >
                 <FontAwesomeIcon icon={faCircleCheck} style={{ marginRight: 6 }} />
-                ログインを完了して進む
+                {loading ? "確認中..." : "ログインを完了して進む"}
               </button>
               <button
                 type="button"

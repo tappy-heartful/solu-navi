@@ -55,11 +55,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 8. PWA セッション同期（pwaSessionId がある場合）
+    let isPwaLogin = false;
     if (stateData?.pwaSessionId) {
+      isPwaLogin = true;
       await adminDb.collection("pwaAuthSessions").doc(stateData.pwaSessionId).set({
         customToken,
         uid: hashedUid,
-        status: "success",
+        status: "completed",
+        profile: {
+          displayName: profile.displayName || "",
+          pictureUrl: profile.pictureUrl || "",
+        },
         createdAt: new Date(),
       });
     }
@@ -67,7 +73,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       customToken,
       uid: hashedUid,
+      profile: {
+        displayName: profile.displayName,
+        pictureUrl: profile.pictureUrl,
+      },
       redirectAfterLogin: stateData?.redirectAfterLogin || "/",
+      isPwaLogin,
     });
   } catch (err: unknown) {
     console.error("line login error:", err);

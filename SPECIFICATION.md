@@ -139,9 +139,10 @@
   - 静的アセット（画像、フォント等）はキャッシュ優先（Cache First）、ページ遷移は最新優先（Network First）でオフライン耐性を確保。
   - ルートクライアントシェル（`ClientLayout.tsx`）から自動登録およびバックグラウンド更新検知。
 - **PWA × OAuth クロスコンテキスト自動同期機構 (`pwaAuthSessions`)**:
-  - PWA スタンドアロン起動時、一意の `pwaSessionId` を自動生成し、LINE認可URLを外部ブラウザで起動。
-  - PWA アプリ画面上には「外部ブラウザでログイン中」の案内モーダルと復帰ボタンを表示。
-  - Firestore の `pwaAuthSessions/{pwaSessionId}` ドキュメントをリアルタイム監視（`onSnapshot`）し、外部ブラウザ側でのLINEログイン完了と同時に PWA アプリ本体が `customToken` で自動サインインしてホームへシームレスに遷移。
+  - PWA スタンドアロン起動時、一意の `pwaSessionId` を自動生成し、LINE認可URL（`bot_prompt=aggressive` 付き）を外部ブラウザ（Safari等）で起動。
+  - PWA アプリ画面上には「外部ブラウザでログイン中」の案内ボックスと手動復帰ボタン（「ログインを完了して進む」）を表示。
+  - 外部ブラウザ側コールバック（`/callback`）は `isPwaLogin` を検知するとブラウザ単体でのログインを行わず、「ログイン成功！Solu Naviアプリにお戻りください」のメッセージとダイアログを表示して待機。
+  - Firestore の `pwaAuthSessions/{pwaSessionId}` ドキュメント（`status: "completed"`, `customToken`）を PWA 側がリアルタイム監視（`onSnapshot`）およびフォアグラウンド復帰時（`visibilitychange`/`focus`）に即時直接取得（`getDoc`）し、PWA アプリ本体が `customToken` で自動サインインしてホームへシームレスに遷移。
 
 ---
 

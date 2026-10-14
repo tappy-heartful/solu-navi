@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     const authUrl = generateLineAuthUrl(state, redirectUri);
 
-    return NextResponse.json({ url: authUrl, state });
+    return NextResponse.json({ url: authUrl, loginUrl: authUrl, state });
   } catch (err: unknown) {
     console.error("line get-url error:", err);
     return NextResponse.json(
