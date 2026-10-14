@@ -1,0 +1,7 @@
+.avatarImg {
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+  background-color: #e8f4f8;
+}

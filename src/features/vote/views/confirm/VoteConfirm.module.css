@@ -1,0 +1,280 @@
+.primaryBtn {
+  flex: 1;
+  min-width: 140px;
+  background-color: #146081;
+  color: #ffffff;
+  padding: 0.65rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.primaryBtn:hover {
+  background-color: #0f4a64;
+}
+
+.deleteAnswerBtn {
+  padding: 0.65rem 1.25rem;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deleteAnswerBtn:hover {
+  background-color: #fecaca;
+}
+
+.linkEditBtn {
+  padding: 0.65rem 1.25rem;
+  background-color: #f1f5f9;
+  color: #146081;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.linkEditBtn:hover {
+  background-color: #e2e8f0;
+}
+
+.adminNotice {
+  color: #d97706;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.resultsContainer {
+  margin-top: 2rem;
+  border-top: 2px solid #e2e8f0;
+  padding-top: 1.5rem;
+}
+
+.resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.resultsTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.playlistBadge {
+  background-color: #ff0000;
+  color: #ffffff;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.difficultyNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  background-color: #f8fafc;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.itemCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.itemHeader {
+  background-color: #e8f4f8;
+  border-bottom: 2px solid #b6dce8;
+  padding: 0.85rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #146081;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.itemLink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.choicesBody {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.choiceRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.myChoice {
+  border-color: #146081;
+}
+
+.gauge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: rgba(20, 96, 129, 0.1);
+  z-index: 0;
+  transition: width 0.8s ease-out;
+}
+
+.statusCol {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 1;
+}
+
+.myAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.emptyCircle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+}
+
+.rankBadge {
+  font-size: 0.65rem;
+  background-color: #146081;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.infoCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 1;
+}
+
+.choiceTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.diffRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.diffBadge {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 700;
+  background-color: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.diffBar {
+  height: 5px;
+  width: 50px;
+  background-color: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.diffFill {
+  height: 100%;
+}
+
+.scoreCol {
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.scoreText {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #146081;
+}
+
+.voterBtn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #146081;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.voterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.voterAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}

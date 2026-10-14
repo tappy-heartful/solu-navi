@@ -1,0 +1,387 @@
+.locationBlock {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.locationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.locationTitle {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.locationFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.rentTimeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rentTimeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #e2e8f0;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  font-weight: bold;
+}
+
+.rentTimeBadge i {
+  color: #64748b;
+}
+
+.reservedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.reservedBadge i {
+  color: #16a34a;
+}
+
+.notReservedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.notReservedBadge i {
+  color: #9ca3af;
+}
+
+.addRecordingBtn {
+  margin-top: 12px;
+  background-color: #ffffff;
+  color: #146081;
+  border: 1px solid #146081;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.addRecordingBtn:hover {
+  background-color: #e8f4f8;
+  border-color: #0f4a64;
+  color: #0f4a64;
+}
+
+.addRecordingBtn:active {
+  transform: scale(0.98);
+}
+
+/* 日程調整テーブル */
+.adjustTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #fff;
+}
+
+.adjustRow {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.adjustRow:last-child {
+  border-bottom: none;
+}
+
+.headerRow {
+  background-color: #f1f5f9;
+  font-weight: bold;
+}
+
+.dateCell {
+  flex-basis: 35%;
+  padding: 12px 10px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.datePart {
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.dayPart {
+  font-size: 0.85em;
+  color: #64748b;
+}
+
+.statusSummaryCell {
+  flex-basis: 65%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.statusCount {
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-decoration: none;
+  background-color: #f1f5f9;
+  color: #146081;
+  border: 1px solid #cbd5e1;
+  transition: background-color 0.15s;
+}
+
+.statusCount:hover {
+  background-color: #e8f4f8;
+}
+
+.statusCountZero {
+  opacity: 0.5;
+  cursor: default;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+.statusUnanswered {
+  color: #e11d48;
+  border-color: #fecdd3;
+  background-color: #fff1f2;
+}
+
+/* 出欠ブロック */
+.attendanceStatusBlock {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.attendanceStatusBlock h3 {
+  font-size: 15px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #1e293b;
+  border-left: 4px solid #146081;
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.attendanceSectionGroup {
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.attendanceSectionGroup h4 {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 4px;
+  font-weight: 600;
+}
+
+.attendanceUsers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.attendanceUser {
+  width: 72px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.attendanceUser img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 6px;
+  border: 1px solid #cbd5e1;
+}
+
+.attendanceUser span {
+  display: block;
+  word-break: break-word;
+  color: #334155;
+}
+
+.noUser {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.answerCountSummary {
+  display: block;
+  text-align: left;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: normal;
+  margin-bottom: 10px;
+}
+
+.unansweredBtn {
+  display: inline-block;
+  padding: 8px 16px;
+  margin-top: 8px;
+  background-color: #ffffff;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unansweredBtn:hover {
+  background-color: #fff1f2;
+}
+
+/* 録音リンク */
+.recordingsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recordingListUl {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recordingListUl li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 10px;
+}
+
+.recordingListUl li:last-child {
+  border-bottom: none;
+}
+
+.recordingLink {
+  font-weight: 600;
+  color: #146081;
+  text-decoration: underline;
+  flex-grow: 1;
+}
+
+.registeredBy {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.deleteRecordingBtn {
+  background: none;
+  border: none;
+  color: #e11d48;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+
+/* 録音追加モーダル */
+.recordingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recordingForm input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}

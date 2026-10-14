@@ -1,0 +1,5 @@
+[
+  { "id": "1", "name": "◯", "description": "参加可能", "order": 1 },
+  { "id": "2", "name": "△", "description": "未定 / 条件付き", "order": 2 },
+  { "id": "3", "name": "×", "description": "不参加", "order": 3 }
+]

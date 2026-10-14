@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <!-- solu-navi テーマカラー (ティールアイス) 背景グラデーション -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0f7fa" />
+      <stop offset="100%" stop-color="#e2eff5" />
+    </linearGradient>
+  </defs>
+
+  <!-- 背景ベース (角丸四角形 / 円形クリップ時にも美しく追従) -->
+  <rect width="120" height="120" rx="30" fill="url(#bgGrad)" />
+
+  <!-- 体 (肩・ドーム型アウトライン) -->
+  <path
+    d="M 17 99 C 17 68 36 58 60 58 C 84 58 103 68 103 99 Z"
+    fill="url(#bgGrad)"
+    stroke="#146081"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- 頭 (丸い頭部アウトライン / 体の上部に重ねて自然にマスク) -->
+  <circle
+    cx="60"
+    cy="38"
+    r="23"
+    fill="url(#bgGrad)"
+    stroke="#146081"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

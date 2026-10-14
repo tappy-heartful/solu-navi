@@ -1,0 +1,199 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 認証済みかどうかのヘルパー
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // システム管理者判定
+    function isSystemAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSystemAdmin == true;
+    }
+
+    // 各モジュール管理者判定
+    function isMasterAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isMasterAdmin == true);
+    }
+
+    function isEventAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isEventAdmin == true);
+    }
+
+    function isCallAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCallAdmin == true);
+    }
+
+    function isVoteAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isVoteAdmin == true);
+    }
+
+    function isUserAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isUserAdmin == true);
+    }
+    
+    // ユーザー自身かどうかの判定
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // users コレクション
+    match /users/{uid} {
+      // 閲覧: 認証済みユーザー全員（名簿閲覧のため）
+      allow read: if isAuthenticated();
+      // 作成・更新: 本人または管理者
+      allow create, update: if isOwner(uid) || isUserAdmin();
+      // 削除: システム管理者のみ
+      allow delete: if isSystemAdmin();
+      
+      // プライベート情報サブコレクション (居住地等)
+      match /private/{document=**} {
+        allow read, write: if isOwner(uid) || isSystemAdmin();
+      }
+    }
+
+    // oauthStates コレクション (LINEログイン認証用)
+    match /oauthStates/{state} {
+      allow create: if true;
+      allow read, delete: if true;
+    }
+
+    // pwaAuthSessions コレクション (PWAクロスコンテキスト同期用)
+    match /pwaAuthSessions/{sessionId} {
+      allow read, write: if true;
+    }
+
+    // マスタコレクション (sections, roles, instruments)
+    // 一般ユーザーは閲覧のみ、編集・削除・追加はマスタ管理者またはシステム管理者
+    match /sections/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /roles/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /instruments/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /prefectures/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /municipalities/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /attendanceStatuses/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || isEventAdmin();
+    }
+    match /eventAdjustStatus/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || isEventAdmin();
+    }
+    match /genres/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin();
+    }
+    match /scoreStatus/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || isCallAdmin();
+    }
+
+
+    // イベント機能
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isEventAdmin();
+    }
+    match /eventAttendanceAnswers/{answerId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && (
+        request.resource.data.uid == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        isEventAdmin()
+      );
+    }
+    match /eventAdjustAnswers/{answerId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && (
+        request.resource.data.uid == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        isEventAdmin()
+      );
+    }
+    match /eventRecordings/{recId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isEventAdmin());
+    }
+
+    // 曲募集機能
+    match /calls/{callId} {
+      allow read: if isAuthenticated();
+      allow write: if isCallAdmin();
+    }
+    match /callAnswers/{answerId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && (
+        request.resource.data.uid == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        isCallAdmin()
+      );
+    }
+
+    // 曲投票機能
+    match /votes/{voteId} {
+      allow read: if isAuthenticated();
+      allow write: if isVoteAdmin();
+    }
+    match /voteAnswers/{answerId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && (
+        request.resource.data.uid == request.auth.uid ||
+        resource.data.uid == request.auth.uid ||
+        isVoteAdmin()
+      );
+    }
+
+    // 楽譜
+    match /scores/{scoreId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // 譜割り
+    match /assigns/{assignId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // 論理削除アーカイブ
+    match /archives/{archiveId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isSystemAdmin();
+    }
+
+    // 監査ログ
+    match /logs/{logId} {
+      allow create: if true;
+      allow read: if isSystemAdmin();
+    }
+    match /accessLogs/{logId} {
+      allow create: if true;
+      allow read: if isSystemAdmin();
+    }
+    match /errorLogs/{logId} {
+      allow create: if true;
+      allow read: if isSystemAdmin();
+    }
+  }
+}
