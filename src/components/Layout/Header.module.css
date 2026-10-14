@@ -4,6 +4,8 @@
   left: 0;
   right: 0;
   width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
   min-height: 3.75rem;
   height: calc(3.75rem + env(safe-area-inset-top, 0px));
   padding-top: env(safe-area-inset-top, 0px);

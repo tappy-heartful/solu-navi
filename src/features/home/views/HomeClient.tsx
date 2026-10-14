@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
 import { getGradeFromEnrollmentYear } from "@/lib/functions";
+import { showSpinner } from "@/components/Common/Spinner";
 import styles from "./HomeClient.module.css";
 
 interface HomeClientProps {
@@ -136,7 +137,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
         </div>
 
         <div className={styles.quickGrid}>
-          <Link href="/event" prefetch={false} className={`${styles.quickCard} ${styles.cardTeal}`}>
+          <Link
+            href="/event"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardTeal}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconTealBg}`}>
               <FontAwesomeIcon icon={faCalendarDays} />
             </div>
@@ -147,7 +153,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/call" prefetch={false} className={`${styles.quickCard} ${styles.cardAmber}`}>
+          <Link
+            href="/call"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardAmber}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
               <FontAwesomeIcon icon={faMusic} />
             </div>
@@ -158,7 +169,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/vote" prefetch={false} className={`${styles.quickCard} ${styles.cardPurple}`}>
+          <Link
+            href="/vote"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardPurple}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconPurpleBg}`}>
               <FontAwesomeIcon icon={faSquarePollVertical} />
             </div>
@@ -169,7 +185,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faSquarePollVertical} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/master" prefetch={false} className={`${styles.quickCard} ${styles.cardEmerald}`}>
+          <Link
+            href="/master"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardEmerald}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconEmeraldBg}`}>
               <FontAwesomeIcon icon={faSliders} />
             </div>
@@ -189,7 +210,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
         </div>
 
         <div className={styles.quickGrid}>
-          <Link href="/user" prefetch={false} className={`${styles.quickCard} ${styles.cardBlue}`}>
+          <Link
+            href="/user"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardBlue}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconBlueBg}`}>
               <FontAwesomeIcon icon={faUsers} />
             </div>
@@ -200,7 +226,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faUsers} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/user/detail" prefetch={false} className={`${styles.quickCard} ${styles.cardCyan}`}>
+          <Link
+            href="/user/detail"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardCyan}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconCyanBg}`}>
               <FontAwesomeIcon icon={faIdCard} />
             </div>
@@ -211,7 +242,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faIdCard} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/user/edit" prefetch={false} className={`${styles.quickCard} ${styles.cardIndigo}`}>
+          <Link
+            href="/user/edit"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardIndigo}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconIndigoBg}`}>
               <FontAwesomeIcon icon={faUserPen} />
             </div>
@@ -222,7 +258,12 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faUserPen} className={styles.watermarkIcon} />
           </Link>
 
-          <Link href="/agreement" prefetch={false} className={`${styles.quickCard} ${styles.cardSlate}`}>
+          <Link
+            href="/agreement"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardSlate}`}
+            onClick={() => showSpinner()}
+          >
             <div className={`${styles.quickIcon} ${styles.iconSlateBg}`}>
               <FontAwesomeIcon icon={faFileShield} />
             </div>

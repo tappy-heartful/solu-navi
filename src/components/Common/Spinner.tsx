@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import styles from "./Spinner.module.css";
+import React, { useEffect, Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
-const BAND_MESSAGES = [
+export const BAND_MESSAGES = [
   "チューニングしています...",
   "リードの調子を確認しています...",
   "ミュートを準備しています...",
@@ -22,23 +22,73 @@ const BAND_MESSAGES = [
   "トランペットがハイノートに備えています...",
   "ベースがコードトーンを支えています...",
   "ピアノが美しいバッキングを探っています...",
+  "バンドスコアを読み解いています...",
+  "ステージ衣装を整えています...",
 ];
 
-let spinnerShowHandler: ((msg?: string) => void) | null = null;
-let spinnerHideHandler: (() => void) | null = null;
+let spinnerInterval: ReturnType<typeof setInterval> | null = null;
+let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
 
+/**
+ * 音楽的ローディングスピナーの表示 (公式エンブレムロゴ＋FontAwesome音符＋メッセージ)
+ */
 export function showSpinner(customMsg?: string) {
-  if (spinnerShowHandler) spinnerShowHandler(customMsg);
+  if (typeof document === "undefined") return;
+
+  let overlay = document.getElementById("spinner-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "spinner-overlay";
+    overlay.innerHTML = `
+      <div class="musical-loading">
+        <div class="note-container">
+          <i class="fa-solid fa-music note"></i>
+          <i class="fa-solid fa-note-sticky note"></i>
+          <i class="fa-solid fa-guitar note"></i>
+          <i class="fa-solid fa-drum note"></i>
+        </div>
+        <p class="loading-message" id="spinner-message">${customMsg || BAND_MESSAGES[0]}</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  } else {
+    const el = document.getElementById("spinner-message");
+    if (el) el.textContent = customMsg || BAND_MESSAGES[Math.floor(Math.random() * BAND_MESSAGES.length)];
+  }
+  overlay.style.display = "flex";
+
+  if (spinnerInterval) clearInterval(spinnerInterval);
+  spinnerInterval = setInterval(() => {
+    const el = document.getElementById("spinner-message");
+    if (el) el.textContent = BAND_MESSAGES[Math.floor(Math.random() * BAND_MESSAGES.length)];
+  }, 1000);
+
+  // 安全タイマー（最大10秒で自動終了）
+  if (timeoutTimer) clearTimeout(timeoutTimer);
+  timeoutTimer = setTimeout(() => {
+    hideSpinner();
+  }, 10000);
 }
 
+/**
+ * スピナーの非表示 (streak-navi準拠: 自然な画面遷移完了で即時非表示)
+ */
 export function hideSpinner() {
-  if (spinnerHideHandler) spinnerHideHandler();
+  if (typeof document === "undefined") return;
+
+  const overlay = document.getElementById("spinner-overlay");
+  if (overlay) overlay.style.display = "none";
+  if (spinnerInterval) {
+    clearInterval(spinnerInterval);
+    spinnerInterval = null;
+  }
+  if (timeoutTimer) {
+    clearTimeout(timeoutTimer);
+    timeoutTimer = null;
+  }
 }
 
-import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-
-// ページ遷移を検知して自動でスピナーを閉じるサブコンポーネント
+// ページ遷移を検知して自動でスピナーを消去する
 function RouteChangeSpinnerCloser() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -51,63 +101,9 @@ function RouteChangeSpinnerCloser() {
 }
 
 export function Spinner() {
-  const [visible, setVisible] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState(BAND_MESSAGES[0]);
-
-  useEffect(() => {
-    spinnerShowHandler = (msg?: string) => {
-      const initial = msg || BAND_MESSAGES[Math.floor(Math.random() * BAND_MESSAGES.length)];
-      setCurrentMessage(initial);
-      setVisible(true);
-    };
-
-    spinnerHideHandler = () => {
-      setVisible(false);
-    };
-
-    return () => {
-      spinnerShowHandler = null;
-      spinnerHideHandler = null;
-    };
-  }, []);
-
-  // メッセージのランダムローテーション & 安全タイムアウト（最大10秒で自動非表示）
-  useEffect(() => {
-    if (!visible) return;
-
-    // 10秒経過しても閉じられない場合は安全のため自動非表示
-    const timeout = setTimeout(() => {
-      setVisible(false);
-    }, 10000);
-
-    const interval = setInterval(() => {
-      const nextMsg = BAND_MESSAGES[Math.floor(Math.random() * BAND_MESSAGES.length)];
-      setCurrentMessage(nextMsg);
-    }, 2200);
-
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    };
-  }, [visible]);
-
   return (
-    <>
-      <Suspense fallback={null}>
-        <RouteChangeSpinnerCloser />
-      </Suspense>
-      {!visible ? null : (
-        <div className={styles.overlay} onClick={() => hideSpinner()}>
-          <div className={styles.spinnerCard || styles.container} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pulseRing}>
-              <div className={styles.iconContainer}>
-                <span className={styles.noteIcon}>🎷</span>
-              </div>
-            </div>
-            <p className={styles.message}>{currentMessage}</p>
-          </div>
-        </div>
-      )}
-    </>
+    <Suspense fallback={null}>
+      <RouteChangeSpinnerCloser />
+    </Suspense>
   );
 }

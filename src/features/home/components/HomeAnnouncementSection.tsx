@@ -10,6 +10,7 @@ import {
   faMusic,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
+import { showSpinner } from "@/components/Common/Spinner";
 import { HomeAnnouncement } from "../types";
 import styles from "./HomeAnnouncementSection.module.css";
 
@@ -69,6 +70,7 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
                 prefetch={false}
                 href={a.link || "#"}
                 className={styles.notificationLink}
+                onClick={() => showSpinner()}
               >
                 <div className={`${styles.itemIconWrapper} ${iconBgClass}`}>
                   <FontAwesomeIcon icon={icon} />

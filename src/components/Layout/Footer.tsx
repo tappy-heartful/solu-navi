@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHome, faUsers, faUser, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { showSpinner } from "../Common/Spinner";
 import styles from "./Footer.module.css";
 
 export function Footer() {
@@ -32,6 +33,7 @@ export function Footer() {
             href={item.href}
             prefetch={false}
             className={`${styles.navLink} ${item.active ? styles.active : ""}`}
+            onClick={() => showSpinner()}
           >
             <FontAwesomeIcon icon={item.icon} className={styles.icon} />
             <span className={styles.label}>{item.label}</span>
