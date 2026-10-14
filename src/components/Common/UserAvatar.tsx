@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import React from "react";
 import { globalLineDefaultImage } from "@/lib/functions";
 import styles from "./UserAvatar.module.css";
 
@@ -17,6 +16,7 @@ export interface UserAvatarProps {
  * ユーザーアバター共通コンポーネント
  * - LINEアイコン画像が存在する場合はそれを表示
  * - 未設定または読み込み失敗時は共通の音楽団体抽象アイコン (/default-avatar.svg) を表示
+ * - iPhone Safari / PWA での描画負荷を最小化するため、軽量なネイティブ img タグを使用
  */
 export function UserAvatar({
   src,
@@ -25,24 +25,19 @@ export function UserAvatar({
   className,
   priority = false,
 }: UserAvatarProps) {
-  const [currentSrc, setCurrentSrc] = useState<string>(src || globalLineDefaultImage);
-
-  useEffect(() => {
-    setCurrentSrc(src || globalLineDefaultImage);
-  }, [src]);
-
   return (
-    <Image
-      src={currentSrc}
+    <img
+      src={src || globalLineDefaultImage}
       alt={alt}
       width={size}
       height={size}
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
       className={`${styles.avatarImg} ${className || ""}`.trim()}
-      priority={priority}
-      unoptimized
-      onError={() => {
-        if (currentSrc !== globalLineDefaultImage) {
-          setCurrentSrc(globalLineDefaultImage);
+      onError={(e) => {
+        const target = e.currentTarget;
+        if (target.src !== globalLineDefaultImage) {
+          target.src = globalLineDefaultImage;
         }
       }}
     />

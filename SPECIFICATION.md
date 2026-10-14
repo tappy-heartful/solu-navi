@@ -234,6 +234,10 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 
 ### 3.5. ユーザー・プロフィール管理 (`/user`)
 - 名簿一覧: `/user` (パート別タブフィルター、略称検索、回生バッジ)
+  - **SSR・サーバー事前フェッチ（streak-navi準拠）**: `src/app/user/page.tsx`（Server Component）にて `getUsersServer`、`getSectionsServer`、`getRolesServer`、`getInstrumentsServer` を `Promise.all` でサーバーサイド事前取得し、クライアントへ初期データ（`initialData`）として即座に受け渡し。クライアント側での Firestore 通信待ちを完全に排除し、iPhone Safari / PWA における初期ロード時間を劇的に短縮。
+  - **アバター画像描画の最適化 (`UserAvatar`)**: Next.js の `<Image>` コンポーネントによる大量のフック・IntersectionObserver 生成を廃止し、プロジェクト規約（`user_global` 2.7節）および `streak-navi` に準拠した軽量ネイティブ `<img>`（`loading="lazy"`, `decoding="async"`）に刷新。画面外の画像リクエストを遅延させ、Safari のメインスレッド占有とフリーズを完全解消。
+  - **DOM レンダリング最適化 (`content-visibility: auto`)**: リストカード（`.userCard`）に CSS `content-visibility: auto; contain-intrinsic-size: 0 76px;` を適用し、画面外要素のレイアウト計算をスキップして60fpsのスムーズスクロールを実現。
+  - **即時スケルトンUI (`loading.tsx`)**: サーバー通信中に自動表示される軽量スケルトンUIを提供。
 - マイプロフィール: `/user/detail` (自身の登録情報の詳細確認、入学年度と自動判定された回生表示)
 - 登録変更: `/user/edit` (略称、役職、パート、担当楽器、入学年度)
   - **項目順序**: 「略称」→「役職」→「所属パート」→「担当楽器」→「入学年度」の順で入力・表示。

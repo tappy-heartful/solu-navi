@@ -15,12 +15,27 @@ import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/fire
 import { getGradeFromEnrollmentYear } from "@/lib/functions";
 import styles from "./UserListClient.module.css";
 
-export function UserListClient() {
+import { SectionDoc, RoleDoc, InstrumentDoc } from "@/lib/firestore/types";
+
+interface UserListClientProps {
+  initialData?: {
+    users: UserDoc[];
+    sections?: SectionDoc[];
+    roles?: RoleDoc[];
+    instruments?: InstrumentDoc[];
+  };
+}
+
+export function UserListClient({ initialData }: UserListClientProps = {}) {
   const { setBreadcrumbs } = useBreadcrumb();
-  const [users, setUsers] = useState<UserDoc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserDoc[]>(initialData?.users || []);
+  const [loading, setLoading] = useState(!initialData?.users);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSection, setSelectedSection] = useState<string>("all");
+
+  const sections = initialData?.sections || DEFAULT_SECTIONS;
+  const roles = initialData?.roles || DEFAULT_ROLES;
+  const instruments = initialData?.instruments || DEFAULT_INSTRUMENTS;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -28,16 +43,19 @@ export function UserListClient() {
       { label: "部員名簿" },
     ]);
 
-    async function load() {
-      try {
-        const data = await fetchUsers();
-        setUsers(data);
-      } finally {
-        setLoading(false);
+    // initialData がない場合のみクライアントフェッチを実行
+    if (!initialData?.users || initialData.users.length === 0) {
+      async function load() {
+        try {
+          const data = await fetchUsers();
+          setUsers(data);
+        } finally {
+          setLoading(false);
+        }
       }
+      load();
     }
-    load();
-  }, [setBreadcrumbs]);
+  }, [setBreadcrumbs, initialData?.users]);
 
   // フィルタリング
   const filteredUsers = useMemo(() => {
@@ -99,7 +117,7 @@ export function UserListClient() {
           >
             すべて
           </button>
-          {DEFAULT_SECTIONS.map((sec) => (
+          {sections.map((sec) => (
             <button
               key={sec.id}
               type="button"
@@ -121,10 +139,10 @@ export function UserListClient() {
         ) : (
           <div className={styles.list}>
             {filteredUsers.map((user) => {
-              const sec = DEFAULT_SECTIONS.find((s) => s.id === user.sectionId);
-              const role = DEFAULT_ROLES.find((r) => r.id === user.roleId);
+              const sec = sections.find((s) => s.id === user.sectionId);
+              const role = roles.find((r) => r.id === user.roleId);
               const instNames = (user.instrumentIds || [])
-                .map((id) => DEFAULT_INSTRUMENTS.find((i) => i.id === id)?.name)
+                .map((id) => instruments.find((i) => i.id === id)?.name)
                 .filter(Boolean);
 
               return (

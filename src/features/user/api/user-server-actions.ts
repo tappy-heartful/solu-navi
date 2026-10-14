@@ -11,7 +11,13 @@ import { unstable_cache } from "next/cache";
 export async function getUsersServer(): Promise<User[]> {
   try {
     const snap = await adminDb.collection("users").get();
-    return snap.docs.map((doc) => toPlainObject(doc)) as unknown as User[];
+    const users = snap.docs.map((doc) => toPlainObject(doc)) as unknown as User[];
+    return users.sort((a, b) => {
+      const secA = a.sectionId || "99";
+      const secB = b.sectionId || "99";
+      if (secA !== secB) return secA.localeCompare(secB);
+      return (a.displayName || "").localeCompare(b.displayName || "");
+    });
   } catch (err) {
     console.error("Failed to fetch users server:", err);
     return [];
