@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { AnswerConfirmLayout } from "@/components/Layout/AnswerConfirmLayout";
@@ -77,6 +77,11 @@ export function EventConfirmClient({ eventId, data }: Props) {
   const [recordingForm, setRecordingForm] = useState({ title: "", url: "" });
   const [recordingModalOpen, setRecordingModalOpen] = useState(false);
 
+  // マウント時にスピナーを確実に非表示
+  useEffect(() => {
+    hideSpinner();
+  }, []);
+
   const isSchedule = event.attendanceType === "schedule";
   const isPast = isEventPast(event);
   const inTerm = isInTerm(event.acceptStartDate, event.acceptEndDate);
@@ -118,7 +123,6 @@ export function EventConfirmClient({ eventId, data }: Props) {
       await writeLog({ dataId: eventId, action: "イベント削除" });
       await showDialog("削除しました", true);
       router.refresh();
-      showSpinner();
       router.push("/event");
     } catch (e) {
       hideSpinner();
@@ -450,7 +454,6 @@ export function EventConfirmClient({ eventId, data }: Props) {
         type="button"
         className="save-button"
         onClick={() => {
-          showSpinner();
           const path = isSchedule
             ? `/event/adjust-answer?eventId=${eventId}`
             : `/event/attendance-answer?eventId=${eventId}`;

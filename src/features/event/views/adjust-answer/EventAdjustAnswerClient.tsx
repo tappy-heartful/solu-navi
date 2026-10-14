@@ -30,6 +30,11 @@ export function EventAdjustAnswerClient({ eventId, event, adjustStatuses }: Prop
 
   const candidateDates = event.candidateDates || [];
 
+  // マウント時にスピナーを確実に非表示
+  useEffect(() => {
+    hideSpinner();
+  }, []);
+
   useEffect(() => {
     if (!uid) return;
     const fetch = async () => {
@@ -72,7 +77,6 @@ export function EventAdjustAnswerClient({ eventId, event, adjustStatuses }: Prop
       await writeLog({ dataId: eventId, action: `イベント回答（調整）${isEdit ? "修正" : "登録"}` });
       await showDialog(`回答を${isEdit ? "修正" : "登録"}しました`, true);
       router.refresh();
-      showSpinner();
       router.push(`/event/confirm?eventId=${eventId}`);
     } catch (e) {
       hideSpinner();

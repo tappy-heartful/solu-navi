@@ -92,12 +92,10 @@ export const AnswerConfirmLayout = ({
   };
 
   const onEdit = () => {
-    showSpinner();
     router.push(`${basePath}/edit?mode=edit&${featureIdKey}=${dataId}`);
   };
 
   const onCopy = () => {
-    showSpinner();
     router.push(`${basePath}/edit?mode=copy&${featureIdKey}=${dataId}`);
   };
 

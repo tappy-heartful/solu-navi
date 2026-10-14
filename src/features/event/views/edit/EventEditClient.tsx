@@ -129,6 +129,11 @@ export function EventEditClient({
     return {};
   });
 
+  // マウント時にスピナーを確実に非表示
+  useEffect(() => {
+    hideSpinner();
+  }, []);
+
   useEffect(() => {
     if (loading) return;
     if (!isAdmin) {
@@ -309,7 +314,6 @@ export function EventEditClient({
       await showDialog("保存しました", true);
 
       router.refresh();
-      showSpinner();
       router.push(`/event/confirm?eventId=${newId}`);
     } catch (e) {
       hideSpinner();

@@ -35,6 +35,21 @@ export function hideSpinner() {
   if (spinnerHideHandler) spinnerHideHandler();
 }
 
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
+// ページ遷移を検知して自動でスピナーを閉じるサブコンポーネント
+function RouteChangeSpinnerCloser() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    hideSpinner();
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
 export function Spinner() {
   const [visible, setVisible] = useState(false);
   const [currentMessage, setCurrentMessage] = useState(BAND_MESSAGES[0]);
@@ -56,28 +71,43 @@ export function Spinner() {
     };
   }, []);
 
+  // メッセージのランダムローテーション & 安全タイムアウト（最大10秒で自動非表示）
   useEffect(() => {
     if (!visible) return;
+
+    // 10秒経過しても閉じられない場合は安全のため自動非表示
+    const timeout = setTimeout(() => {
+      setVisible(false);
+    }, 10000);
+
     const interval = setInterval(() => {
       const nextMsg = BAND_MESSAGES[Math.floor(Math.random() * BAND_MESSAGES.length)];
       setCurrentMessage(nextMsg);
     }, 2200);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [visible]);
 
-  if (!visible) return null;
-
   return (
-    <div className={styles.overlay}>
-      <div className={styles.spinnerCard || styles.container}>
-        <div className={styles.pulseRing}>
-          <div className={styles.iconContainer}>
-            <span className={styles.noteIcon}>🎷</span>
+    <>
+      <Suspense fallback={null}>
+        <RouteChangeSpinnerCloser />
+      </Suspense>
+      {!visible ? null : (
+        <div className={styles.overlay} onClick={() => hideSpinner()}>
+          <div className={styles.spinnerCard || styles.container} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pulseRing}>
+              <div className={styles.iconContainer}>
+                <span className={styles.noteIcon}>🎷</span>
+              </div>
+            </div>
+            <p className={styles.message}>{currentMessage}</p>
           </div>
         </div>
-        <p className={styles.message}>{currentMessage}</p>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
