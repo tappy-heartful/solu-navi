@@ -1,5 +1,5 @@
 // Solu Navi Service Worker
-const CACHE_NAME = "solu-navi-cache-v2";
+const CACHE_NAME = "solu-navi-cache-v3";
 
 // プリキャッシュ対象の静的アセット
 const PRECACHE_ASSETS = [
