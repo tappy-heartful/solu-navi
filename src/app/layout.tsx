@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | Solu Navi",
     default: "Solu Navi | 愛大軽音楽部活動ポータル",
   },
-  description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra 活動ポータル",
   applicationName: "Solu Navi",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Solu Navi | 愛大軽音楽部活動ポータル",
-    description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
+    description: "愛媛大学軽音楽部 Sound Solution Orchestra 活動ポータル",
     siteName: "Solu Navi",
     locale: "ja_JP",
     type: "website",

@@ -1,6 +1,6 @@
-# Solu Navi (愛媛大学軽音楽部 Sound Solition Orchestra) システム仕様書
+# Solu Navi (愛媛大学軽音楽部 Sound Solution Orchestra) システム仕様書
 
-本ドキュメントは、愛媛大学軽音楽部 Sound Solition Orchestra（愛大軽音楽部）向け活動ポータル「**Solu Navi**」の完全システム仕様書である。
+本ドキュメントは、愛媛大学軽音楽部 Sound Solution Orchestra（愛大軽音楽部）向け活動ポータル「**Solu Navi**」の完全システム仕様書である。
 先行して稼働している姉妹アプリ「Streak Navi」の堅牢なアーキテクチャ・設計思想をベースとし、愛大軽音楽部の活動形態に合わせて最適化している。
 
 ---
@@ -8,10 +8,10 @@
 ## 1. システム全体概要
 
 ### 1.1. システム目的
-愛媛大学軽音楽部 Sound Solition Orchestra の日常運営・部費/会計精算・ライブ制作・メンバー間の情報共有・出欠連絡を一元管理し、部員の負担軽減と円滑なサークル運営を実現する活動ポータルWebアプリケーション。
+愛媛大学軽音楽部 Sound Solution Orchestra の日常運営・部費/会計精算・ライブ制作・メンバー間の情報共有・出欠連絡を一元管理し、部員の負担軽減と円滑なサークル運営を実現する活動ポータルWebアプリケーション。
 
 ### 1.2. サークル基本情報 (参考情報)
-- **団体名**: 愛媛大学軽音楽部 Sound Solition Orchestra (Sound Solution Orchestra / 愛大軽音楽部)
+- **団体名**: 愛媛大学軽音楽部 Sound Solution Orchestra (Sound Solution Orchestra / 愛大軽音楽部)
   - 愛媛大学の学生ビッグバンドサークル（社会人ビッグバンド Swing Streak Jazz Orchestra の母体組織）。
 - **年間活動サイクル・世代交代**:
   - 5月頃: 新入生が入部
@@ -36,7 +36,7 @@
   - `--primary: #146081`
   - `--primary-hover: #0f4a64`
   - `--primary-light: #e8f4f8`
-- **ロゴ画像**: `/public/sso-logo.jpg`（Sound Solition Orchestra 公式ロゴ・サークルエンブレム）
+- **ロゴ画像**: `/public/sso-logo.jpg`（Sound Solution Orchestra 公式ロゴ・サークルエンブレム）
 - **アプリアイコン**: `Solu Navi.png`（ディープティールブルー `#104861` 背景に「Solu Navi」のロゴタイプを配した公式アプリアイコン）
   - ブラウザ favicon: `favicon.ico`, `favicon.png` (32x32)
   - iOS ホーム画面追加 (Apple Touch Icon): `apple-touch-icon.png` (180x180)
@@ -67,7 +67,7 @@
   - 白いカードや枠線、余分な説明ピル、テスト用ログインを全廃。ビューポート全体（`100dvh` / `100vw`）に広がる深淵なディープティール＋ナイトジャズグラデーション（`#05141d` 〜 `#104861`）とアンビエント光彩を配置。
   - 背後にサークルの公式エンブレムロゴ（`/sso-logo.jpg`）を巨大かつ薄く透かし（ウォーターマーク、呼吸アニメーション）として配置し、バンドの世界観と期待感を最大化。
 - **上部タイトル配置**:
-  - 画面上部に公式アプリアイコンバッジ（`/icons/icon-192.png`）を配置し、その直下に `Solu Navi`（Nがアンバーゴールド `#f59e0b` に輝くタイポグラフィ）、サブタイトル `Sound Solition Orchestra`、および `愛媛大学軽音楽部 活動ポータル` をスタイリッシュにレイアウト。
+  - 画面上部に公式アプリアイコンバッジ（`/icons/icon-192.png`）を配置し、その直下に `Solu Navi`（Nがアンバーゴールド `#f59e0b` に輝くタイポグラフィ）、サブタイトル `Sound Solution Orchestra`、および `愛媛大学軽音楽部 活動ポータル` をスタイリッシュにレイアウト。
 - **下部認証アクション配置**:
   - 画面最下部に「LINEでログイン」ボタン（立体グラデーション＆プレミアムグロー）をすっきり配置。
   - PWA スタンドアロン起動時は、外部ブラウザでのログイン待機ガイドと復帰ボタン（「ログインを完了して進む」）をスムーズに表示。
@@ -85,7 +85,7 @@
 
 ### 1.8. ホーム画面 (`/`) & PWA ホーム画面追加案内
 - **ウェルカムカード**:
-  - Sound Solition Orchestra 公式ロゴ（`/public/sso-logo.jpg`）を表示。ヘッダー右側にユーザー自身のLINEアバター画像（`UserAvatar`）を表示。
+  - Sound Solution Orchestra 公式ロゴ（`/public/sso-logo.jpg`）を表示。ヘッダー右側にユーザー自身のLINEアバター画像（`UserAvatar`）を表示。
   - 表示名は略称ではなく、通常画面（ホーム、部員名簿、ヘッダー、詳細確認等）では常に LINE の表示名（`displayName`）を使用（※略称は譜割り専用のため通常画面では非表示・2文字以内制限）。
   - 役職バッジ（👑バンマス、🎼コンマス、✨パートリーダー、🎵メンバー、🎉ゲスト）、パートバッジ、回生バッジ（毎年4月1日 JST 00:00:00 に自動進級切り替え）、担当楽器を表示。
 - **お知らせセクション (`HomeAnnouncementSection` / streak-navi 準拠デザイン)**:

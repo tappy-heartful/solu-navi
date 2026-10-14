@@ -248,7 +248,7 @@ export function UserEditClient() {
         <div className={styles.noticeAlert}>
           <FontAwesomeIcon icon={faInfoCircle} className={styles.alertIcon} />
           <div>
-            <strong>ようこそ Sound Solition Orchestra へ！</strong>
+            <strong>ようこそ Sound Solution Orchestra へ！</strong>
             <p>
               円滑な活動と出欠・譜割り管理のため、初回プロフィールの登録をお願いします。
             </p>

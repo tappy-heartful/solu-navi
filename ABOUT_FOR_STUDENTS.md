@@ -1,7 +1,7 @@
-# 🎷 Sound Solition Orchestra 活動ポータル「Solu Navi」ガイド
+# 🎷 Sound Solution Orchestra 活動ポータル「Solu Navi」ガイド
 ## 〜 事務処理をなくして、もっと「音楽」と「仲間」に向き合うために 〜
 
-愛媛大学軽音楽部 Sound Solition Orchestra（愛大そりゅ）の部員のみなさんへ向けた、活動ポータルWebアプリ**「Solu Navi（そりゅナビ）」**の紹介・説明ドキュメントです。
+愛媛大学軽音楽部 Sound Solution Orchestra（愛大そりゅ）の部員のみなさんへ向けた、活動ポータルWebアプリ**「Solu Navi（そりゅナビ）」**の紹介・説明ドキュメントです。
 
 ---
 

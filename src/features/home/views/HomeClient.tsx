@@ -77,7 +77,7 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <div className={styles.logoBadge}>
               <Image
                 src="/sso-logo.jpg"
-                alt="Sound Solition Orchestra Logo"
+                alt="Sound Solution Orchestra Logo"
                 width={56}
                 height={56}
                 className={styles.logoImg}
@@ -85,7 +85,7 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
               />
             </div>
             <div className={styles.welcomeText}>
-              <span className={styles.greeting}>Sound Solition Orchestra</span>
+              <span className={styles.greeting}>Sound Solution Orchestra</span>
               <h2 className={styles.userName}>
                 {userData?.displayName
                   ? `${userData.displayName} さん`

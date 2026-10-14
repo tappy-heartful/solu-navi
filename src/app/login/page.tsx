@@ -238,7 +238,7 @@ function LoginContent() {
         <h1 className={styles.title}>
           Solu <span className={styles.titleHighlight}>N</span>avi
         </h1>
-        <p className={styles.subtitle}>Sound Solition Orchestra</p>
+        <p className={styles.subtitle}>Sound Solution Orchestra</p>
         <p className={styles.caption}>愛媛大学軽音楽部 活動ポータル</p>
       </div>
 

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "曲投票一覧 | Solu Navi",
-  description: "愛媛大学軽音楽部 Sound Solition Orchestra 曲投票一覧",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra 曲投票一覧",
 };
 
 export const dynamic = "force-dynamic";

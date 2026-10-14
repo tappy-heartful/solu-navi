@@ -3,7 +3,7 @@ import { UserEditClient } from "@/features/user/views/UserEditClient";
 
 export const metadata = {
   title: "プロフィール編集 | Solu Navi",
-  description: "愛媛大学軽音楽部 Sound Solition Orchestra プロフィール編集",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra プロフィール編集",
 };
 
 export default function UserEditPage() {

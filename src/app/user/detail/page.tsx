@@ -3,7 +3,7 @@ import { UserConfirmClient } from "@/features/user/views/UserConfirmClient";
 
 export const metadata = {
   title: "部員詳細 | Solu Navi",
-  description: "愛媛大学軽音楽部 Sound Solition Orchestra 部員詳細",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra 部員詳細",
 };
 
 export default function UserDetailPage() {

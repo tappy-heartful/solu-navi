@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "ホーム | Solu Navi",
-  description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra 活動ポータル",
 };
 
 export default async function HomePage() {

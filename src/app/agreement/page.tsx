@@ -29,10 +29,10 @@ export default function AgreementPage() {
     ? typeof userData.agreedAt === "number"
       ? new Date(userData.agreedAt)
       : typeof (userData.agreedAt as { toDate?: () => Date }).toDate === "function"
-      ? (userData.agreedAt as { toDate: () => Date }).toDate()
-      : typeof (userData.agreedAt as { toMillis?: () => number }).toMillis === "function"
-      ? new Date((userData.agreedAt as { toMillis: () => number }).toMillis())
-      : null
+        ? (userData.agreedAt as { toDate: () => Date }).toDate()
+        : typeof (userData.agreedAt as { toMillis?: () => number }).toMillis === "function"
+          ? new Date((userData.agreedAt as { toMillis: () => number }).toMillis())
+          : null
     : null;
   const agreedDateStr = agreedDate ? format(agreedDate, "yyyy.MM.dd") : "";
 
@@ -107,7 +107,7 @@ export default function AgreementPage() {
               <FontAwesomeIcon icon={faFileShield} className={styles.titleIcon} />
               Solu Navi 利用規約
             </h1>
-            <p className={styles.subtitle}>愛媛大学軽音楽部 Sound Solition Orchestra</p>
+            <p className={styles.subtitle}>愛媛大学軽音楽部 Sound Solution Orchestra</p>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ export default function AgreementPage() {
           <section className={styles.termSection}>
             <h3>第1条（総則・利用目的）</h3>
             <p>
-              本規約は、愛媛大学軽音楽部 Sound Solition Orchestra（以下「本サークル」）が部員向けに提供する活動ポータル「Solu Navi」（以下「本サービス」）の利用条件を定めるものです。本サービスは、サークル運営、練習・ライブ・イベントの出欠確認および日程調整、選曲リクエスト募集・選曲投票、録音等の共有、部員情報の相互共有を円滑化することを目的とします。
+              本規約は、愛媛大学軽音楽部 Sound Solution Orchestra（以下「本サークル」）が部員向けに提供する活動ポータル「Solu Navi」（以下「本サービス」）の利用条件を定めるものです。本サービスは、サークル運営、練習・ライブ・イベントの出欠確認および日程調整、選曲リクエスト募集・選曲投票、録音等の共有、部員情報の相互共有を円滑化することを目的とします。
             </p>
           </section>
 

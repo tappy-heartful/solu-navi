@@ -61,7 +61,7 @@ export function Header() {
             <div className={styles.logoWrapper}>
               <Image
                 src="/sso-logo.jpg"
-                alt="Sound Solition Orchestra Logo"
+                alt="Sound Solution Orchestra Logo"
                 width={36}
                 height={36}
                 className={styles.logoImg}
@@ -70,7 +70,7 @@ export function Header() {
             </div>
             <div className={styles.titleWrapper}>
               <span className={styles.brandTitle}>Solu Navi</span>
-              <span className={styles.brandSubtitle}>Sound Solition Orch.</span>
+              <span className={styles.brandSubtitle}>Sound Solution Orch.</span>
             </div>
           </Link>
         </div>
