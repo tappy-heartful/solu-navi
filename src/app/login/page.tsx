@@ -153,12 +153,6 @@ function LoginContent() {
     };
   }, [redirectPath, urlPwaSessionId, completePwaLogin]);
 
-  // すでにログイン済みの場合はリダイレクト
-  useEffect(() => {
-    if (user) {
-      router.replace(redirectPath);
-    }
-  }, [user, redirectPath, router]);
 
   // 通常ブラウザでの LINE ログイン開始
   const handleLineLogin = async () => {

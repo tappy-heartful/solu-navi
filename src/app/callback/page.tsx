@@ -10,7 +10,7 @@ import styles from "./callback.module.css";
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { loginWithCustomToken } = useAuth();
+  const { loginWithCustomToken, logout } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPwaSuccess, setIsPwaSuccess] = useState(false);
   const hasCalled = useRef(false);
@@ -55,12 +55,19 @@ function CallbackContent() {
           return;
         }
 
-        // PWA ログインの場合（外部ブラウザから PWA アプリ本体へ戻す）
+        // PWA ログインの場合（ブラウザ側ではログインせず、PWA アプリ本体のみでログインを完了させる）
         if (data.isPwaLogin) {
+          try {
+            // ブラウザ側の既存セッションをクリア（ブラウザ側ではログインしない）
+            await logout();
+          } catch (logoutErr) {
+            console.error("Browser session clear error:", logoutErr);
+          }
+
           setIsPwaSuccess(true);
           await showDialog({
             title: "ログイン成功！",
-            message: "認証が完了しました！Solu Naviアプリに戻り、画面左上の「完了」ボタン（またはブラウザを閉じて）アプリをご確認ください。",
+            message: "認証が完了しました！Solu Naviアプリに戻り、画面左上の「完了」ボタン（またはブラウザの閉じるボタン）をタップしてください。",
             type: "success",
           });
           return;

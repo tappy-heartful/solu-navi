@@ -141,7 +141,8 @@
 - **PWA × OAuth クロスコンテキスト自動同期機構 (`pwaAuthSessions`)**:
   - PWA スタンドアロン起動時、一意の `pwaSessionId` を自動生成し、LINE認可URL（`bot_prompt=aggressive` 付き）を外部ブラウザ（Safari等）で起動。
   - PWA アプリ画面上には「外部ブラウザでログイン中」の案内ボックスと手動復帰ボタン（「ログインを完了して進む」）を表示。
-  - 外部ブラウザ側コールバック（`/callback`）は `isPwaLogin` を検知するとブラウザ単体でのログインを行わず、「ログイン成功！Solu Naviアプリにお戻りください」のメッセージとダイアログを表示して待機。
+  - **ブラウザ側セッションの完全分離**: 外部ブラウザ側コールバック（`/callback`）は `isPwaLogin` を検知すると、ブラウザ側でのログインを明示的に遮断（`logout()` で既存セッションを破棄）し、「ログイン成功！Solu Naviアプリにお戻りください」のメッセージとダイアログを表示して待機（ブラウザ側でホーム画面に遷移させない）。
+  - **公開パスの強制リダイレクト防止 (`AuthGuard`)**: `streak-navi` の設計に完全準拠し、公開パス（`/login`, `/callback`, `/agreement`, `/about`）での勝手なホーム画面への自動リダイレクトを排除。
   - Firestore の `pwaAuthSessions/{pwaSessionId}` ドキュメント（`status: "completed"`, `customToken`）を PWA 側がリアルタイム監視（`onSnapshot`）およびフォアグラウンド復帰時（`visibilitychange`/`focus`）に即時直接取得（`getDoc`）し、PWA アプリ本体が `customToken` で自動サインインしてホームへシームレスに遷移。
 
 ---

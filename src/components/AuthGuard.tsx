@@ -8,7 +8,7 @@ interface AuthGuardProps {
   children: ReactNode;
 }
 
-const PUBLIC_PATHS = ["/login", "/callback"];
+const PUBLIC_PATHS = ["/login", "/callback", "/agreement", "/about"];
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { user, userData, loading } = useAuth();
@@ -28,9 +28,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    // ログイン済みでログインページ等にいる場合 -> ホームへ
+    // 公開パス（/login, /callback 等）の場合はリダイレクトせずそのまま表示
     if (isPublic) {
-      router.replace("/");
       return;
     }
 
