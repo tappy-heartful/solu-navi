@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { writeLog } from "@/lib/functions";
@@ -11,6 +11,7 @@ function CallbackContent() {
   const searchParams = useSearchParams();
   const { loginWithCustomToken } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const hasCalled = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get("code");
@@ -28,6 +29,11 @@ function CallbackContent() {
       return;
     }
 
+    if (hasCalled.current) {
+      return;
+    }
+    hasCalled.current = true;
+
     async function handleLogin() {
       try {
         const res = await fetch("/api/line/login", {
@@ -42,7 +48,7 @@ function CallbackContent() {
           if (data.error === "NOT_FRIEND") {
             setErrorMsg("公式アカウントが友だち追加されていません。友だち追加後に再度お試しください。");
           } else {
-            setErrorMsg(data.message || "ログイン処理に失敗しました。");
+            setErrorMsg(data.message || data.error || "ログイン処理に失敗しました。");
           }
           return;
         }
