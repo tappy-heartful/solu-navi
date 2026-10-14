@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Solu Navi | 愛大ソルソリ活動ポータル",
+    name: "Solu Navi | 愛大軽音楽部活動ポータル",
     short_name: "Solu Navi",
     description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
     start_url: "/",

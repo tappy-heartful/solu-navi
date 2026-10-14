@@ -34,7 +34,7 @@
 メンバーがスマートフォンからストレスなく利用できるモバイルファーストのUI/UX、LINEとのシームレスな統合（認証・通知）、PWAによるアプリ同等の体験、そしてLLMを活用したAIコンシェルジュ機能を兼ね備えている。
 
 ### 1.2. サークル基本情報 (参考情報)
-- **団体名**: 愛媛大学軽音楽部 Sound Solition Orchestra (Sound Solution Orchestra / 愛大ソルソリ)
+- **団体名**: 愛媛大学軽音楽部 Sound Solition Orchestra (Sound Solution Orchestra / 愛大軽音楽部)
   - 愛媛大学の学生ビッグバンドサークル（社会人ビッグバンド Swing Streak Jazz Orchestra の母体組織）。
 - **年間活動サイクル・世代交代**:
   - 5月頃: 新入生が入部

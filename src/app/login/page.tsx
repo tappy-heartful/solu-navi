@@ -6,8 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLine } from "@fortawesome/free-brands-svg-icons";
 import {
-  faShieldHalved,
-  faUserCheck,
   faArrowUpRightFromSquare,
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,7 +23,6 @@ function LoginContent() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showDevLogin, setShowDevLogin] = useState(false);
 
   // PWA 関連ステート
   const [isStandalone, setIsStandalone] = useState(false);
@@ -48,7 +45,6 @@ function LoginContent() {
     let unsub: (() => void) | undefined;
 
     if (standalone) {
-      // PWA スタンドアロンの場合、Session ID を発行・保持
       let sid = localStorage.getItem("pwa_session_id");
       if (!sid) {
         sid =
@@ -59,7 +55,6 @@ function LoginContent() {
       }
       setPwaSessionId(sid);
 
-      // PWA用の認可URLを事前取得
       fetch(`/api/line/get-url?redirect=${encodeURIComponent(redirectPath)}&pwaSessionId=${sid}`)
         .then((res) => res.json())
         .then((data) => {
@@ -71,7 +66,6 @@ function LoginContent() {
           console.error("Failed to pre-fetch PWA login URL:", err);
         });
 
-      // Firestore の pwaAuthSessions をリアルタイム監視
       unsub = onSnapshot(doc(db, "pwaAuthSessions", sid), async (snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot.data();
@@ -92,7 +86,6 @@ function LoginContent() {
         }
       });
     } else if (urlPwaSessionId && !isRedirectingRef.current) {
-      // 外部ブラウザで pwaSessionId 付きで開かれた場合、即座にLINE認可URLへ自動リダイレクト
       isRedirectingRef.current = true;
       fetch(`/api/line/get-url?redirect=${encodeURIComponent(redirectPath)}&pwaSessionId=${urlPwaSessionId}`)
         .then((res) => res.json())
@@ -146,48 +139,46 @@ function LoginContent() {
     }
   }, [user, redirectPath, router]);
 
-  // 開発・テスト用ログイン
-  const handleDevLogin = async (role: "admin" | "user") => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch("/api/test-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.customToken) {
-        throw new Error(data.error || "テストトークン取得失敗");
-      }
-      await loginWithCustomToken(data.customToken);
-      router.replace(redirectPath);
-    } catch (err: unknown) {
-      console.error("Dev login error:", err);
-      setError(err instanceof Error ? err.message : "開発ログインエラー");
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className={styles.loginContainer || styles.container}>
-      <div className={styles.loginCard || styles.card}>
-        {/* ロゴ & タイトル */}
-        <div className={styles.logoWrapper}>
+    <div className={styles.loginPage}>
+      {/* 背景アンビエント光彩 */}
+      <div className={styles.ambientGlowTeal} />
+      <div className={styles.ambientGlowAmber} />
+
+      {/* サークルの公式エンブレムロゴ（薄く大きく背景に配置） */}
+      <div className={styles.bgLogoBackdrop} aria-hidden="true">
+        <Image
+          src="/sso-logo.jpg"
+          alt=""
+          width={720}
+          height={720}
+          className={styles.bgLogoImg}
+          priority
+        />
+      </div>
+
+      {/* 画面上部：タイトルエリア */}
+      <div className={styles.titleArea}>
+        <div className={styles.appIconBadge}>
           <Image
-            src="/sso-logo.jpg"
-            alt="Sound Solition Orchestra"
-            width={120}
-            height={120}
-            className={styles.logoImg}
+            src="/icons/icon-192.png"
+            alt="Solu Navi"
+            width={76}
+            height={76}
+            className={styles.appIconImg}
             priority
           />
         </div>
 
-        <h1 className={styles.title}>Solu Navi</h1>
-        <p className={styles.subtitle}>愛媛大学軽音楽部 Sound Solition Orchestra</p>
-        <p className={styles.caption}>活動ポータルへようこそ</p>
+        <h1 className={styles.title}>
+          Solu <span className={styles.titleHighlight}>N</span>avi
+        </h1>
+        <p className={styles.subtitle}>Sound Solition Orchestra</p>
+        <p className={styles.caption}>愛媛大学軽音楽部 活動ポータル</p>
+      </div>
 
+      {/* 画面下部：認証アクションエリア */}
+      <div className={styles.authContainer}>
         {error && <div className={styles.errorBox}>{error}</div>}
 
         {/* PWA ガイド表示 */}
@@ -229,7 +220,7 @@ function LoginContent() {
                   href={pwaLoginUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={styles.lineBtn}
+                  className={styles.loginBtn}
                   onClick={() => setShowPwaGuide(true)}
                 >
                   <FontAwesomeIcon icon={faLine} className={styles.lineIcon} />
@@ -238,7 +229,7 @@ function LoginContent() {
               ) : (
                 <button
                   type="button"
-                  className={styles.lineBtn}
+                  className={styles.loginBtn}
                   disabled
                 >
                   <FontAwesomeIcon icon={faLine} className={styles.lineIcon} />
@@ -248,7 +239,7 @@ function LoginContent() {
             ) : (
               <button
                 type="button"
-                className={styles.lineBtn}
+                className={styles.loginBtn}
                 onClick={handleLineLogin}
                 disabled={loading}
               >
@@ -260,42 +251,8 @@ function LoginContent() {
         )}
 
         <p className={styles.notes}>
-          ※部員限定システムです。ログインには公式LINEアカウントの友だち追加が必要です。
+          ※部員限定システム（公式LINE友だち追加必須）
         </p>
-
-        {/* 開発・テスト用ログインセクション */}
-        <div className={styles.devSection}>
-          <button
-            type="button"
-            className={styles.devToggle}
-            onClick={() => setShowDevLogin((prev) => !prev)}
-          >
-            {showDevLogin ? "▲ テストログインを閉じる" : "▼ ローカル・テスト用ログイン"}
-          </button>
-
-          {showDevLogin && (
-            <div className={styles.devButtons}>
-              <button
-                type="button"
-                className={styles.testBtn}
-                onClick={() => handleDevLogin("admin")}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faShieldHalved} />
-                <span>管理者としてログイン</span>
-              </button>
-              <button
-                type="button"
-                className={styles.testBtn}
-                onClick={() => handleDevLogin("user")}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faUserCheck} />
-                <span>一般部員としてログイン</span>
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
@@ -303,7 +260,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className={styles.loginContainer || styles.container}>読み込み中...</div>}>
+    <Suspense fallback={<div className={styles.loginPage}>読み込み中...</div>}>
       <LoginContent />
     </Suspense>
   );
