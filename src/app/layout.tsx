@@ -3,18 +3,56 @@ import "./globals.css";
 import { ClientLayout } from "./ClientLayout";
 
 export const metadata: Metadata = {
-  title: "Solu Navi | 愛媛大学軽音楽部 Sound Solition Orchestra",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3003"),
+  title: {
+    template: "%s | Solu Navi",
+    default: "Solu Navi | 愛大ソルソリ活動ポータル",
+  },
   description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
+  applicationName: "Solu Navi",
+  manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/sso-logo.jpg",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Solu Navi",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    title: "Solu Navi | 愛大ソルソリ活動ポータル",
+    description: "愛媛大学軽音楽部 Sound Solition Orchestra 活動ポータル",
+    siteName: "Solu Navi",
+    locale: "ja_JP",
+    type: "website",
+    images: [
+      {
+        url: "/icons/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "Solu Navi Logo",
+      },
+    ],
   },
 };
 
 export const viewport: Viewport = {
+  themeColor: "#146081",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -24,6 +62,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
+      <head>
+        {/* PWA / iOS Safari 互換メタタグ */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Solu Navi" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body>
         <ClientLayout>{children}</ClientLayout>
       </body>

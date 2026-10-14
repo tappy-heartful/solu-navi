@@ -7,6 +7,7 @@ import { BreadcrumbProvider } from "../contexts/BreadcrumbContext";
 import { AuthGuard } from "../components/AuthGuard";
 import { CommonDialog } from "../components/Common/CommonDialog";
 import { Spinner } from "../components/Common/Spinner";
+import { ServiceWorkerRegister } from "../components/PWA/ServiceWorkerRegister";
 
 // Font Awesome の autoAddCss を無効化
 config.autoAddCss = false;
@@ -18,6 +19,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
         <AuthGuard>{children}</AuthGuard>
         <CommonDialog />
         <Spinner />
+        <ServiceWorkerRegister />
       </BreadcrumbProvider>
     </AuthProvider>
   );

@@ -51,7 +51,7 @@
   width: 100%;
   max-width: 48rem;
   margin: 0 auto;
-  padding: 1.25rem 1rem 2rem 1rem;
+  padding: 1.25rem 1rem calc(2rem + env(safe-area-inset-bottom, 0px)) 1rem;
 }
 
 .pageTitle {

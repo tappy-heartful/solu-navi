@@ -110,6 +110,30 @@
   - **LINEアプリ内ブラウザ対策**: LINEで開いた場合の外部ブラウザ起動手順（「Safariで開く」「Chromeで開く」）を注意書きとして提示。
   - **表示制御（streak-navi準拠のPWA検知）**: `streak-navi` の方式に準拠し、`window.matchMedia('(display-mode: standalone)').matches` や `(navigator as any).standalone`、`fullscreen`、`minimal-ui` による包括的なスタンドアロン判定を実施。すでにPWAアプリとして起動している時は確実に非表示とし、スマートフォン実機およびブラウザのモバイル画面幅（<= 768px）アクセス時に確実に案内カードを表示。
 
+### 1.9. PWA (Progressive Web Apps) 完全稼働仕様
+- **Web App Manifest (`src/app/manifest.ts` & `public/manifest.json`)**:
+  - `name`: "Solu Navi | 愛大ソルソリ活動ポータル"
+  - `short_name`: "Solu Navi"
+  - `display`: "standalone"
+  - `orientation`: "portrait"
+  - `background_color`: "#f8fafc"
+  - `theme_color`: "#146081"
+  - `icons`: 192x192, 512x512（通常およびマスク対応 maskable アイコン、円形クリッピング＋セーフエリア保護）
+- **iOS Safari (Apple Web App) メタデータ統合**:
+  - `appleWebApp: { capable: true, statusBarStyle: "default", title: "Solu Navi" }`
+  - `apple-touch-icon`: 180x180（角丸アイコン）
+  - `viewport`: `viewportFit: "cover"`, `themeColor: "#146081"`
+  - 各種レイアウト（`Header.module.css`, `BaseLayout.module.css`）で `env(safe-area-inset-top)` / `env(safe-area-inset-bottom)` によるノッチ・ホームバー干渉防止。
+- **Service Worker (`public/sw.js` & `ServiceWorkerRegister.tsx`)**:
+  - キャッシュ名 `solu-navi-cache-v1` による主要アセット（マニフェスト、ロゴ、アイコン、フォールバック等）のプリキャッシュ。
+  - APIルート（`/api/*`）、Firebase、LINE認証、ホットリロードは完全に除外してネットワーク直送。
+  - 静的アセット（画像、フォント等）はキャッシュ優先（Cache First）、ページ遷移は最新優先（Network First）でオフライン耐性を確保。
+  - ルートクライアントシェル（`ClientLayout.tsx`）から自動登録およびバックグラウンド更新検知。
+- **PWA × OAuth クロスコンテキスト自動同期機構 (`pwaAuthSessions`)**:
+  - PWA スタンドアロン起動時、一意の `pwaSessionId` を自動生成し、LINE認可URLを外部ブラウザで起動。
+  - PWA アプリ画面上には「外部ブラウザでログイン中」の案内モーダルと復帰ボタンを表示。
+  - Firestore の `pwaAuthSessions/{pwaSessionId}` ドキュメントをリアルタイム監視（`onSnapshot`）し、外部ブラウザ側でのLINEログイン完了と同時に PWA アプリ本体が `customToken` で自動サインインしてホームへシームレスに遷移。
+
 ---
 
 ## 2. 管理者ロール・権限マトリクス (RBAC)
