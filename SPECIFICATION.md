@@ -36,7 +36,11 @@
   - `--primary: #146081`
   - `--primary-hover: #0f4a64`
   - `--primary-light: #e8f4f8`
-- **ロゴ画像**: `/public/sso-logo.jpg`（Sound Solition Orchestra 公式ロゴ）
+- **ロゴ画像**: `/public/sso-logo.jpg`（Sound Solition Orchestra 公式ロゴ・サークルエンブレム）
+- **アプリアイコン**: `Solu Navi.png`（ディープティールブルー `#104861` 背景に「Solu Navi」のロゴタイプを配した公式アプリアイコン）
+  - ブラウザ favicon: `favicon.ico`, `favicon.png` (32x32)
+  - iOS ホーム画面追加 (Apple Touch Icon): `apple-touch-icon.png` (180x180)
+  - PWA マニフェストアイコン: `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`
 - **アクセント**: `#d97706` (Amber / 金管ブラスセクションの輝きと温かみ)
 - **背景色**: `#f8fafc` (Slate 50)
 - **モバイルファースト**: スマートフォンでの片手操作に最適化されたヘッダー・タッチターゲット・レスポンシブテーブル（ボトムフッターバーは廃止しコンテンツ領域を最大化）。
@@ -116,16 +120,16 @@
   - `short_name`: "Solu Navi"
   - `display`: "standalone"
   - `orientation`: "portrait"
-  - `background_color`: "#f8fafc"
-  - `theme_color`: "#146081"
-  - `icons`: 192x192, 512x512（通常およびマスク対応 maskable アイコン、円形クリッピング＋セーフエリア保護）
+  - `background_color`: "#104861"
+  - `theme_color`: "#104861"
+  - `icons`: 192x192, 512x512（通常およびマスク対応 maskable アイコン、公式 `Solu Navi.png` より高解像度生成、セーフエリア保護）
 - **iOS Safari (Apple Web App) メタデータ統合**:
   - `appleWebApp: { capable: true, statusBarStyle: "default", title: "Solu Navi" }`
-  - `apple-touch-icon`: 180x180（角丸アイコン）
-  - `viewport`: `viewportFit: "cover"`, `themeColor: "#146081"`
+  - `apple-touch-icon`: 180x180（`Solu Navi.png` より生成した角丸対応アプリアイコン）
+  - `viewport`: `viewportFit: "cover"`, `themeColor: "#104861"`
   - 各種レイアウト（`Header.module.css`, `BaseLayout.module.css`）で `env(safe-area-inset-top)` / `env(safe-area-inset-bottom)` によるノッチ・ホームバー干渉防止。
 - **Service Worker (`public/sw.js` & `ServiceWorkerRegister.tsx`)**:
-  - キャッシュ名 `solu-navi-cache-v1` による主要アセット（マニフェスト、ロゴ、アイコン、フォールバック等）のプリキャッシュ。
+  - キャッシュ名 `solu-navi-cache-v2` による主要アセット（マニフェスト、ロゴ、アイコン、favicon、フォールバック等）のプリキャッシュ。
   - APIルート（`/api/*`）、Firebase、LINE認証、ホットリロードは完全に除外してネットワーク直送。
   - 静的アセット（画像、フォント等）はキャッシュ優先（Cache First）、ページ遷移は最新優先（Network First）でオフライン耐性を確保。
   - ルートクライアントシェル（`ClientLayout.tsx`）から自動登録およびバックグラウンド更新検知。

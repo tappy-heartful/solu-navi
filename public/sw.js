@@ -1,10 +1,13 @@
 // Solu Navi Service Worker
-const CACHE_NAME = "solu-navi-cache-v1";
+const CACHE_NAME = "solu-navi-cache-v2";
 
 // プリキャッシュ対象の静的アセット
 const PRECACHE_ASSETS = [
   "/",
   "/manifest.json",
+  "/favicon.ico",
+  "/favicon.png",
+  "/apple-touch-icon.png",
   "/sso-logo.jpg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
