@@ -76,8 +76,8 @@ export function Header() {
               <Image
                 src="/sso-logo.jpg"
                 alt="Sound Solution Orchestra Logo"
-                width={36}
-                height={36}
+                width={44}
+                height={44}
                 className={styles.logoImg}
                 priority
               />
@@ -114,7 +114,7 @@ export function Header() {
               <UserAvatar
                 src={userData?.pictureUrl}
                 alt={userData?.displayName || "ユーザー"}
-                size={34}
+                size={46}
                 className={styles.headerAvatar}
                 priority
               />
