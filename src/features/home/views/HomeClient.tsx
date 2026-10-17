@@ -202,10 +202,10 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
           </Link>
         </div>
 
-        {/* 部員・サークル設定メニュー */}
+        {/* ユーザ・サークル設定メニュー */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
-            <span className={styles.titleIcon}>👥</span> 部員・サークル設定
+            <span className={styles.titleIcon}>👥</span> ユーザ・サークル設定
           </h3>
         </div>
 
@@ -220,8 +220,8 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
               <FontAwesomeIcon icon={faUsers} />
             </div>
             <div className={styles.quickInfo}>
-              <span className={styles.quickLabel}>部員名簿</span>
-              <span className={styles.quickKeyword}>メンバー一覧</span>
+              <span className={styles.quickLabel}>ユーザ</span>
+              <span className={styles.quickKeyword}>ユーザ一覧</span>
             </div>
             <FontAwesomeIcon icon={faUsers} className={styles.watermarkIcon} />
           </Link>

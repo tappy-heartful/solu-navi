@@ -46,7 +46,7 @@ export function UserEditClient() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
-      { label: "部員名簿", href: "/user" },
+      { label: "ユーザ", href: "/user" },
       { label: isInitial ? "初期プロフィール登録" : "プロフィール編集" },
     ]);
 
@@ -414,7 +414,7 @@ export function UserEditClient() {
         onCancel={() => router.back()}
         submitting={submitting}
         backHref={!isInitial ? "/user" : undefined}
-        backText="部員一覧"
+        backText="ユーザ一覧"
       />
     </EditFormLayout>
   );

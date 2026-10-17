@@ -215,7 +215,7 @@ export function Header() {
                 </Link>
                 <Link href="/user" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faUsers} className={`${styles.mainIcon} ${styles.iconEmerald}`} />
-                  <span className={styles.mainLabel}>部員名簿</span>
+                  <span className={styles.mainLabel}>ユーザ</span>
                 </Link>
               </div>
 

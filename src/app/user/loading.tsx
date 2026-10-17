@@ -11,7 +11,7 @@ export default function UserLoading() {
         <div className={styles.header}>
           <h1 className={styles.title}>
             <FontAwesomeIcon icon={faUsers} className={styles.titleIcon} />
-            部員名簿
+            ユーザ
           </h1>
           <span className={styles.countBadge}>読み込み中...</span>
         </div>
@@ -20,7 +20,7 @@ export default function UserLoading() {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="部員名 (略称) で検索"
+            placeholder="ユーザ名 (略称) で検索"
             disabled
           />
         </div>

@@ -38,7 +38,7 @@ export function UserConfirmClient() {
   useEffect(() => {
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
-      { label: "部員名簿", href: "/user" },
+      { label: "ユーザ", href: "/user" },
       { label: "プロフィール詳細" },
     ]);
 
@@ -74,7 +74,7 @@ export function UserConfirmClient() {
 
   if (loading) {
     return (
-      <ConfirmLayout title="部員詳細">
+      <ConfirmLayout title="ユーザ詳細">
         <div className={styles.loading}>読み込み中...</div>
       </ConfirmLayout>
     );
@@ -82,18 +82,18 @@ export function UserConfirmClient() {
 
   if (!targetUser) {
     return (
-      <ConfirmLayout title="部員詳細">
-        <div className={styles.notFound}>部員情報が見つかりませんでした。</div>
+      <ConfirmLayout title="ユーザ詳細">
+        <div className={styles.notFound}>ユーザ情報が見つかりませんでした。</div>
       </ConfirmLayout>
     );
   }
 
   return (
     <ConfirmLayout
-      title="部員詳細"
+      title="ユーザ詳細"
       icon={<FontAwesomeIcon icon={faIdCard} />}
       backHref="/user"
-      backText="部員一覧"
+      backText="ユーザ一覧"
       actions={
         canEdit && (
           <Link
@@ -113,7 +113,7 @@ export function UserConfirmClient() {
           <div className={styles.avatarWrapper}>
             <UserAvatar
               src={targetUser.pictureUrl}
-              alt={targetUser.displayName || "部員アバター"}
+              alt={targetUser.displayName || "ユーザアバター"}
               size={80}
               className={styles.avatarImg}
             />

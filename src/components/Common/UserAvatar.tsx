@@ -20,7 +20,7 @@ export interface UserAvatarProps {
  */
 export function UserAvatar({
   src,
-  alt = "部員アバター",
+  alt = "ユーザアバター",
   size = 48,
   className,
   priority = false,

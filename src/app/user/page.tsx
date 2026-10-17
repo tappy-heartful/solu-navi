@@ -7,8 +7,8 @@ import {
 } from "@/features/user/api/user-server-actions";
 
 export const metadata = {
-  title: "部員名簿 | Solu Navi",
-  description: "愛媛大学軽音楽部 Sound Solution Orchestra 部員一覧",
+  title: "ユーザ | Solu Navi",
+  description: "愛媛大学軽音楽部 Sound Solution Orchestra ユーザ一覧",
 };
 
 export const dynamic = "force-dynamic";

@@ -45,7 +45,7 @@ service cloud.firestore {
 
     // users コレクション
     match /users/{uid} {
-      // 閲覧: 認証済みユーザー全員（名簿閲覧のため）
+      // 閲覧: 認証済みユーザー全員（ユーザ情報閲覧のため）
       allow read: if isAuthenticated();
       // 作成・更新: 本人または管理者
       allow create, update: if isOwner(uid) || isUserAdmin();

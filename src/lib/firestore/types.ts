@@ -21,7 +21,7 @@ export interface UserDoc {
   isSystemAdmin?: boolean;
   // 各モジュール管理者権限
   isMasterAdmin?: boolean;    // マスタ管理者 (パート・楽器等の編集)
-  isUserAdmin?: boolean;      // 部員名簿管理者
+  isUserAdmin?: boolean;      // ユーザ管理者
   isEventAdmin?: boolean;     // イベント管理者
   isCallAdmin?: boolean;      // 曲募集管理者
   isVoteAdmin?: boolean;      // 曲投票管理者

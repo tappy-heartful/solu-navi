@@ -40,7 +40,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
   useEffect(() => {
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
-      { label: "部員名簿" },
+      { label: "ユーザ" },
     ]);
 
     // initialData がない場合のみクライアントフェッチを実行
@@ -82,7 +82,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
         <div className={styles.header}>
           <h1 className={styles.title}>
             <FontAwesomeIcon icon={faUsers} className={styles.titleIcon} />
-            部員名簿
+            ユーザ
           </h1>
           <span className={styles.countBadge}>{filteredUsers.length}名</span>
         </div>
@@ -93,7 +93,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="部員名 (略称) で検索"
+            placeholder="ユーザ名 (略称) で検索"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -131,10 +131,10 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
 
         {/* 一覧リスト */}
         {loading ? (
-          <div className={styles.emptyState}>部員情報を読み込み中...</div>
+          <div className={styles.emptyState}>ユーザ情報を読み込み中...</div>
         ) : filteredUsers.length === 0 ? (
           <div className={styles.emptyState}>
-            該当する部員が見つかりません。
+            該当するユーザが見つかりません。
           </div>
         ) : (
           <div className={styles.list}>
@@ -155,7 +155,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
                   <div className={styles.avatarWrapper}>
                     <UserAvatar
                       src={user.pictureUrl}
-                      alt={user.displayName || "部員アバター"}
+                      alt={user.displayName || "ユーザアバター"}
                       size={48}
                       className={styles.avatarImg}
                     />

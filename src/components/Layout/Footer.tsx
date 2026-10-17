@@ -19,7 +19,7 @@ export function Footer() {
 
   const navItems = [
     { label: "ホーム", href: "/", icon: faHome, active: pathname === "/" },
-    { label: "名簿", href: "/user", icon: faUsers, active: pathname === "/user" },
+    { label: "ユーザ", href: "/user", icon: faUsers, active: pathname === "/user" },
     { label: "プロフィール", href: "/user/detail", icon: faUser, active: pathname.startsWith("/user/detail") },
     { label: "登録変更", href: "/user/edit", icon: faEdit, active: pathname.startsWith("/user/edit") },
   ];
