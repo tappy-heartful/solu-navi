@@ -452,19 +452,26 @@ export function EventConfirmClient({ eventId, data }: Props) {
     <>
       <button
         type="button"
-        className="save-button"
+        className={styles.answerBtnPrimary}
         onClick={() => {
+          showSpinner();
           const path = isSchedule
             ? `/event/adjust-answer?eventId=${eventId}`
             : `/event/attendance-answer?eventId=${eventId}`;
           router.push(path);
         }}
       >
-        {myAnswerExists ? "回答を修正する" : "回答する"}
+        <i className="fa-solid fa-pen-to-square" />
+        <span>{myAnswerExists ? "回答を修正する" : "回答する"}</span>
       </button>
       {myAnswerExists && (
-        <button type="button" className="delete-button" onClick={handleDeleteMyAnswer}>
-          回答を取り消す
+        <button
+          type="button"
+          className={styles.answerBtnDanger}
+          onClick={handleDeleteMyAnswer}
+        >
+          <i className="fa-solid fa-trash-can" />
+          <span>回答を取り消す</span>
         </button>
       )}
     </>
@@ -484,21 +491,18 @@ export function EventConfirmClient({ eventId, data }: Props) {
         onDelete={handleDelete}
         answerMenuSlot={answerMenuSlot}
       >
-        {/* 日付 */}
-        <div className="form-group">
-          <label className="label-title">{isSchedule ? "候補日" : "日付"}</label>
-          <div className="label-value">
-            {isSchedule ? (
-              <div>
-                {(event.candidateDates || []).map((d) => (
-                  <div key={d}>{getDayOfWeek(d)}</div>
-                ))}
-              </div>
-            ) : (
-              <span>{event.date ? getDayOfWeek(event.date) : "未設定"}</span>
-            )}
-          </div>
-        </div>
+        {/* 日付 / 候補日 */}
+        <DisplayField label={isSchedule ? "候補日" : "日付"}>
+          {isSchedule ? (
+            <div>
+              {(event.candidateDates || []).map((d) => (
+                <div key={d}>{getDayOfWeek(d)}</div>
+              ))}
+            </div>
+          ) : (
+            event.date ? getDayOfWeek(event.date) : "未設定"
+          )}
+        </DisplayField>
 
         {/* 受付期間 */}
         <DisplayField label={isSchedule ? "日程調整受付期間" : "出欠受付期間"}>
@@ -521,35 +525,40 @@ export function EventConfirmClient({ eventId, data }: Props) {
           <div className={styles.locationFields}>
             {/* 都道府県 & 市区町村 */}
             <div className={styles.row}>
-              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="label-title">都道府県</label>
-                <div className="label-value">{prefectureName || "未設定"}</div>
+              <div className={styles.locationField} style={{ flex: 1 }}>
+                <label className={styles.locationLabel}>都道府県</label>
+                <div className={styles.locationValue}>
+                  {prefectureName || <span className={styles.unsetText}>未設定</span>}
+                </div>
               </div>
 
-              <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                <label className="label-title">市区町村</label>
-                <div className="label-value">{municipalityName || "未設定"}</div>
+              <div className={styles.locationField} style={{ flex: 1 }}>
+                <label className={styles.locationLabel}>市区町村</label>
+                <div className={styles.locationValue}>
+                  {municipalityName || <span className={styles.unsetText}>未設定</span>}
+                </div>
               </div>
             </div>
 
             {/* 場所名 */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label-title">場所名</label>
-              <div className="label-value">
+            <div className={styles.locationField}>
+              <label className={styles.locationLabel}>場所名</label>
+              <div className={styles.locationValue}>
                 {event.website ? (
-                  <a href={event.website} target="_blank" rel="noopener noreferrer">
+                  <a href={event.website} target="_blank" rel="noopener noreferrer" className={styles.linkText}>
+                    <i className="fa-solid fa-arrow-up-right-from-square" />
                     {event.placeName || event.website}
                   </a>
                 ) : (
-                  event.placeName || "未設定"
+                  event.placeName || <span className={styles.unsetText}>未設定</span>
                 )}
               </div>
             </div>
 
             {/* 施設利用時間 */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label-title">施設利用時間</label>
-              <div className="label-value">
+            <div className={styles.locationField}>
+              <label className={styles.locationLabel}>施設利用時間</label>
+              <div className={styles.locationValue}>
                 {event.rentTimeRanges && event.rentTimeRanges.length > 0 ? (
                   <div className={styles.rentTimeList}>
                     {event.rentTimeRanges.map((range, idx) => (
@@ -560,47 +569,49 @@ export function EventConfirmClient({ eventId, data }: Props) {
                     ))}
                   </div>
                 ) : (
-                  "未設定"
+                  <span className={styles.unsetText}>未設定</span>
                 )}
               </div>
             </div>
 
             {/* Google Map */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label-title">Google Map</label>
-              <div className="label-value">
+            <div className={styles.locationField}>
+              <label className={styles.locationLabel}>Google Map</label>
+              <div className={styles.locationValue}>
                 {event.googleMap ? (
-                  <a href={event.googleMap} target="_blank" rel="noopener noreferrer">
+                  <a href={event.googleMap} target="_blank" rel="noopener noreferrer" className={styles.linkText}>
+                    <i className="fa-solid fa-map-pin" />
                     Google Mapで見る
                   </a>
                 ) : (
-                  "未設定"
+                  <span className={styles.unsetText}>未設定</span>
                 )}
               </div>
             </div>
 
             {/* 交通アクセス */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label-title">交通アクセス・駐車場情報</label>
-              <div className="label-value">
+            <div className={styles.locationField}>
+              <label className={styles.locationLabel}>交通アクセス・駐車場情報</label>
+              <div className={styles.locationValue}>
                 {event.access ? (
                   /^https?:\/\//.test(event.access) ? (
-                    <a href={event.access} target="_blank" rel="noopener noreferrer">
+                    <a href={event.access} target="_blank" rel="noopener noreferrer" className={styles.linkText}>
+                      <i className="fa-solid fa-link" />
                       {event.access}
                     </a>
                   ) : (
                     <span style={{ whiteSpace: "pre-wrap" }}>{event.access}</span>
                   )
                 ) : (
-                  "未設定"
+                  <span className={styles.unsetText}>未設定</span>
                 )}
               </div>
             </div>
 
             {/* 会場押さえ状況 */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="label-title">会場押さえ状況</label>
-              <div className="label-value">
+            <div className={styles.locationField}>
+              <label className={styles.locationLabel}>会場押さえ状況</label>
+              <div className={styles.locationValue}>
                 {event.isVenueReserved ? (
                   <span className={styles.reservedBadge}>
                     <i className="fa-solid fa-circle-check" /> 押さえ済み
@@ -673,14 +684,17 @@ export function EventConfirmClient({ eventId, data }: Props) {
 
         {/* 譜割 */}
         {event.allowAssign && (
-          <div className="form-group">
-            <label className="label-title">譜割</label>
-            <div className="label-value">
-              <a href={`/assign/confirm?eventId=${eventId}`} target="_blank" rel="noopener noreferrer">
-                譜割りを見る
-              </a>
-            </div>
-          </div>
+          <DisplayField label="譜割">
+            <a
+              href={`/assign/confirm?eventId=${eventId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.assignLink}
+            >
+              <i className="fa-solid fa-music" style={{ marginRight: "6px" }} />
+              譜割りを見る
+            </a>
+          </DisplayField>
         )}
 
         {/* タイムスケジュール */}
@@ -698,16 +712,12 @@ export function EventConfirmClient({ eventId, data }: Props) {
           {event.bring || ""}
         </DisplayField>
 
-        {/* 施設に借りるもの */}
-        <DisplayField label="施設に借りるもの" preWrap>
-          {event.rent || ""}
-        </DisplayField>
+
 
         {/* 楽器構成 */}
         {event.instrumentConfig && Object.keys(event.instrumentConfig).length > 0 && (
-          <div className="form-group">
-            <label className="label-title">楽器構成</label>
-            <div className="label-value">
+          <DisplayField label="楽器構成">
+            <div className={styles.instrumentConfigList}>
               {Object.keys(event.instrumentConfig)
                 .sort((a, b) => parseInt(a) - parseInt(b))
                 .map((sectionId) => {
@@ -719,20 +729,19 @@ export function EventConfirmClient({ eventId, data }: Props) {
                     .join("、");
                   if (!sectionName || !partNames) return null;
                   return (
-                    <div key={sectionId} style={{ marginBottom: "8px" }}>
-                      <strong>{sectionName}</strong>
-                      <br />
-                      <span>{partNames}</span>
+                    <div key={sectionId} className={styles.instrumentConfigItem}>
+                      <span className={styles.instrumentSectionName}>{sectionName}</span>
+                      <span className={styles.instrumentPartNames}>{partNames}</span>
                     </div>
                   );
                 })}
             </div>
-          </div>
+          </DisplayField>
         )}
 
         {/* 回答状況 */}
-        <div className="form-group">
-          <label className="label-title">{isSchedule ? "日程調整" : "出欠"}</label>
+        <div style={{ marginBottom: "1.25rem" }}>
+          <label className={styles.fieldTitle}>{isSchedule ? "日程調整" : "出欠"}</label>
           <div>
             <span className={styles.answerCountSummary}>
               回答{answers.length}人 (未回答{unansweredUids.length}人)
@@ -884,9 +893,9 @@ export function EventConfirmClient({ eventId, data }: Props) {
         })()}
 
         {/* 録音・録画リンク */}
-        <div className="form-group">
-          <label className="label-title">録音・録画リンク</label>
-          <div className={styles.recordingsContainer}>
+        <div style={{ marginBottom: "1.25rem" }}>
+          <label className={styles.fieldTitle}>録音・録画リンク</label>
+          <div className={styles.recordingsCard}>
             {recordings.length === 0 ? (
               <p className={styles.noUser}>登録されたリンクはありません。</p>
             ) : (

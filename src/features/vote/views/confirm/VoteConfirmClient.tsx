@@ -209,11 +209,13 @@ export function VoteConfirmClient({ voteData, voteId, voteAnswers, usersMap }: P
           router.push(`/vote/answer?voteId=${voteId}`);
         }}
       >
-        {hasAnswered ? "回答を修正する" : "回答する"}
+        <i className="fa-solid fa-pen-to-square" />
+        <span>{hasAnswered ? "回答を修正する" : "回答する"}</span>
       </button>
       {hasAnswered && (
         <button type="button" className={styles.deleteAnswerBtn} onClick={handleDeleteMyAnswer}>
-          回答を取り消す
+          <i className="fa-solid fa-trash-can" />
+          <span>回答を取り消す</span>
         </button>
       )}
     </>

@@ -588,7 +588,7 @@ export function EventEditClient({
                 onChange={(e) => setAllowAssign(e.target.checked)}
                 className={styles.checkbox}
               />
-              <span>譜割り（担当パート分け）機能を有効にする</span>
+              <span>譜割り機能を有効にする</span>
             </label>
           </div>
 
@@ -598,7 +598,7 @@ export function EventEditClient({
             <SetlistEdit setlist={setlist} scores={scores} onChange={setSetlist} />
           </div>
 
-          <FormButtons mode={mode} onSave={handleSave} onClear={() => {}} />
+          <FormButtons mode={mode} onSave={handleSave} onClear={() => { }} />
         </div>
 
         <div className={styles.footer}>

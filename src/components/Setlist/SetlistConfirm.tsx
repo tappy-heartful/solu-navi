@@ -34,7 +34,17 @@ export function SetlistConfirm({ setlist, scoresMap }: Props) {
       : null;
 
   if (setlistGroups.length === 0) {
-    return <div className={styles.emptyNotice}>設定されていません</div>;
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.header}>
+          <label className={styles.title}>
+            <FontAwesomeIcon icon={faMusic} style={{ color: "#146081", marginRight: "6px" }} />
+            セットリスト
+          </label>
+        </div>
+        <div className={styles.emptyBox}>未設定</div>
+      </div>
+    );
   }
 
   return (

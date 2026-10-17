@@ -155,7 +155,8 @@ export function CallConfirmClient({
                 prefetch={false}
                 className={styles.primaryBtn}
               >
-                {hasAnswered ? "回答を修正する" : "回答を登録する"}
+                <i className="fa-solid fa-pen-to-square" />
+                <span>{hasAnswered ? "回答を修正する" : "回答を登録する"}</span>
               </Link>
               {hasAnswered && (
                 <button
@@ -163,7 +164,8 @@ export function CallConfirmClient({
                   className={styles.deleteAnswerBtn}
                   onClick={handleDeleteMyAnswer}
                 >
-                  回答を取り消す
+                  <i className="fa-solid fa-trash-can" />
+                  <span>回答を取り消す</span>
                 </button>
               )}
             </div>
