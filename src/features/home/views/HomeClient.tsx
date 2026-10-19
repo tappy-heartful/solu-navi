@@ -16,11 +16,14 @@ import {
   faFileShield,
   faTriangleExclamation,
   faArrowRight,
+  faPhotoFilm,
+  faCoins,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
-import { PwaInstallHint } from "../components/PwaInstallHint";
 import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
 import { HomeAnnouncement } from "../types";
+import { CalendarView } from "@/features/calendar/components/CalendarView";
+import { Event, Vote, Call, Fee, Score } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
@@ -30,9 +33,21 @@ import styles from "./HomeClient.module.css";
 
 interface HomeClientProps {
   initialAnnouncements?: HomeAnnouncement[];
+  events?: Event[];
+  votes?: Vote[];
+  calls?: Call[];
+  fees?: Fee[];
+  scores?: Score[];
 }
 
-export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
+export function HomeClient({
+  initialAnnouncements = [],
+  events = [],
+  votes = [],
+  calls = [],
+  fees = [],
+  scores = [],
+}: HomeClientProps) {
   const { userData } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
 
@@ -55,9 +70,23 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
     userData?.instrumentIds?.length
   );
 
+  const quickScores = (scores || []).slice(0, 6);
+  const scorePlaylistIds = (scores || [])
+    .map((s) => s.youtubeId)
+    .filter(Boolean)
+    .join(",");
+
   return (
     <BaseLayout showBreadcrumbs={false}>
       <div className={styles.container}>
+        {/* 画面タイトル (streak-navi準拠) */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>
+            <FontAwesomeIcon icon={faHouse} className={styles.headerIcon} />
+            <span>ホーム</span>
+          </h1>
+        </div>
+
         {/* 未完了警告アラート */}
         {isProfileIncomplete && (
           <Link href="/user/edit" prefetch={false} className={styles.warningBanner}>
@@ -72,7 +101,73 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
           </Link>
         )}
 
-        {/* ユーザーウェルカムカード */}
+        {/* 1. 受付中のお知らせ (曲募集・曲投票・リマインド等) */}
+        <HomeAnnouncementSection announcements={initialAnnouncements} />
+
+        {/* 2. 新着譜面セクション */}
+        <div className={styles.sectionTitleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>🎼</span> 新着譜面
+          </h3>
+          {scorePlaylistIds && (
+            <a
+              href={`https://www.youtube.com/watch_videos?video_ids=${scorePlaylistIds}`}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.playlistBtn}
+            >
+              <i className="fa-brands fa-youtube" /> プレイリスト
+            </a>
+          )}
+        </div>
+
+        <div className={styles.scoreSection}>
+          {quickScores.length > 0 ? (
+            <div className={styles.quickScoreGrid}>
+              {quickScores.map((score) => (
+                <Link
+                  key={score.id}
+                  href={`/score/confirm?scoreId=${score.id}`}
+                  prefetch={false}
+                  className={styles.quickScoreCard}
+                  onClick={() => showSpinner()}
+                >
+                  <span className={styles.scoreCardTitle}>🎼 {score.title}</span>
+                  <div className={styles.scoreCardMeta}>
+                    <span>{score.abbreviation || score.note || "譜面詳細"}</span>
+                    {score.youtubeId && (
+                      <i className={`fa-brands fa-youtube ${styles.scoreHasYoutube}`} title="参考音源あり" />
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyScoreMsg}>譜面はまだ登録されていません🍀</div>
+          )}
+
+          <div className={styles.moreScoreRow}>
+            <Link
+              href="/score"
+              prefetch={false}
+              className={styles.moreScoreLink}
+              onClick={() => showSpinner()}
+            >
+              もっと見る <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "0.75rem" }} />
+            </Link>
+          </div>
+        </div>
+
+        {/* 3. サークルカレンダー */}
+        <div className={styles.sectionTitleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>📅</span> サークルカレンダー
+          </h3>
+        </div>
+        <CalendarView events={events} votes={votes} calls={calls} />
+
+        {/* ユーザーウェルカムカード (いったん非表示) */}
+        {/*
         <div className={styles.welcomeCard}>
           <div className={styles.welcomeHeader}>
             <div className={styles.logoBadge}>
@@ -125,11 +220,9 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             </div>
           </div>
         </div>
+        */}
 
-        {/* 受付中のお知らせ (曲募集・曲投票) */}
-        <HomeAnnouncementSection announcements={initialAnnouncements} />
-
-        {/* 活動・音楽メニュー */}
+        {/* 4. 活動・音楽メニュー */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
             <span className={styles.titleIcon}>🎷</span> 活動・音楽メニュー
@@ -151,6 +244,70 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
               <span className={styles.quickKeyword}>練習日程・回答</span>
             </div>
             <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/calendar"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardEmerald}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconEmeraldBg}`}>
+              <FontAwesomeIcon icon={faCalendarDays} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>カレンダー</span>
+              <span className={styles.quickKeyword}>月間スケジュール</span>
+            </div>
+            <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/score"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardPurple}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconPurpleBg}`}>
+              <FontAwesomeIcon icon={faMusic} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>譜面管理</span>
+              <span className={styles.quickKeyword}>楽譜PDF・参考音源</span>
+            </div>
+            <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/media"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardAmber}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
+              <FontAwesomeIcon icon={faPhotoFilm} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>録音・メディア</span>
+              <span className={styles.quickKeyword}>練習録音・YouTube</span>
+            </div>
+            <FontAwesomeIcon icon={faPhotoFilm} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/fee"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardTeal}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconTealBg}`}>
+              <FontAwesomeIcon icon={faCoins} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>部費・集金</span>
+              <span className={styles.quickKeyword}>納入管理・催促通知</span>
+            </div>
+            <FontAwesomeIcon icon={faCoins} className={styles.watermarkIcon} />
           </Link>
 
           <Link
@@ -274,9 +431,6 @@ export function HomeClient({ initialAnnouncements = [] }: HomeClientProps) {
             <FontAwesomeIcon icon={faFileShield} className={styles.watermarkIcon} />
           </Link>
         </div>
-
-        {/* PWA ホーム画面アイコン追加ヒント */}
-        <PwaInstallHint />
       </div>
     </BaseLayout>
   );

@@ -466,6 +466,17 @@ export function getEnrollmentYearOptions(): { year: number; label: string }[] {
   return options;
 }
 
+export function buildGoogleDriveHtml(driveUrl: string, showNotice = false): string {
+  const match = driveUrl?.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!match) return "";
+  return `
+    <div class="drive-embed-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 10px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <iframe src="https://drive.google.com/file/d/${match[1]}/preview" style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+    </div>
+    ${showNotice ? `<div style="font-size: 0.8rem; color: #666; margin-top: 4px;">🔒サークル内限定公開</div>` : ""}
+  `;
+}
+
 // 再エクスポート
 export {
   doc,

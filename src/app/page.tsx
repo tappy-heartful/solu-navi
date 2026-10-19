@@ -1,5 +1,11 @@
 import { HomeClient } from "@/features/home/views/HomeClient";
 import { getHomeAnnouncementsServer } from "@/features/home/api/home-server-actions";
+import { getEventsServer } from "@/features/event/api/event-server-actions";
+import { getFeesServer } from "@/features/fee/api/fee-server-actions";
+import { getScoresServer } from "@/features/score/api/score-server-actions";
+import { adminDb } from "@/lib/firebase-admin";
+import { toPlainObject } from "@/lib/firestore/utils";
+import { Vote, Call, Score } from "@/lib/firestore/types";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +15,26 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const announcements = await getHomeAnnouncementsServer();
-  return <HomeClient initialAnnouncements={announcements} />;
-}
+  const [announcements, events, fees, scores, votesSnap, callsSnap] = await Promise.all([
+    getHomeAnnouncementsServer(),
+    getEventsServer(),
+    getFeesServer(),
+    getScoresServer(),
+    adminDb.collection("votes").orderBy("acceptStartDate", "desc").limit(20).get(),
+    adminDb.collection("calls").orderBy("acceptStartDate", "desc").limit(20).get(),
+  ]);
 
+  const votes = votesSnap.docs.map(toPlainObject) as Vote[];
+  const calls = callsSnap.docs.map(toPlainObject) as Call[];
+
+  return (
+    <HomeClient
+      initialAnnouncements={announcements}
+      events={events}
+      fees={fees}
+      scores={scores}
+      votes={votes}
+      calls={calls}
+    />
+  );
+}

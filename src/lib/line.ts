@@ -116,3 +116,88 @@ export async function checkLineFriendship(accessToken: string): Promise<boolean>
     return true;
   }
 }
+
+/**
+ * LINE Messaging API: 単一ユーザーへのプッシュメッセージ送信
+ */
+export async function sendLinePushMessage(
+  to: string,
+  messages: Array<{ type: string; text?: string; [key: string]: any }>
+) {
+  const token =
+    process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+    process.env.LINE_INDIV_ACCESS_TOKEN ||
+    process.env.LINE_ACCESS_TOKEN;
+  if (!token) {
+    console.warn("LINE_CHANNEL_ACCESS_TOKEN is not set. Skipping push notification.");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ to, messages }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error(`sendLinePushMessage failed (${res.status}):`, err);
+    }
+  } catch (err) {
+    console.error("sendLinePushMessage error:", err);
+  }
+}
+
+/**
+ * LINE Messaging API: 複数ユーザー（最大500件）へのマルチキャストメッセージ一括送信
+ */
+export async function sendLineMulticastMessage(
+  toUids: string[],
+  messages: Array<{ type: string; text?: string; [key: string]: any }>
+): Promise<{ successCount: number; failCount: number }> {
+  const token =
+    process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+    process.env.LINE_INDIV_ACCESS_TOKEN ||
+    process.env.LINE_ACCESS_TOKEN;
+  if (!token || toUids.length === 0) {
+    console.warn("LINE token not set or toUids is empty. Skipping multicast.");
+    return { successCount: 0, failCount: toUids.length };
+  }
+
+  // 500件ごとにchunk分割
+  const chunkSize = 500;
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < toUids.length; i += chunkSize) {
+    const chunk = toUids.slice(i, i + chunkSize);
+    try {
+      const res = await fetch("https://api.line.me/v2/bot/message/multicast", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ to: chunk, messages }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        console.error(`sendLineMulticastMessage failed (${res.status}):`, err);
+        failCount += chunk.length;
+      } else {
+        successCount += chunk.length;
+      }
+    } catch (err) {
+      console.error("sendLineMulticastMessage error:", err);
+      failCount += chunk.length;
+    }
+  }
+
+  return { successCount, failCount };
+}
+

@@ -14,11 +14,15 @@ import {
 import { faApple, faAndroid } from "@fortawesome/free-brands-svg-icons";
 import styles from "./PwaInstallHint.module.css";
 
-export function PwaInstallHint() {
+interface PwaInstallHintProps {
+  isInsideAnnouncement?: boolean;
+}
+
+export function PwaInstallHint({ isInsideAnnouncement = false }: PwaInstallHintProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
   const [deviceType, setDeviceType] = useState<"ios" | "android">("ios");
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(!isInsideAnnouncement);
 
   useEffect(() => {
     setIsMounted(true);
@@ -71,9 +75,9 @@ export function PwaInstallHint() {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={isInsideAnnouncement ? styles.cardInside : styles.card}>
       <div
-        className={styles.header}
+        className={isInsideAnnouncement ? styles.headerInside : styles.header}
         onClick={() => setIsExpanded(!isExpanded)}
         role="button"
         tabIndex={0}

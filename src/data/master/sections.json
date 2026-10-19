@@ -26,12 +26,5 @@
     "shortName": "リズム",
     "order": 4,
     "color": "#10b981"
-  },
-  {
-    "id": "5",
-    "name": "OB・OG / その他",
-    "shortName": "OB・OG",
-    "order": 5,
-    "color": "#8b5cf6"
   }
 ]

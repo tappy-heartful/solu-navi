@@ -37,6 +37,21 @@ service cloud.firestore {
       return isSystemAdmin() || (isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isUserAdmin == true);
     }
+
+    function isScoreAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isScoreAdmin == true);
+    }
+
+    function isMediaAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isMediaAdmin == true);
+    }
+
+    function isFeeAdmin() {
+      return isSystemAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFeeAdmin == true);
+    }
     
     // ユーザー自身かどうかの判定
     function isOwner(uid) {
@@ -167,7 +182,24 @@ service cloud.firestore {
     // 楽譜
     match /scores/{scoreId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if isScoreAdmin();
+    }
+
+    // メディア・録音
+    match /medias/{mediaId} {
+      allow read: if isAuthenticated();
+      allow write: if isMediaAdmin();
+    }
+
+    // 部費・集金管理
+    match /fees/{feeId} {
+      allow read: if isAuthenticated();
+      allow write: if isFeeAdmin();
+    }
+    match /feePayments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isFeeAdmin() || (isAuthenticated() && request.resource.data.uid == request.auth.uid);
+      allow delete: if isFeeAdmin();
     }
 
     // 譜割り

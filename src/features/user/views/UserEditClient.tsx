@@ -14,11 +14,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { fetchUserById, updateUserProfile } from "../api/user-client-service";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
+import { RoleDoc, SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
+import { getClientRoles, getClientSections, getClientInstruments } from "@/features/master/api/master-client-service";
 import { getEnrollmentYearOptions, getGradeFromEnrollmentYear, writeLog } from "@/lib/functions";
 import { UserFormData } from "../types";
 import styles from "./UserEditClient.module.css";
 
-export function UserEditClient() {
+interface UserEditClientProps {
+  initialData?: {
+    roles?: RoleDoc[];
+    sections?: SectionDoc[];
+    instruments?: InstrumentDoc[];
+  };
+}
+
+export function UserEditClient({ initialData }: UserEditClientProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryUid = searchParams.get("uid");
@@ -26,6 +36,10 @@ export function UserEditClient() {
 
   const { user: currentUser, userData: currentUserData, isAdmin } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
+
+  const [roles, setRoles] = useState<RoleDoc[]>(initialData?.roles || DEFAULT_ROLES);
+  const [sections, setSections] = useState<SectionDoc[]>(initialData?.sections || DEFAULT_SECTIONS);
+  const [instruments, setInstruments] = useState<InstrumentDoc[]>(initialData?.instruments || DEFAULT_INSTRUMENTS);
 
   const targetUid = (isAdmin && queryUid) ? queryUid : currentUser?.uid;
 
@@ -81,11 +95,28 @@ export function UserEditClient() {
           enrollmentYear: data.enrollmentYear ?? "",
         });
       }
+
+      // initialData がない場合はクライアントからマスタを取得
+      if (!initialData?.roles || initialData.roles.length === 0) {
+        try {
+          const [loadedRoles, loadedSections, loadedInstruments] = await Promise.all([
+            getClientRoles(),
+            getClientSections(),
+            getClientInstruments(),
+          ]);
+          setRoles(loadedRoles);
+          setSections(loadedSections);
+          setInstruments(loadedInstruments);
+        } catch (mErr) {
+          console.warn("[UserEditClient] マスタ取得エラー:", mErr);
+        }
+      }
+
       setLoading(false);
     }
 
     load();
-  }, [targetUid, currentUser?.uid, currentUserData, isInitial, setBreadcrumbs]);
+  }, [targetUid, currentUser?.uid, currentUserData, isInitial, setBreadcrumbs, initialData?.roles]);
 
   const handleEnrollmentSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -228,11 +259,14 @@ export function UserEditClient() {
     );
   }
 
+  // 役職を order 昇順でソート
+  const sortedRoles = [...roles].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
   // 選択されたパートに属する楽器を上位に表示
-  const relevantInstruments = DEFAULT_INSTRUMENTS.filter(
+  const relevantInstruments = instruments.filter(
     (i) => !formData.sectionId || i.sectionId === formData.sectionId
   );
-  const otherInstruments = DEFAULT_INSTRUMENTS.filter(
+  const otherInstruments = instruments.filter(
     (i) => formData.sectionId && i.sectionId !== formData.sectionId
   );
 
@@ -273,7 +307,7 @@ export function UserEditClient() {
         />
       </FormField>
 
-      {/* 役職選択 */}
+      {/* 役職選択 (マスタより取得) */}
       <FormField
         label="役職"
         required
@@ -285,15 +319,15 @@ export function UserEditClient() {
           onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
           className={styles.select}
         >
-          {DEFAULT_ROLES.map((r) => (
+          {sortedRoles.map((r) => (
             <option key={r.id} value={r.id}>
-              {r.name} {r.description ? `(${r.description})` : ""}
+              {r.name}
             </option>
           ))}
         </select>
       </FormField>
 
-      {/* パート選択 */}
+      {/* パート選択 (マスタより取得) */}
       <FormField
         label="所属パート"
         required
@@ -301,7 +335,7 @@ export function UserEditClient() {
         description="メインで所属しているセクションを選択してください"
       >
         <div className={styles.radioGrid}>
-          {DEFAULT_SECTIONS.map((sec) => (
+          {sections.map((sec) => (
             <label
               key={sec.id}
               className={`${styles.radioCard} ${formData.sectionId === sec.id ? styles.radioSelected : ""}`}

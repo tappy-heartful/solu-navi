@@ -139,6 +139,8 @@ export async function fetchEvents(): Promise<Event[]> {
   return snap.docs.map(toEventDoc);
 }
 
+export const getEventsServer = fetchEvents;
+
 export async function fetchEvent(id: string): Promise<Event | null> {
   const doc = await adminDb.collection("events").doc(id).get();
   if (!doc.exists) return null;
@@ -373,3 +375,4 @@ export async function fetchAdjustAnswerPageData(eventId: string): Promise<{
   const event = toEventDoc(eventDoc);
   return { event, adjustStatuses };
 }
+

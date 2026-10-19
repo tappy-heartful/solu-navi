@@ -18,6 +18,8 @@ import {
   faSliders,
   faIdCard,
   faUserPen,
+  faPhotoFilm,
+  faCoins,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
@@ -42,27 +44,8 @@ export function Header() {
 
   return (
     <>
-      <header
-        className={styles.headerBar}
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "nowrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          className={styles.headerLeft}
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            flexShrink: 0,
-          }}
-        >
+      <header className={styles.headerBar}>
+        <div className={styles.headerLeft}>
           <Link
             href="/"
             className={styles.logoLink}
@@ -90,20 +73,10 @@ export function Header() {
         </div>
 
         {user && (
-          <div
-            className={styles.headerRight}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: "0.75rem",
-              flexShrink: 0,
-              marginLeft: "auto",
-            }}
-          >
+          <div className={styles.headerRight}>
             <div
               onClick={toggleDrawer}
-              style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              className={styles.avatarButton}
               title="メニューを開く"
               role="button"
               tabIndex={0}
@@ -199,11 +172,27 @@ export function Header() {
               </div>
 
               {/* メインメニュー（2列グリッド・主要活動） */}
-              <div className={styles.menuDivider}>メインメニュー</div>
+              <div className={styles.menuDivider}>活動メニュー</div>
               <div className={styles.mainGrid}>
                 <Link href="/event" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faCalendarDays} className={`${styles.mainIcon} ${styles.iconTeal}`} />
                   <span className={styles.mainLabel}>イベント・出欠</span>
+                </Link>
+                <Link href="/calendar" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faCalendarDays} className={`${styles.mainIcon} ${styles.iconEmerald}`} />
+                  <span className={styles.mainLabel}>カレンダー</span>
+                </Link>
+                <Link href="/score" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faMusic} className={`${styles.mainIcon} ${styles.iconPurple}`} />
+                  <span className={styles.mainLabel}>譜面管理</span>
+                </Link>
+                <Link href="/media" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faPhotoFilm} className={`${styles.mainIcon} ${styles.iconAmber}`} />
+                  <span className={styles.mainLabel}>録音・メディア</span>
+                </Link>
+                <Link href="/fee" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faCoins} className={`${styles.mainIcon} ${styles.iconTeal}`} />
+                  <span className={styles.mainLabel}>部費・集金</span>
                 </Link>
                 <Link href="/call" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faMusic} className={`${styles.mainIcon} ${styles.iconAmber}`} />

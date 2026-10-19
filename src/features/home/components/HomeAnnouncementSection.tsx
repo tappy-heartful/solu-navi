@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { showSpinner } from "@/components/Common/Spinner";
 import { HomeAnnouncement } from "../types";
+import { PwaInstallHint } from "./PwaInstallHint";
 import styles from "./HomeAnnouncementSection.module.css";
 
 interface HomeAnnouncementSectionProps {
@@ -30,8 +31,7 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
     <section className={styles.announcementContainer}>
       <div className={styles.announcementHeader}>
         <h3 className={styles.headerTitle}>
-          <FontAwesomeIcon icon={faBullhorn} className={styles.headerIcon} />
-          お知らせ
+          <span className={styles.titleIcon}>📢</span> お知らせ
         </h3>
       </div>
       <ul className={styles.notificationList}>
@@ -81,6 +81,10 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
             </li>
           );
         })}
+        {/* PWA ホーム画面追加ヒント (お知らせ最下位優先度) */}
+        <li className={styles.pwaHintItem}>
+          <PwaInstallHint isInsideAnnouncement={true} />
+        </li>
       </ul>
     </section>
   );

@@ -57,9 +57,9 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
     }
   }, [setBreadcrumbs, initialData?.users]);
 
-  // フィルタリング
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
+  // フィルタリング & ソート (パート順 → 回生の高い順 → 役職の高い順)
+  const sortedAndFilteredUsers = useMemo(() => {
+    const filtered = users.filter((u) => {
       // パート一致
       if (selectedSection !== "all" && u.sectionId !== selectedSection) {
         return false;
@@ -73,7 +73,154 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
       }
       return true;
     });
-  }, [users, selectedSection, searchQuery]);
+
+    return [...filtered].sort((a, b) => {
+      // 1. パート順 (section.order 昇順)
+      const secA = sections.find((s) => s.id === a.sectionId);
+      const secB = sections.find((s) => s.id === b.sectionId);
+      const secOrderA = secA?.order ?? (secA ? Number(secA.id) : 999);
+      const secOrderB = secB?.order ?? (secB ? Number(secB.id) : 999);
+      if (secOrderA !== secOrderB) {
+        return secOrderA - secOrderB;
+      }
+
+      // 2. 回生の高い順 (入学年度 enrollmentYear が古い/小さい順 = 上級生が先頭、未設定は末尾)
+      const yearA = a.enrollmentYear ? parseInt(String(a.enrollmentYear), 10) : 99999;
+      const yearB = b.enrollmentYear ? parseInt(String(b.enrollmentYear), 10) : 99999;
+      const validYearA = isNaN(yearA) || yearA <= 0 ? 99999 : yearA;
+      const validYearB = isNaN(yearB) || yearB <= 0 ? 99999 : yearB;
+      if (validYearA !== validYearB) {
+        return validYearA - validYearB;
+      }
+
+      // 3. 役職の高い順 (role.order 昇順、未設定は末尾)
+      const roleA = roles.find((r) => r.id === a.roleId);
+      const roleB = roles.find((r) => r.id === b.roleId);
+      const roleOrderA = roleA?.order ?? (roleA ? Number(roleA.id) : 999);
+      const roleOrderB = roleB?.order ?? (roleB ? Number(roleB.id) : 999);
+      if (roleOrderA !== roleOrderB) {
+        return roleOrderA - roleOrderB;
+      }
+
+      // 4. 同一条件時は名前順
+      return (a.displayName || "").localeCompare(b.displayName || "", "ja");
+    });
+  }, [users, selectedSection, searchQuery, sections, roles]);
+
+  // パートごとの見出しグループ作成
+  interface SectionGroup {
+    sectionId: string;
+    sectionName: string;
+    sectionColor: string;
+    users: UserDoc[];
+  }
+
+  const groupedUsers = useMemo(() => {
+    // 個別パートが選択されている場合
+    if (selectedSection !== "all") {
+      const sec = sections.find((s) => s.id === selectedSection);
+      return [
+        {
+          sectionId: selectedSection,
+          sectionName: sec?.name || "メンバー",
+          sectionColor: sec?.color || "#146081",
+          users: sortedAndFilteredUsers,
+        },
+      ];
+    }
+
+    // 「すべて」の場合: sections の order 順に見出しグループを作成
+    const groups: SectionGroup[] = [];
+    const sortedSections = [...sections].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+    sortedSections.forEach((sec) => {
+      const secUsers = sortedAndFilteredUsers.filter((u) => u.sectionId === sec.id);
+      if (secUsers.length > 0) {
+        groups.push({
+          sectionId: sec.id,
+          sectionName: sec.name,
+          sectionColor: sec.color || "#146081",
+          users: secUsers,
+        });
+      }
+    });
+
+    // パート未設定のユーザーがいる場合
+    const unassignedUsers = sortedAndFilteredUsers.filter(
+      (u) => !u.sectionId || !sections.some((s) => s.id === u.sectionId)
+    );
+    if (unassignedUsers.length > 0) {
+      groups.push({
+        sectionId: "unassigned",
+        sectionName: "パート未設定",
+        sectionColor: "#94a3b8",
+        users: unassignedUsers,
+      });
+    }
+
+    return groups;
+  }, [sortedAndFilteredUsers, selectedSection, sections]);
+
+  const renderUserCard = (user: UserDoc) => {
+    const sec = sections.find((s) => s.id === user.sectionId);
+    const role = roles.find((r) => r.id === user.roleId);
+    const instNames = (user.instrumentIds || [])
+      .map((id) => instruments.find((i) => i.id === id)?.name)
+      .filter(Boolean);
+
+    return (
+      <Link
+        key={user.uid}
+        href={`/user/detail?uid=${user.uid}`}
+        prefetch={false}
+        className={styles.userCard}
+      >
+        <div className={styles.avatarWrapper}>
+          <UserAvatar
+            src={user.pictureUrl}
+            alt={user.displayName || "ユーザアバター"}
+            size={48}
+            className={styles.avatarImg}
+          />
+        </div>
+
+        <div className={styles.cardContent}>
+          <div className={styles.nameRow}>
+            <span className={styles.displayName}>{user.displayName || "メンバー"}</span>
+            {user.abbreviation && (
+              <span className={styles.abbrBadge}>{user.abbreviation}</span>
+            )}
+            {sec && (
+              <span
+                className={styles.sectionBadge}
+                style={{ backgroundColor: sec.color || "#3b82f6" }}
+              >
+                {sec.shortName}
+              </span>
+            )}
+          </div>
+
+          <div className={styles.metaRow}>
+            {role && <span className={styles.roleName}>{role.name}</span>}
+            {user.enrollmentYear && (
+              <span className={styles.grade}>
+                {getGradeFromEnrollmentYear(user.enrollmentYear)}
+              </span>
+            )}
+            {instNames.length > 0 && (
+              <span className={styles.instruments}>
+                {instNames.join(" / ")}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.arrowIcon}>
+          <FontAwesomeIcon icon={faChevronRight} />
+        </div>
+      </Link>
+    );
+  };
 
   return (
     <BaseLayout>
@@ -84,7 +231,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
             <FontAwesomeIcon icon={faUsers} className={styles.titleIcon} />
             ユーザ
           </h1>
-          <span className={styles.countBadge}>{filteredUsers.length}名</span>
+          <span className={styles.countBadge}>{sortedAndFilteredUsers.length}名</span>
         </div>
 
         {/* 検索入力 */}
@@ -129,72 +276,37 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
           ))}
         </div>
 
-        {/* 一覧リスト */}
+        {/* 一覧リスト (パート別見出しグループ) */}
         {loading ? (
           <div className={styles.emptyState}>ユーザ情報を読み込み中...</div>
-        ) : filteredUsers.length === 0 ? (
+        ) : sortedAndFilteredUsers.length === 0 ? (
           <div className={styles.emptyState}>
             該当するユーザが見つかりません。
           </div>
         ) : (
-          <div className={styles.list}>
-            {filteredUsers.map((user) => {
-              const sec = sections.find((s) => s.id === user.sectionId);
-              const role = roles.find((r) => r.id === user.roleId);
-              const instNames = (user.instrumentIds || [])
-                .map((id) => instruments.find((i) => i.id === id)?.name)
-                .filter(Boolean);
-
-              return (
-                <Link
-                  key={user.uid}
-                  href={`/user/detail?uid=${user.uid}`}
-                  prefetch={false}
-                  className={styles.userCard}
-                >
-                  <div className={styles.avatarWrapper}>
-                    <UserAvatar
-                      src={user.pictureUrl}
-                      alt={user.displayName || "ユーザアバター"}
-                      size={48}
-                      className={styles.avatarImg}
+          <div className={styles.groupedList}>
+            {groupedUsers.map((group) => (
+              <div key={group.sectionId} className={styles.sectionGroup}>
+                {/* 見出し (パート名と所属人数) */}
+                <div className={styles.sectionHeader}>
+                  <div className={styles.sectionTitleRow}>
+                    <span
+                      className={styles.sectionColorBar}
+                      style={{ backgroundColor: group.sectionColor }}
                     />
+                    <h2 className={styles.sectionTitle}>{group.sectionName}</h2>
                   </div>
+                  <span className={styles.sectionCountBadge}>
+                    {group.users.length}名
+                  </span>
+                </div>
 
-                  <div className={styles.cardContent}>
-                    <div className={styles.nameRow}>
-                      <span className={styles.displayName}>{user.displayName || "メンバー"}</span>
-                      {sec && (
-                        <span
-                          className={styles.sectionBadge}
-                          style={{ backgroundColor: sec.color || "#3b82f6" }}
-                        >
-                          {sec.shortName}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className={styles.metaRow}>
-                      {role && <span className={styles.roleName}>{role.name}</span>}
-                      {user.enrollmentYear && (
-                        <span className={styles.grade}>
-                          {getGradeFromEnrollmentYear(user.enrollmentYear)}
-                        </span>
-                      )}
-                      {instNames.length > 0 && (
-                        <span className={styles.instruments}>
-                          {instNames.join(" / ")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={styles.arrowIcon}>
-                    <FontAwesomeIcon icon={faChevronRight} />
-                  </div>
-                </Link>
-              );
-            })}
+                {/* メンバーカード一覧 */}
+                <div className={styles.list}>
+                  {group.users.map((user) => renderUserCard(user))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

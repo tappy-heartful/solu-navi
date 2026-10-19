@@ -26,6 +26,8 @@ export interface UserDoc {
   isCallAdmin?: boolean;      // 曲募集管理者
   isVoteAdmin?: boolean;      // 曲投票管理者
   isScoreAdmin?: boolean;     // 楽譜管理者
+  isMediaAdmin?: boolean;     // メディア・録音管理者
+  isFeeAdmin?: boolean;       // 会計・部費管理者
   isNoticeAdmin?: boolean;    // お知らせ管理者
   isLiveAdmin?: boolean;      // ライブ管理者
   isBoardAdmin?: boolean;     // 掲示板管理者
@@ -152,6 +154,51 @@ export type Genre = {
   name: string;
   order?: number;
 };
+
+export interface EventWithSetlist {
+  id: string;
+  title: string;
+  date: string;
+  scoreIdsInSetlist: string[];
+}
+
+export interface Media {
+  id: string;
+  title: string;
+  date: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  driveUrl?: string;
+  note?: string;
+  isDispTop?: boolean;
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+// ===== 部費・集金管理 =====
+export interface Fee {
+  id: string;
+  title: string;          // 例: "2026年5月度 部費", "夏合宿集金"
+  amount: number;         // 金額 (例: 2000, 15000)
+  dueDate: string;        // 期日 "yyyy.MM.dd" または "yyyy-MM-dd"
+  description?: string;   // 案内・備考
+  targetGrades?: string[]; // 対象学年 (空なら全員)
+  createdAt?: number;
+  updatedAt?: number;
+  createdBy?: string;
+}
+
+export interface FeePayment {
+  id: string;             // `${feeId}_${uid}`
+  feeId: string;
+  uid: string;
+  status: "unpaid" | "paid" | "exempt"; // 未払い、支払済、免除
+  paidAt?: number;
+  paidMethod?: "paypay" | "cash" | "bank" | "other"; // 支払方法
+  note?: string;
+  updatedAt?: number;
+  updatedBy?: string;
+}
 
 export interface ScoreStatus {
   id: string;

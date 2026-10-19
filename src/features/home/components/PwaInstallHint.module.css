@@ -8,10 +8,34 @@
   transition: all 0.2s ease;
 }
 
+.cardInside {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cardInside:hover {
+  border-color: #146081;
+}
+
 .header {
   padding: 1rem 1.25rem;
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
   border-bottom: 1px solid #dcfce7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.headerInside {
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: space-between;
