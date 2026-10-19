@@ -124,6 +124,10 @@ textarea:focus {
   left: 0;
   border-right: 2px solid #cbd5e1;
   box-shadow: 3px 0 6px -2px rgba(0, 0, 0, 0.08);
+  max-width: 160px;
+  min-width: 110px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .list-table th:first-child {
@@ -136,6 +140,11 @@ textarea:focus {
   background-color: #ffffff;
 }
 
+.list-table th.text-center,
+.list-table td.text-center {
+  text-align: center;
+}
+
 .list-table tbody tr:hover {
   background-color: var(--primary-light);
 }
@@ -146,6 +155,113 @@ textarea:focus {
 
 .list-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* テーブル内の行タイトルリンク（第1列） */
+.list-table-row-header {
+  font-weight: 600;
+}
+
+.list-table-row-header a {
+  color: var(--primary, #146081);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.list-table-row-header a:hover {
+  color: var(--primary-hover, #0f4a64);
+  text-decoration: underline;
+}
+
+/* 譜面・音源等の外部リンクボタン */
+.list-external-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  color: var(--primary, #146081) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.list-external-link:hover {
+  background-color: var(--primary-light, #e8f4f8);
+  border-color: var(--primary, #146081);
+  color: var(--primary-hover, #0f4a64) !important;
+}
+
+/* ジャンル・略称等のサブテキスト */
+.list-text-small {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+/* YouTube参考音源等のバッジボタン */
+.list-badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: #ff0000;
+  color: #ffffff !important;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(255, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.list-badge-button:hover {
+  background-color: #cc0000;
+  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+}
+
+/* 検索フィルターグリッド */
+.list-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .list-filter-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+}
+
+.list-filter-grid select,
+.list-filter-grid input,
+.form-control {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  color: var(--text-main, #0f172a);
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.list-filter-grid select:focus,
+.list-filter-grid input:focus,
+.form-control:focus {
+  border-color: var(--primary, #146081);
+  box-shadow: 0 0 0 3px rgba(20, 96, 129, 0.15);
 }
 
 /* データなし表示カード（スマホ見切れ防止・画面幅フィット） */

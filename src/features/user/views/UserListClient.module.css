@@ -77,6 +77,68 @@
   padding: 0.25rem;
 }
 
+/* 学年チェックボックスフィルター */
+.gradeFilterContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.gradeFilterTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.gradeCheckboxGroup {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.gradeCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  user-select: none;
+}
+
+.gradeCheckboxLabel:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.gradeChecked {
+  background-color: #e8f4f8;
+  border-color: #146081;
+  color: #146081;
+}
+
+.gradeCheckboxInput {
+  width: 14px;
+  height: 14px;
+  accent-color: #146081;
+  cursor: pointer;
+  margin: 0;
+}
+
+.gradeText {
+  line-height: 1.2;
+}
+
 /* パートタブ (横スクロール) */
 .filterBar {
   display: flex;

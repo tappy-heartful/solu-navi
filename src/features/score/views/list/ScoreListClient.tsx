@@ -94,18 +94,6 @@ export function ScoreListClient({ initialData }: Props) {
             target="_blank"
             rel="noreferrer"
             className="list-badge-button"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 12px",
-              backgroundColor: "#ff0000",
-              color: "#fff",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-            }}
           >
             <i className="fa-brands fa-youtube"></i> 参考音源プレイリスト
           </a>

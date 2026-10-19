@@ -408,7 +408,7 @@ export function UserEditClient({ initialData }: UserEditClientProps = {}) {
         label="入学年度"
         required
         error={errors.enrollmentYear}
-        description="入学年度を選択してください（4回生まで選択可。それ以前のOB/OGは「その他」から直接入力）"
+        description="入学年度を選択してください（1〜3回生まで選択可。それ以上のOBOGは直接入力）"
       >
         <select
           value={isOtherYear ? "other" : (formData.enrollmentYear || "")}
@@ -421,7 +421,7 @@ export function UserEditClient({ initialData }: UserEditClientProps = {}) {
               {opt.label}
             </option>
           ))}
-          <option value="other">その他 (OB/OG・入学年度を直接入力)</option>
+          <option value="other">OBOG (入学年度を直接入力)</option>
         </select>
 
         {isOtherYear && (

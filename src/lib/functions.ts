@@ -433,15 +433,13 @@ export function getGradeFromEnrollmentYear(
     return "2回生";
   } else if (diff === 3) {
     return "3回生";
-  } else if (diff === 4) {
-    return "4回生";
   } else {
-    return "OB/OG";
+    return "OBOG";
   }
 }
 
 /**
- * 入学年度の選択肢リストを生成（現役生: 4回生まで）
+ * 入学年度の選択肢リストを生成（現役生: 1〜3回生まで）
  */
 export function getEnrollmentYearOptions(): { year: number; label: string }[] {
   const currentAcademicYear = getCurrentAcademicYear();
@@ -454,8 +452,8 @@ export function getEnrollmentYearOptions(): { year: number; label: string }[] {
     label: `${nextYear}年度 (新入生)`,
   });
 
-  // 現在年度から4回生まで (4学年分)
-  for (let y = currentAcademicYear; y >= currentAcademicYear - 3; y--) {
+  // 現在年度から3回生まで (3学年分: 1回生, 2回生, 3回生)
+  for (let y = currentAcademicYear; y >= currentAcademicYear - 2; y--) {
     const grade = getGradeFromEnrollmentYear(y);
     options.push({
       year: y,

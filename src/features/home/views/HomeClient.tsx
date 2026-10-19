@@ -247,22 +247,6 @@ export function HomeClient({
           </Link>
 
           <Link
-            href="/calendar"
-            prefetch={false}
-            className={`${styles.quickCard} ${styles.cardEmerald}`}
-            onClick={() => showSpinner()}
-          >
-            <div className={`${styles.quickIcon} ${styles.iconEmeraldBg}`}>
-              <FontAwesomeIcon icon={faCalendarDays} />
-            </div>
-            <div className={styles.quickInfo}>
-              <span className={styles.quickLabel}>カレンダー</span>
-              <span className={styles.quickKeyword}>月間スケジュール</span>
-            </div>
-            <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
-          </Link>
-
-          <Link
             href="/score"
             prefetch={false}
             className={`${styles.quickCard} ${styles.cardPurple}`}

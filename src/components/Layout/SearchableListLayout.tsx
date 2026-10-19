@@ -2,10 +2,14 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faMagnifyingGlass, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { SearchableListReturn } from "@/hooks/useSearchableList";
 import { useAuth } from "@/contexts/AuthContext";
 import { BaseLayout } from "./BaseLayout";
+import { BackNavigation } from "@/components/Common/BackNavigation";
+import styles from "./SearchableListLayout.module.css";
 
 type Props<T extends Record<string, any>, F extends Record<string, any>> = {
   title: string;
@@ -43,149 +47,128 @@ export const SearchableListLayout = <
   const { isAdmin } = useAuth();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: `${title}一覧` }]);
+    setBreadcrumbs([
+      { label: "ホーム", href: "/" },
+      { label: `${title}一覧` },
+    ]);
   }, [setBreadcrumbs, title]);
+
+  const count = list.filteredData.length;
 
   return (
     <BaseLayout>
-      <div className="page-header">
-        <h1>
-          {icon && <i className={icon} style={{ marginRight: "0.5rem" }}></i>}
-          {title}一覧
-        </h1>
-      </div>
+      <div className={styles.wrapper}>
+        {/* 画面ヘッダー */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>
+            {icon && <i className={`${icon} ${styles.headerIcon}`} />}
+            <span>{title}一覧</span>
+            <span className={styles.headerCount}>({count}件)</span>
+          </h1>
 
-      {topSlot}
-
-      <div className="container">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>
-            {icon && <i className={icon} style={{ marginRight: "0.5rem" }} />}
-            検索
-          </h3>
-          {extraSearchHeaderContent}
-        </div>
-        {searchFields}
-        <div className="confirm-buttons" style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
-          <button
-            type="button"
-            className="clear-button"
-            onClick={list.resetFilters}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              background: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            クリア
-          </button>
-          {onSearch && (
-            <button
-              type="button"
-              className="save-button"
-              onClick={() => onSearch(list.filters)}
-              style={{
-                padding: "0.5rem 1.25rem",
-                borderRadius: "6px",
-                border: "none",
-                background: "var(--primary-color, #146081)",
-                color: "#fff",
-                cursor: "pointer",
-              }}
-            >
-              検索
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="container">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
-            flexWrap: "wrap",
-            gap: "0.5rem",
-          }}
-        >
-          <h3 style={{ margin: 0 }}>
-            {icon && <i className={icon} style={{ marginRight: "0.5rem" }} />}
-            {title} ({list.filteredData.length}件)
-          </h3>
-          {extraHeaderContent}
-        </div>
-
-        <div className="table-wrapper" style={{ overflowX: "auto" }}>
-          <table className="list-table">
-            <thead>
-              <tr>
-                {tableHeaders.map((header, i) => {
-                  if (typeof header === "string") {
-                    return <th key={i}>{header}</th>;
-                  }
-                  return (
-                    <th key={i} className={header.className}>
-                      {header.content}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {list.filteredData.length > 0 ? (
-                children
-              ) : (
-                <tr>
-                  <td colSpan={tableHeaders.length} className="text-center" style={{ textAlign: "center", padding: "2rem" }}>
-                    該当の{title}はありません🍀
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {isAdmin && !hideAddButton && (
-          <div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
+          {isAdmin && !hideAddButton && (
             <Link
               href={`${basePath}/edit?mode=new`}
               prefetch={false}
-              className="list-add-button"
-              style={{
-                textDecoration: "none",
-                display: "inline-flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "fit-content",
-                padding: "12px 24px",
-                background: "var(--primary-color, #146081)",
-                color: "#fff",
-                borderRadius: "8px",
-                fontWeight: 600,
-              }}
+              className={styles.addButton}
             >
-              ＋ 新規作成
+              <FontAwesomeIcon icon={faPlus} />
+              <span>新規作成</span>
             </Link>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <div className="page-footer" style={{ textAlign: "center", margin: "2rem 0" }}>
-        <Link href="/" prefetch={false} className="back-link">
-          ← ホームに戻る
-        </Link>
+        {/* トップスロット（カスタムバナーやアナウンス等） */}
+        {topSlot && <div className={styles.topSlotArea}>{topSlot}</div>}
+
+        {/* 検索カード */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>
+              <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.cardTitleIcon} />
+              <span>絞り込み検索</span>
+            </h2>
+            {extraSearchHeaderContent}
+          </div>
+
+          {searchFields}
+
+          <div className={styles.filterActions}>
+            <button
+              type="button"
+              className={styles.clearBtn}
+              onClick={list.resetFilters}
+            >
+              <FontAwesomeIcon icon={faRotateLeft} />
+              <span>クリア</span>
+            </button>
+            {onSearch && (
+              <button
+                type="button"
+                className={styles.searchBtn}
+                onClick={() => onSearch(list.filters)}
+              >
+                <FontAwesomeIcon icon={faMagnifyingGlass} />
+                <span>検索</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 一覧カード */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>
+              {icon && <i className={`${icon} ${styles.cardTitleIcon}`} />}
+              <span>{title}</span>
+              <span className={styles.cardCount}>({count}件)</span>
+            </h2>
+            {extraHeaderContent}
+          </div>
+
+          {count > 0 ? (
+            <div className="table-wrapper">
+              <table className="list-table">
+                <thead>
+                  <tr>
+                    {tableHeaders.map((header, i) => {
+                      if (typeof header === "string") {
+                        return <th key={i}>{header}</th>;
+                      }
+                      return (
+                        <th key={i} className={header.className}>
+                          {header.content}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>{children}</tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="table-empty-card">
+              <span className="table-empty-text">該当の{title}はありません🍀</span>
+            </div>
+          )}
+
+          {isAdmin && !hideAddButton && (
+            <div className={styles.bottomAddWrapper}>
+              <Link
+                href={`${basePath}/edit?mode=new`}
+                prefetch={false}
+                className={styles.bottomAddBtn}
+              >
+                <FontAwesomeIcon icon={faPlus} />
+                <span>新規作成</span>
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <BackNavigation href="/" label="ホーム" />
       </div>
     </BaseLayout>
   );
 };
+

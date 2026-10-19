@@ -178,10 +178,6 @@ export function Header() {
                   <FontAwesomeIcon icon={faCalendarDays} className={`${styles.mainIcon} ${styles.iconTeal}`} />
                   <span className={styles.mainLabel}>イベント・出欠</span>
                 </Link>
-                <Link href="/calendar" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faCalendarDays} className={`${styles.mainIcon} ${styles.iconEmerald}`} />
-                  <span className={styles.mainLabel}>カレンダー</span>
-                </Link>
                 <Link href="/score" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faMusic} className={`${styles.mainIcon} ${styles.iconPurple}`} />
                   <span className={styles.mainLabel}>譜面管理</span>
@@ -194,23 +190,23 @@ export function Header() {
                   <FontAwesomeIcon icon={faCoins} className={`${styles.mainIcon} ${styles.iconTeal}`} />
                   <span className={styles.mainLabel}>部費・集金</span>
                 </Link>
-                <Link href="/call" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faMusic} className={`${styles.mainIcon} ${styles.iconAmber}`} />
-                  <span className={styles.mainLabel}>曲募集</span>
-                </Link>
-                <Link href="/vote" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faSquarePollVertical} className={`${styles.mainIcon} ${styles.iconPurple}`} />
-                  <span className={styles.mainLabel}>曲投票</span>
-                </Link>
-                <Link href="/user" className={styles.mainCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faUsers} className={`${styles.mainIcon} ${styles.iconEmerald}`} />
-                  <span className={styles.mainLabel}>ユーザ</span>
-                </Link>
               </div>
 
-              {/* サブメニュー（3列グリッド・設定＆管理） */}
-              <div className={styles.menuDivider}>設定・マスタ</div>
+              {/* サブメニュー（3列グリッド・機能＆設定） */}
+              <div className={styles.menuDivider}>その他の機能・設定</div>
               <div className={styles.subGrid}>
+                <Link href="/call" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faMusic} className={styles.subIcon} />
+                  <span className={styles.subLabel}>曲募集</span>
+                </Link>
+                <Link href="/vote" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faSquarePollVertical} className={styles.subIcon} />
+                  <span className={styles.subLabel}>曲投票</span>
+                </Link>
+                <Link href="/user" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faUsers} className={styles.subIcon} />
+                  <span className={styles.subLabel}>ユーザ</span>
+                </Link>
                 <Link href="/master" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faSliders} className={styles.subIcon} />
                   <span className={styles.subLabel}>マスタ管理</span>

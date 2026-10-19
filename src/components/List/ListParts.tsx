@@ -39,7 +39,7 @@ export const FilterSelect = ({
   label: string;
   groups?: { label: string; options: { id: string; name: string }[] }[];
 }) => (
-  <select value={value} onChange={(e) => onChange(e.target.value)}>
+  <select className="form-control" value={value} onChange={(e) => onChange(e.target.value)}>
     <option value="">{label}</option>
     {groups
       ? groups.map((group, gIdx) => (

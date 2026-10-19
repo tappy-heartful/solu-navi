@@ -32,6 +32,13 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
   const [loading, setLoading] = useState(!initialData?.users);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSection, setSelectedSection] = useState<string>("all");
+  const [selectedGrades, setSelectedGrades] = useState<string[]>(["1回生", "2回生", "3回生"]);
+
+  const toggleGrade = (grade: string) => {
+    setSelectedGrades((prev) =>
+      prev.includes(grade) ? prev.filter((g) => g !== grade) : [...prev, grade]
+    );
+  };
 
   const sections = initialData?.sections || DEFAULT_SECTIONS;
   const roles = initialData?.roles || DEFAULT_ROLES;
@@ -64,6 +71,26 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
       if (selectedSection !== "all" && u.sectionId !== selectedSection) {
         return false;
       }
+
+      // 学年（回生）チェックボックスフィルター一致
+      const grade = getGradeFromEnrollmentYear(u.enrollmentYear);
+      let gradeCategory = grade;
+      if (grade === "新入生") {
+        gradeCategory = "1回生";
+      } else if (grade === "4回生" || grade === "OB/OG") {
+        gradeCategory = "OBOG";
+      }
+
+      if (gradeCategory === "未設定") {
+        // 未設定の部員は現役生(1〜3回生)のいずれかが選択されていれば含める
+        const hasActiveGrade = selectedGrades.some((g) => ["1回生", "2回生", "3回生"].includes(g));
+        if (!hasActiveGrade) return false;
+      } else {
+        if (!selectedGrades.includes(gradeCategory)) {
+          return false;
+        }
+      }
+
       // 検索クエリ一致
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -105,7 +132,7 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
       // 4. 同一条件時は名前順
       return (a.displayName || "").localeCompare(b.displayName || "", "ja");
     });
-  }, [users, selectedSection, searchQuery, sections, roles]);
+  }, [users, selectedSection, selectedGrades, searchQuery, sections, roles]);
 
   // パートごとの見出しグループ作成
   interface SectionGroup {
@@ -253,6 +280,30 @@ export function UserListClient({ initialData }: UserListClientProps = {}) {
               ×
             </button>
           )}
+        </div>
+
+        {/* 学年（回生）チェックボックスフィルター */}
+        <div className={styles.gradeFilterContainer}>
+          <span className={styles.gradeFilterTitle}>学年:</span>
+          <div className={styles.gradeCheckboxGroup}>
+            {["1回生", "2回生", "3回生", "OBOG"].map((grade) => {
+              const isChecked = selectedGrades.includes(grade);
+              return (
+                <label
+                  key={grade}
+                  className={`${styles.gradeCheckboxLabel} ${isChecked ? styles.gradeChecked : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleGrade(grade)}
+                    className={styles.gradeCheckboxInput}
+                  />
+                  <span className={styles.gradeText}>{grade}</span>
+                </label>
+              );
+            })}
+          </div>
         </div>
 
         {/* パート選択タブ (横スクロール可能) */}
