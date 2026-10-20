@@ -2,15 +2,25 @@
 @import "@fortawesome/fontawesome-svg-core/styles.css";
 
 :root {
+  /* 公式テーマカラー (濃い青色はそのまま維持) */
   --primary: #146081;
   --primary-hover: #0f4a64;
   --primary-light: #e8f4f8;
   --secondary: #d97706;
-  --bg-main: #f8fafc;
-  --text-main: #0f172a;
+
+  /* 目に優しいナチュラルカラーパレット */
+  --bg-main: #f7f9fa;
+  --text-main: #1e293b;
   --text-muted: #64748b;
   --card-bg: #ffffff;
   --border-color: #e2e8f0;
+
+  /* 音楽パステルカラーパレット (スピナー・ハイライト等) */
+  --pastel-sky: #38bdf8;
+  --pastel-mint: #5eead4;
+  --pastel-amber: #fcd34d;
+  --pastel-purple: #c084fc;
+  --pastel-rose: #f472b6;
 }
 
 * {
@@ -336,15 +346,17 @@ textarea:focus {
   }
 }
 
-/* スピナー表示 */
+/* スピナー表示 (目に優しく洗練されたパステルすりガラスオーバーレイ) */
 #spinner-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  z-index: 999;
+  background: rgba(247, 249, 250, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,37 +368,69 @@ textarea:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
-  gap: 24px;
+  min-height: 180px;
+  gap: 20px;
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(20, 96, 129, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
-
 
 .note-container {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 48px;
 }
 
 .note {
-  font-size: 32px;
-  color: #4caf50;
-  animation: noteBounce 0.6s ease-in-out infinite alternate;
+  font-size: 28px;
+  animation: noteBounce 0.65s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  filter: drop-shadow(0 2px 4px rgba(20, 96, 129, 0.12));
 }
 
-.note:nth-child(2) { animation-delay: 0.15s; }
-.note:nth-child(3) { animation-delay: 0.3s; }
-.note:nth-child(4) { animation-delay: 0.45s; }
+/* パステルカラーアニメーション (アプリ全体のディープティールに美しく調和) */
+.note-1 {
+  color: var(--pastel-sky, #38bdf8);
+  animation-delay: 0s;
+}
+
+.note-2 {
+  color: var(--pastel-mint, #5eead4);
+  animation-delay: 0.15s;
+}
+
+.note-3 {
+  color: var(--pastel-amber, #fcd34d);
+  animation-delay: 0.3s;
+}
+
+.note-4 {
+  color: var(--pastel-purple, #c084fc);
+  animation-delay: 0.45s;
+}
 
 @keyframes noteBounce {
-  from { transform: translateY(0); opacity: 0.6; }
-  to { transform: translateY(-20px); opacity: 1; }
+  0% {
+    transform: translateY(0) scale(0.96);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(-16px) scale(1.08);
+    opacity: 1;
+  }
 }
 
 .loading-message {
-  font-size: 16px;
-  font-weight: 500;
-  color: #555;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #475569;
   min-height: 1.5em;
-  transition: opacity 0.3s;
+  text-align: center;
+  letter-spacing: 0.02em;
+  transition: opacity 0.3s ease;
 }
 
 /* フォーム・詳細表示共通スタイル (streak-navi準拠) */

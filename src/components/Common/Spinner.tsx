@@ -42,10 +42,10 @@ export function showSpinner(customMsg?: string) {
     overlay.innerHTML = `
       <div class="musical-loading">
         <div class="note-container">
-          <i class="fa-solid fa-music note"></i>
-          <i class="fa-solid fa-note-sticky note"></i>
-          <i class="fa-solid fa-guitar note"></i>
-          <i class="fa-solid fa-drum note"></i>
+          <i class="fa-solid fa-music note note-1"></i>
+          <i class="fa-solid fa-compact-disc note note-2"></i>
+          <i class="fa-solid fa-guitar note note-3"></i>
+          <i class="fa-solid fa-drum note note-4"></i>
         </div>
         <p class="loading-message" id="spinner-message">${customMsg || BAND_MESSAGES[0]}</p>
       </div>
