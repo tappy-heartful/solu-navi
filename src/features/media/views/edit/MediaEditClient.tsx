@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { EditFormLayout } from "@/components/Layout/EditFormLayout";
 import { AppInput } from "@/components/Form/AppInput";
 import { FormField } from "@/components/Form/FormField";
@@ -67,9 +66,8 @@ export function MediaEditClient({ mode, mediaId, initialMedia }: Props) {
   };
 
   return (
-    <BaseLayout>
-      <EditFormLayout
-        featureName="メディア"
+    <EditFormLayout
+      featureName="メディア"
         icon="fa-solid fa-photo-film"
         featureIdKey="mediaId"
         basePath="/media"
@@ -170,6 +168,5 @@ export function MediaEditClient({ mode, mediaId, initialMedia }: Props) {
           {...inputProps("isDispTop")}
         />
       </EditFormLayout>
-    </BaseLayout>
   );
 }

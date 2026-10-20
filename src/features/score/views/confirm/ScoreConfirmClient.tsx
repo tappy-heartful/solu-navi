@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buildYouTubeHtml, archiveAndDeleteDoc, showDialog, showSpinner, hideSpinner } from "@/lib/functions";
@@ -8,6 +8,7 @@ import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { DisplayField } from "@/components/Form/DisplayField";
 import { Genre, Score } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import styles from "./ScoreConfirmClient.module.css";
 
 type Props = {
@@ -19,7 +20,16 @@ type Props = {
 export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { setBreadcrumbs } = useBreadcrumb();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "ホーム", href: "/" },
+      { label: "譜面一覧", href: "/score" },
+      { label: scoreData?.title ? `譜面詳細 (${scoreData.title})` : "譜面詳細" },
+    ]);
+  }, [setBreadcrumbs, scoreData?.title]);
 
   const genreNames = scoreData.genres
     ?.map((gid) => allGenres.find((g) => g.id === gid)?.name)
@@ -137,7 +147,7 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
                   </div>
                   <div className={styles.textContainer}>
                     <span className={styles.linkTitle}>譜面を見る ♪</span>
-                    <span className={styles.linkSub}>別タブで開きます (PDF)</span>
+                    <span className={styles.linkSub}>別タブで開きます</span>
                   </div>
                   <i className={`fa-solid fa-arrow-up-right-from-square ${styles.arrowIcon}`}></i>
                 </a>

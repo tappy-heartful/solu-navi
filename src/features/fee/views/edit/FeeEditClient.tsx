@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { EditFormLayout } from "@/components/Layout/EditFormLayout";
 import { AppInput } from "@/components/Form/AppInput";
 import { saveFee, FeeFormData } from "@/features/fee/api/fee-client-service";
@@ -41,9 +40,8 @@ export function FeeEditClient({ mode, feeId, initialFee }: Props) {
   });
 
   return (
-    <BaseLayout>
-      <EditFormLayout
-        featureName="部費・集金"
+    <EditFormLayout
+      featureName="部費・集金"
         icon="fa-solid fa-coins"
         featureIdKey="feeId"
         basePath="/fee"
@@ -80,6 +78,5 @@ export function FeeEditClient({ mode, feeId, initialFee }: Props) {
           {...inputProps("description")}
         />
       </EditFormLayout>
-    </BaseLayout>
   );
 }

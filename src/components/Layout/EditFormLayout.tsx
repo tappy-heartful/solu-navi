@@ -64,6 +64,7 @@ export function EditFormLayout<T extends Record<string, any>>({
     } else {
       setIsAuthorized(true);
       setBreadcrumbs([
+        { label: "ホーム", href: "/" },
         { label: `${featureName}一覧`, href: basePath },
         ...(!isNew ? [{ label: `${featureName}確認`, href: confirmPath }] : []),
         { label: displayTitle, href: "" },

@@ -24,7 +24,10 @@ export function FeeListClient({ initialFees, totalUserCount }: FeeListClientProp
   const [loadingPayments, setLoadingPayments] = useState(true);
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "部費・会計管理" }]);
+    setBreadcrumbs([
+      { label: "ホーム", href: "/" },
+      { label: "部費・会計管理" },
+    ]);
   }, [setBreadcrumbs]);
 
   useEffect(() => {

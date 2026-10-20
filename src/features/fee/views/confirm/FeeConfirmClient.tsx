@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { DisplayField } from "@/components/Form/DisplayField";
 import { Fee, FeePayment, User } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { updateFeePaymentStatus } from "@/features/fee/api/fee-client-service";
 import { sendFeeRemindAction } from "@/features/fee/api/fee-notification-server-actions";
 import {
@@ -34,7 +35,16 @@ export function FeeConfirmClient({
 }: FeeConfirmClientProps) {
   const router = useRouter();
   const { userData, isAdmin } = useAuth();
+  const { setBreadcrumbs } = useBreadcrumb();
   const uid = userData?.uid || userData?.id;
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "ホーム", href: "/" },
+      { label: "部費・集金管理", href: "/fee" },
+      { label: fee?.title ? `部費詳細 (${fee.title})` : "部費詳細" },
+    ]);
+  }, [setBreadcrumbs, fee?.title]);
 
   const [payments, setPayments] = useState<Record<string, FeePayment>>(() => {
     const map: Record<string, FeePayment> = {};

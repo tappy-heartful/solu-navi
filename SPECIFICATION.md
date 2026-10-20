@@ -55,7 +55,11 @@
   - スクロール時も画面上部に常時固定（`position: sticky; top: 0; z-index: 1000;`）され、背景色白（`#ffffff`）、境界線（`border-bottom: 1px solid #e2e8f0`）、薄いシャドウ（`box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05)`）を保持。
   - セーフエリア対応（`padding-top: calc(10px + env(safe-area-inset-top, 0px))`）により、iPhoneのノッチ・Dynamic Island環境下でもコンテンツと被らず安定表示。
 - **ヘッダー一重化規約**:
-  - `EditFormLayout` や `ConfirmLayout` などの内部で `BaseLayout` を呼び出すレイアウトコンポーネントを使用する画面では、親側でさらに `BaseLayout` を重複して囲わない（ヘッダー二重化の防止）。
+  - `EditFormLayout` や `ConfirmLayout` などの内部で `BaseLayout` を呼び出すレイアウトコンポーネントを使用する画面では、親側でさらに `BaseLayout` を重複して囲わない（ヘッダー・パンくず二重化の防止）。`ScoreEditClient`, `MediaEditClient`, `FeeEditClient` 等では直接 `EditFormLayout` を返却する。
+- **パンくずリスト階層統一規約 (「ホーム」起点)**:
+  - アプリ内の全画面（一覧、新規・編集、確認・詳細、回答画面）において、パンくずリスト（`Breadcrumbs`）の最上位階層は必ず `{ label: "ホーム", href: "/" }` から開始する。
+  - `EditFormLayout`、`SearchableListLayout`、`ListBaseLayout`、`AnswerEditLayout`、`AnswerConfirmLayout`、および各一覧・確認画面（`FeeListClient`, `ScoreConfirmClient`, `MediaConfirmClient`, `FeeConfirmClient` 等）すべてで「ホーム > 〇〇一覧 > ...」の階層構造を徹底統一。
+
 - **前の画面に戻るボタン (`BackNavigation`)**:
   - 画面最下部に「フッター」という呼称ではなく独立したページナビゲーション（戻るボタン）として中央配置（`margin: 36px auto 56px auto`）。
   - 姉妹アプリ「streak-navi」と同一のデザイン構造およびアニメーション（`arrowPulse`）を踏襲し、Solu Naviのプライマリカラー（`#146081`、太さ2px枠線、ホバー時背景 `#e8f4f8`）を適用した押しやすい大きめのボタンスタイルを採用。
@@ -336,13 +340,14 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 ### 3.7. 譜面管理機能 (`/score`) (streak-navi準拠)
 - **目的**: 紙の原譜コピーによる劣化・紛失・コンマスの印刷負担を解消し、楽譜PDFをクラウドで一元データ管理。
 - **特徴**:
-  - タイトル、譜面PDF（Firebase Storage アップロードまたは Google Drive / 外部URL）、YouTube参考音源URL、ジャンルマスタ複数紐付け、略称（譜割用）、備考、ホーム表示設定。
+  - タイトル、譜面（Google Drive URL）、YouTube参考音源URL、ジャンルマスタ複数紐付け、略称（譜割用）、備考、ホーム表示設定。
+  - **Google Drive URL 管理 (streak-navi完全準拠)**: アプリ内へのファイルアップロード機能は設けず、Google Drive の共有URL（`https://drive.google.com/...`）入力欄のみとし、厳格な `rules.googleDrive` バリデーションを適用。
   - **YouTube 参考音源プレイリスト自動生成**: 表示中の譜面一覧から YouTube ID を抽出し、ワンクリックで全曲連続再生可能な `youtube.com/watch_videos?video_ids=...` リンクを自動生成。
-  - アニメーション付き「譜面を見る ♪」ボタンから別タブでPDFを直接閲覧。
+  - アニメーション付き「譜面を見る ♪」ボタンから別タブで楽譜を直接閲覧。
 - **画面構成**:
   - 一覧: `/score` (検索、ジャンルフィルター、イベントフィルター、並び替え、プレイリストボタン)
   - 詳細: `/score/confirm?scoreId=xxx` (YouTubeインライン再生、譜面リンク、管理用編集・コピー・削除)
-  - 作成・編集: `/score/edit` (PDFファイルアップロード、Google Drive URL、ジャンル追加・削除UI)
+  - 作成・編集: `/score/edit` (Google Drive URL入力欄、ジャンル追加・削除UI、略称、備考、ホーム表示設定)
 
 ### 3.8. 音源・動画共有機能 (`/media`) (streak-navi準拠)
 - **目的**: LINEでの練習録音やYouTubeアーカイブの保存期限切れ・チャット埋もれを解消し、永続ストック・共有。

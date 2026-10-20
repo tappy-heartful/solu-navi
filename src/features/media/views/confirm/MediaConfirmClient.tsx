@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +16,7 @@ import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { DisplayField } from "@/components/Form/DisplayField";
 import { Media } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 
 type Props = {
   mediaData: Media;
@@ -25,7 +26,16 @@ type Props = {
 export function MediaConfirmClient({ mediaData, mediaId }: Props) {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { setBreadcrumbs } = useBreadcrumb();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "ホーム", href: "/" },
+      { label: "メディア・音源一覧", href: "/media" },
+      { label: mediaData?.title ? `メディア詳細 (${mediaData.title})` : "メディア詳細" },
+    ]);
+  }, [setBreadcrumbs, mediaData?.title]);
 
   const handleDelete = async () => {
     const ok = await showDialog(
