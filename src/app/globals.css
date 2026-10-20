@@ -368,13 +368,11 @@ textarea:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 180px;
   gap: 20px;
-  padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(20, 96, 129, 0.08);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  width: 100%;
+  max-width: 480px;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
 }
 
 .note-container {
