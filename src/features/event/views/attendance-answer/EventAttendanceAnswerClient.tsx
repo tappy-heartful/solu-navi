@@ -6,6 +6,7 @@ import { Event, AttendanceStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { AnswerEditLayout } from "@/components/Layout/AnswerEditLayout";
+import { DisplayField } from "@/components/Form/DisplayField";
 import { getDayOfWeek, showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
 import { submitAttendanceAnswer } from "@/features/event/api/event-client-service";
 import { db } from "@/lib/firebase";
@@ -94,20 +95,14 @@ export function EventAttendanceAnswerClient({ eventId, event, attendanceStatuses
         onSave={handleSave}
         isLoading={isLoading}
       >
-        <div className="form-group">
-          <label className="label-title">日付</label>
-          <div className="label-value">
-            {event.date ? getDayOfWeek(event.date) : "未設定"}
-          </div>
-        </div>
+        <DisplayField label="日付">
+          {event.date ? getDayOfWeek(event.date) : "未設定"}
+        </DisplayField>
 
-        <div className="form-group">
-          <label className="label-title">タイトル</label>
-          <div className="label-value">{event.title}</div>
-        </div>
+        <DisplayField label="タイトル">{event.title}</DisplayField>
 
-        <div className="form-group">
-          <label className="label-title">出欠回答</label>
+        <div className={styles.formGroup}>
+          <label className={styles.sectionLabel}>出欠回答</label>
           <div className={styles.radioGroup}>
             {attendanceStatuses.map((status) => {
               const isSelected = selectedStatus === status.id;
@@ -132,8 +127,8 @@ export function EventAttendanceAnswerClient({ eventId, event, attendanceStatuses
           </div>
         </div>
 
-        <div className="form-group" style={{ marginTop: "1.5rem" }}>
-          <label className="label-title">コメント</label>
+        <div className={styles.formGroup}>
+          <label className={styles.sectionLabel}>コメント</label>
           <textarea
             rows={3}
             value={comment}

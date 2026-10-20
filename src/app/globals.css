@@ -389,3 +389,30 @@ textarea:focus {
   transition: opacity 0.3s;
 }
 
+/* フォーム・詳細表示共通スタイル (streak-navi準拠) */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.label-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.label-value {
+  font-size: 1rem;
+  color: #0f172a;
+  padding: 0.5rem 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  word-break: break-all;
+}
+
+

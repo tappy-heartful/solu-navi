@@ -6,6 +6,7 @@ import { Event, EventAdjustStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { AnswerEditLayout } from "@/components/Layout/AnswerEditLayout";
+import { DisplayField } from "@/components/Form/DisplayField";
 import { getDayOfWeek, showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
 import { submitAdjustAnswer } from "@/features/event/api/event-client-service";
 import { db } from "@/lib/firebase";
@@ -103,10 +104,7 @@ export function EventAdjustAnswerClient({ eventId, event, adjustStatuses }: Prop
         onSave={handleSave}
         isLoading={isLoading}
       >
-        <div className="form-group">
-          <label className="label-title">タイトル</label>
-          <div className="label-value">{event.title}</div>
-        </div>
+        <DisplayField label="タイトル">{event.title}</DisplayField>
 
         <div className="form-group">
           <label className="label-title">日程調整回答</label>
