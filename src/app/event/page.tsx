@@ -1,11 +1,10 @@
-﻿import { fetchEvents } from "@/features/event/api/event-server-actions";
+import { fetchEvents } from "@/features/event/api/event-server-actions";
 import { EventListClient } from "@/features/event/views/list/EventListClient";
 import { adminDb } from "@/lib/firebase-admin";
 import { getMunicipalityNamesMapServer } from "@/features/user/api/user-server-actions";
 
 export const metadata = { title: "イベント一覧" };
-// 1分間キャッシュしてアクセス集中時の多重フェッチを抑止
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function EventListPage() {
   const events = await fetchEvents();

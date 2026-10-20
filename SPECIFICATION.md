@@ -195,9 +195,11 @@
   - `viewport`: `viewportFit: "cover"`, `themeColor: "#104861"`
   - 各種レイアウト（`Header.module.css`, `BaseLayout.module.css`）で `env(safe-area-inset-top)` / `env(safe-area-inset-bottom)` によるノッチ・ホームバー干渉防止。
 - **Service Worker (`public/sw.js` & `ServiceWorkerRegister.tsx`)**:
-  - キャッシュ名 `solu-navi-cache-v2` による主要アセット（マニフェスト、ロゴ、アイコン、favicon、フォールバック等）のプリキャッシュ。
+  - キャッシュ名 `solu-navi-cache-v4` による完全静的アセット（マニフェスト、ロゴ、アイコン、favicon、アバターSVG等）のみをプリキャッシュ。
   - APIルート（`/api/*`）、Firebase、LINE認証、ホットリロードは完全に除外してネットワーク直送。
-  - 静的アセット（画像、フォント等）はキャッシュ優先（Cache First）、ページ遷移は最新優先（Network First）でオフライン耐性を確保。
+  - **HTML・ページ・動的データの完全ネットワーク直送 (Network Only / `force-dynamic`)**:
+    - データ削除・更新時に古いページが表示される不整合を防ぐため、HTML文書、ページナビゲーション、RSCデータは Service Worker のキャッシュに一切書き込まず、ネットワーク直接取得（Network Only）を徹底。
+    - 各一覧画面（`/score`, `/media`, `/event`, `/fee`, `/user`, `/` 等）を `export const dynamic = "force-dynamic";` に統一し、サーバーサイド ISR キャッシュを廃止して常に最新の Firestore データをオンデマンド取得。
   - ルートクライアントシェル（`ClientLayout.tsx`）から自動登録およびバックグラウンド更新検知。
 - **PWA × OAuth クロスコンテキスト自動同期機構 (`pwaAuthSessions`)**:
   - PWA スタンドアロン起動時、一意の `pwaSessionId` を自動生成し、LINE認可URL（`bot_prompt=aggressive` 付き）を外部ブラウザ（Safari等）で起動。

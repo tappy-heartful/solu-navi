@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "部費・集金管理",
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function FeeListPage() {
   const [fees, usersSnap] = await Promise.all([

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "メディア・音源一覧",
 };
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function MediaListPage() {
   const medias = await getMediasServer();
