@@ -1,8 +1,9 @@
 import { getScoreServer, getGenresServer } from "@/features/score/api/score-server-actions";
+import { getSectionsServer, getInstrumentsServer } from "@/features/user/api/user-server-actions";
 import { ScoreConfirmClient } from "@/features/score/views/confirm/ScoreConfirmClient";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Genre, Score } from "@/lib/firestore/types";
+import { Genre, Score, SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
 
 type Props = {
   searchParams: Promise<{ scoreId?: string }>;
@@ -29,10 +30,15 @@ export default async function ScoreConfirmPage({ searchParams }: Props) {
 
   if (!scoreId) notFound();
 
-  const [scoreData, allGenres] = await Promise.all([
+  const [scoreData, allGenres, sectionsData, instrumentsData] = await Promise.all([
     getScoreServer(scoreId) as Promise<Score | null>,
     getGenresServer() as Promise<Genre[]>,
+    getSectionsServer(),
+    getInstrumentsServer(),
   ]);
+
+  const allSections = sectionsData as SectionDoc[];
+  const allInstruments = instrumentsData as InstrumentDoc[];
 
   if (!scoreData) notFound();
 
@@ -40,6 +46,8 @@ export default async function ScoreConfirmPage({ searchParams }: Props) {
     <ScoreConfirmClient
       scoreData={scoreData}
       allGenres={allGenres}
+      allSections={allSections}
+      allInstruments={allInstruments}
       scoreId={scoreId}
     />
   );

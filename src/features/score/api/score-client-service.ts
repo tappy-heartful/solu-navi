@@ -2,11 +2,15 @@ import { db, storage } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+import { InstrumentPart } from "@/lib/firestore/types";
+
 export type ScoreFormData = {
   title: string;
-  scoreUrl: string;
-  referenceTrack: string;
+  storageLocation?: string;
+  scoreUrl?: string;
+  referenceTrack?: string;
   genres: string[];
+  instrumentConfig?: Record<string, InstrumentPart[]>;
   abbreviation: string;
   note: string;
   isDispTop: boolean;

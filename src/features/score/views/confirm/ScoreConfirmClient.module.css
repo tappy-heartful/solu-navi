@@ -47,19 +47,6 @@
   transform: scale(1.1) rotate(-8deg);
 }
 
-@keyframes noteBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px) rotate(12deg);
-  }
-}
-
-.scoreLink:hover .iconWrapper i {
-  animation: noteBounce 0.6s ease-in-out infinite;
-}
-
 .textContainer {
   display: flex;
   flex-direction: column;
@@ -69,11 +56,10 @@
 
 .linkTitle {
   font-weight: 700;
-  font-size: 1.15rem;
-  letter-spacing: 0.05em;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
   margin: 0;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .linkSub {
@@ -93,4 +79,84 @@
 
 .scoreLink:hover .arrowIcon {
   transform: translate(4px, -4px);
+}
+
+/* 保管場所バッジ */
+.storageBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px solid #cbd5e1;
+  border-radius: 0.625rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.storageIcon {
+  color: #d97706; /* アンバー */
+  font-size: 1.1rem;
+}
+
+/* 楽器構成・パート譜一覧 */
+.instrumentGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.sectionCard {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  padding: 0.75rem 1rem;
+}
+
+.sectionCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sectionColorIndicator {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.sectionName {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.partPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.partPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+}
+
+.partPillName {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.partPillInst {
+  font-size: 0.75rem;
+  color: #64748b;
 }

@@ -7,16 +7,23 @@ export type ScoreFilters = {
   sort: string;
 };
 
-// フィルタ知能
+// フィルタ知能 (タイトル・保管場所・略称・備考での横断検索)
 export const scoreFilterFn = (s: Score, f: ScoreFilters, events: EventWithSetlist[]) => {
-  const matchTitle = s.title?.toLowerCase().includes(f.search.toLowerCase());
+  const q = (f.search || "").toLowerCase().trim();
+  const matchSearch =
+    !q ||
+    (s.title || "").toLowerCase().includes(q) ||
+    (s.storageLocation || "").toLowerCase().includes(q) ||
+    (s.abbreviation || "").toLowerCase().includes(q) ||
+    (s.note || "").toLowerCase().includes(q);
+
   const matchGenre = !f.genre || s.genres?.includes(f.genre);
   let matchEvent = true;
   if (f.eventId) {
     const event = events.find((e) => e.id === f.eventId);
     matchEvent = event?.scoreIdsInSetlist?.includes(s.id) ?? false;
   }
-  return !!(matchTitle && matchGenre && matchEvent);
+  return !!(matchSearch && matchGenre && matchEvent);
 };
 
 // ソート知能

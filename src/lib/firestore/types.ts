@@ -105,16 +105,18 @@ export interface LogDoc {
   createdAt: number | Timestamp | FieldValue;
 }
 
-// ===== 楽譜 =====
+// ===== 楽譜・譜面 =====
 export interface Score {
   id: string;
   title: string;
   abbreviation?: string;
-  note?: string;
-  scoreUrl?: string;
+  storageLocation?: string; // 保管場所・ボックス番号 (例: ボックスA-3、部室 棚2段目など)
+  scoreUrl?: string; // 関連リンク
   genres?: string[];
   referenceTrack?: string;
   youtubeId?: string;
+  instrumentConfig?: Record<string, InstrumentPart[]>; // 楽器編成 { [sectionId]: InstrumentPart[] }
+  note?: string;
   isDispTop?: boolean;
   createdAt?: number;
   updatedAt?: number;

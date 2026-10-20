@@ -3,21 +3,44 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { buildYouTubeHtml, archiveAndDeleteDoc, showDialog, showSpinner, hideSpinner } from "@/lib/functions";
+import {
+  buildYouTubeHtml,
+  archiveAndDeleteDoc,
+  showDialog,
+  showSpinner,
+  hideSpinner,
+} from "@/lib/functions";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { DisplayField } from "@/components/Form/DisplayField";
-import { Genre, Score } from "@/lib/firestore/types";
+import { Genre, Score, SectionDoc, InstrumentDoc } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBoxArchive,
+  faArrowUpRightFromSquare,
+  faMusic,
+  faPenToSquare,
+  faCopy,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 import styles from "./ScoreConfirmClient.module.css";
 
 type Props = {
   scoreData: Score;
   allGenres: Genre[];
+  allSections: SectionDoc[];
+  allInstruments: InstrumentDoc[];
   scoreId: string;
 };
 
-export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
+export function ScoreConfirmClient({
+  scoreData,
+  allGenres,
+  allSections,
+  allInstruments,
+  scoreId,
+}: Props) {
   const router = useRouter();
   const { isAdmin } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -57,11 +80,14 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
     }
   };
 
+  const instrumentConfig = scoreData.instrumentConfig || {};
+  const hasInstruments = Object.values(instrumentConfig).some((parts) => parts.length > 0);
+
   return (
     <BaseLayout>
       <div className="page-header">
         <h1>
-          <i className="fa-solid fa-music" style={{ marginRight: "0.5rem" }} />
+          <FontAwesomeIcon icon={faMusic} style={{ marginRight: "0.5rem" }} />
           譜面詳細
         </h1>
       </div>
@@ -90,7 +116,7 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
                 fontWeight: 600,
               }}
             >
-              <i className="fa-solid fa-pen-to-square" style={{ marginRight: "4px" }} />
+              <FontAwesomeIcon icon={faPenToSquare} style={{ marginRight: "4px" }} />
               編集
             </Link>
             <Link
@@ -106,7 +132,7 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
                 fontWeight: 600,
               }}
             >
-              <i className="fa-solid fa-copy" style={{ marginRight: "4px" }} />
+              <FontAwesomeIcon icon={faCopy} style={{ marginRight: "4px" }} />
               コピー
             </Link>
             <button
@@ -124,7 +150,7 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
                 cursor: "pointer",
               }}
             >
-              <i className="fa-solid fa-trash" style={{ marginRight: "4px" }} />
+              <FontAwesomeIcon icon={faTrash} style={{ marginRight: "4px" }} />
               削除
             </button>
           </div>
@@ -133,30 +159,19 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
         <div className="content-card" style={{ padding: "1.5rem" }}>
           <DisplayField label="タイトル">{scoreData.title}</DisplayField>
 
-          <DisplayField label="譜面">
-            {scoreData.scoreUrl ? (
-              <div className={styles.scoreLinkContainer}>
-                <a
-                  href={scoreData.scoreUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.scoreLink}
-                >
-                  <div className={styles.iconWrapper}>
-                    <i className="fa-solid fa-music"></i>
-                  </div>
-                  <div className={styles.textContainer}>
-                    <span className={styles.linkTitle}>譜面を見る ♪</span>
-                    <span className={styles.linkSub}>別タブで開きます</span>
-                  </div>
-                  <i className={`fa-solid fa-arrow-up-right-from-square ${styles.arrowIcon}`}></i>
-                </a>
+          {/* 保管場所・ボックス番号 */}
+          <DisplayField label="保管場所・ボックス番号">
+            {scoreData.storageLocation ? (
+              <div className={styles.storageBadge}>
+                <FontAwesomeIcon icon={faBoxArchive} className={styles.storageIcon} />
+                <span>{scoreData.storageLocation}</span>
               </div>
             ) : (
-              "未設定"
+              "未登録"
             )}
           </DisplayField>
 
+          {/* 参考音源 */}
           <DisplayField label="参考音源">
             {scoreData.referenceTrack ? (
               <div
@@ -172,7 +187,76 @@ export function ScoreConfirmClient({ scoreData, allGenres, scoreId }: Props) {
 
           <DisplayField label="ジャンル">{genreNames || "未設定"}</DisplayField>
 
+          {/* 楽器構成・パート譜 */}
+          <DisplayField label="楽器構成・パート譜">
+            {hasInstruments ? (
+              <div className={styles.instrumentGrid}>
+                {allSections.map((sec) => {
+                  const parts = instrumentConfig[sec.id] || [];
+                  if (parts.length === 0) return null;
+
+                  return (
+                    <div key={sec.id} className={styles.sectionCard}>
+                      <div className={styles.sectionCardHeader}>
+                        <div
+                          className={styles.sectionColorIndicator}
+                          style={{ backgroundColor: sec.color || "#146081" }}
+                        />
+                        <span className={styles.sectionName}>
+                          {sec.name} ({parts.length})
+                        </span>
+                      </div>
+                      <div className={styles.partPills}>
+                        {parts.map((p, idx) => {
+                          const inst = allInstruments.find((i) => i.id === p.instrumentId);
+                          return (
+                            <span key={idx} className={styles.partPill}>
+                              <span className={styles.partPillName}>{p.partName || "パート"}</span>
+                              {inst && (
+                                <span className={styles.partPillInst}>({inst.name})</span>
+                              )}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              "パート構成未設定"
+            )}
+          </DisplayField>
+
           <DisplayField label="略称(譜割用)">{scoreData.abbreviation || "未設定"}</DisplayField>
+
+          {/* 関連リンク */}
+          <DisplayField label="関連リンク">
+            {scoreData.scoreUrl ? (
+              <div className={styles.scoreLinkContainer}>
+                <a
+                  href={scoreData.scoreUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.scoreLink}
+                >
+                  <div className={styles.iconWrapper}>
+                    <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+                  </div>
+                  <div className={styles.textContainer}>
+                    <span className={styles.linkTitle}>関連リンクを開く</span>
+                    <span className={styles.linkSub}>別タブで開きます</span>
+                  </div>
+                  <FontAwesomeIcon
+                    icon={faArrowUpRightFromSquare}
+                    className={styles.arrowIcon}
+                  />
+                </a>
+              </div>
+            ) : (
+              "未設定"
+            )}
+          </DisplayField>
 
           <DisplayField label="備考" preWrap>
             {scoreData.note || "特になし"}

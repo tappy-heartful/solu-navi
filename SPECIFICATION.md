@@ -340,17 +340,21 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
   - 管理画面ヘッダーの「初期データ投入」ボタンより、上記 JSON に定義された全マスタ（パート・役職・楽器・都道府県・市区町村：計1,959件）を Firestore に一括投入可能。
   - 市区町村データ（1,892件）は Firestore の `writeBatch` 上限（500件）を超えないよう400件単位でチャンク分割コミットを行い、処理中のプログレスメッセージ表示および監査ログ（`logs`）への記録を自動実行。
 
-### 3.7. 譜面管理機能 (`/score`) (streak-navi準拠)
-- **目的**: 紙の原譜コピーによる劣化・紛失・コンマスの印刷負担を解消し、楽譜PDFをクラウドで一元データ管理。
+### 3.7. 譜面・保管ボックス情報管理機能 (`/score`) (streak-navi楽器構成準拠)
+- **目的**: 譜面ファイル自体をアプリ上で管理するのではなく、部室・サークルの物理的な保管ボックスや棚のどこに何の譜面があるか（保管場所・ボックス番号）の検索・所在管理、および各楽曲ごとの楽器編成・パート構成を一元管理する情報データベース。
 - **特徴**:
-  - タイトル、譜面（Google Drive URL）、YouTube参考音源URL、ジャンルマスタ複数紐付け、略称（譜割用）、備考、ホーム表示設定。
-  - **Google Drive URL 管理 (streak-navi完全準拠)**: アプリ内へのファイルアップロード機能は設けず、Google Drive の共有URL（`https://drive.google.com/...`）入力欄のみとし、厳格な `rules.googleDrive` バリデーションを適用。
+  - タイトル、保管場所・ボックス番号、関連リンク（Google Driveや任意URL）、YouTube参考音源URL、ジャンルマスタ複数紐付け、楽器編成・パート構成、略称（譜割用）、備考、ホーム表示設定。
+  - **保管場所・ボックス番号の所在検索機能**: 「ボックスA-3」「第3共用施設 棚2」「青ファイルNo.12」などの保管場所を登録。一覧画面のフリーワード検索でタイトルだけでなくボックス番号や保管場所からも該当譜面を即時逆引き検索可能。
+  - **関連リンクの柔軟な登録**: 「譜面（Google Drive URL）」という限定的な表記から「関連リンク」に表現を緩和。Google Driveのほか、任意の関連WebURL（Dropboxや参考ページ等）を柔軟に登録可能。
+  - **楽器構成・パート譜の有無設定 (streak-naviイベント楽器構成機能完全準拠)**:
+    - サックス、トランペット、トロンボーン、リズムの各セクションごとに、パート名（`partName` 例: 1st, 2nd, Lead, Solo等）と対応楽器（`instrumentId`）を追加・編集・削除可能。
+    - 「ビッグバンド標準編成 (17パート) を一括セット」ボタンおよびセクション別「標準パート入力」ボタンを搭載し、ワンタップで標準パートを展開可能。
   - **YouTube 参考音源プレイリスト自動生成**: 表示中の譜面一覧から YouTube ID を抽出し、ワンクリックで全曲連続再生可能な `youtube.com/watch_videos?video_ids=...` リンクを自動生成。
-  - アニメーション付き「譜面を見る ♪」ボタンから別タブで楽譜を直接閲覧。
+  - 「関連リンクを開く」ボタンから外部共有ファイルや参照リンクを直接閲覧。
 - **画面構成**:
-  - 一覧: `/score` (検索、ジャンルフィルター、イベントフィルター、並び替え、プレイリストボタン)
-  - 詳細: `/score/confirm?scoreId=xxx` (YouTubeインライン再生、譜面リンク、管理用編集・コピー・削除)
-  - 作成・編集: `/score/edit` (Google Drive URL入力欄、ジャンル追加・削除UI、略称、備考、ホーム表示設定)
+  - 一覧: `/score` (タイトル・保管場所・ボックス番号横断検索、テーブル内保管場所バッジ表示、ジャンルフィルター、イベントフィルター、並び替え、プレイリストボタン)
+  - 詳細: `/score/confirm?scoreId=xxx` (タイトル、保管場所バッジ、YouTubeインライン再生、ジャンル、セクション別楽器構成タグ一覧、略称、関連リンクボタン、備考、管理用編集・コピー・削除)
+  - 作成・編集: `/score/edit` (タイトル、保管場所・ボックス番号、参考音源、ジャンル選択、楽器構成エディタ、略称、関連リンク、備考、ホーム表示設定)
 
 ### 3.8. 音源・動画共有機能 (`/media`) (streak-navi準拠)
 - **目的**: LINEでの練習録音やYouTubeアーカイブの保存期限切れ・チャット埋もれを解消し、永続ストック・共有。
@@ -420,7 +424,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 | `callAnswers` | `{callId}_{uid}` | `callId`, `uid`, `answers` (`{ [genre]: CallAnswerSong[] }`) | 認証済部員 | 本人 / `isCallAdmin` |
 | `votes` | 自動採番 | `name`, `description`, `type` (single/borda), `bordaConfig`, `items` (選択肢配列), `acceptStartDate`, `acceptEndDate` | 認証済部員 | `isVoteAdmin` |
 | `voteAnswers` | `{voteId}_{uid}` | `voteId`, `uid`, `answers` | 認証済部員 | 本人 / `isVoteAdmin` |
-| `scores` | 自動採番 | `title`, `abbreviation`, `scoreUrl`, `genres`, `referenceTrack`, `youtubeId`, `note`, `isDispTop` | 認証済部員 | `isScoreAdmin` |
+| `scores` | 自動採番 | `title`, `abbreviation`, `storageLocation`, `scoreUrl`, `genres`, `referenceTrack`, `youtubeId`, `instrumentConfig`, `note`, `isDispTop` | 認証済部員 | `isScoreAdmin` |
 | `medias` | 自動採番 | `title`, `date`, `youtubeUrl`, `driveUrl`, `instagramUrl`, `isDispTop` | 認証済部員 | `isMediaAdmin` |
 | `fees` | 自動採番 | `title`, `amount`, `dueDate`, `description`, `targetGrades` | 認証済部員 | `isFeeAdmin` |
 | `feePayments` | `{feeId}_{uid}` | `feeId`, `uid`, `status`, `paidAt`, `paidMethod`, `note` | 認証済部員 | `isFeeAdmin` / 本人(更新) |

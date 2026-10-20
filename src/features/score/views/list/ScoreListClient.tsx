@@ -47,11 +47,11 @@ export function ScoreListClient({ initialData }: Props) {
       icon="fa-solid fa-music"
       basePath="/score"
       list={list}
-      tableHeaders={["タイトル", "譜面", "音源", "ジャンル", "略称"]}
+      tableHeaders={["タイトル", "保管場所", "音源", "ジャンル", "略称", "関連リンク"]}
       searchFields={
         <ListFilterGrid>
           <FilterInput
-            placeholder="タイトルで検索..."
+            placeholder="タイトル・保管場所・ボックスで検索..."
             value={list.filters.search}
             onChange={(v) => list.updateFilter("search", v)}
           />
@@ -106,7 +106,17 @@ export function ScoreListClient({ initialData }: Props) {
             {s.title}
           </ListCellHeader>
 
-          <ListCellLink href={s.scoreUrl} icon="fa-solid fa-file-pdf" label="譜面" />
+          {/* 保管場所・ボックス番号 */}
+          <ListCellSmall>
+            {s.storageLocation ? (
+              <span style={{ fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap" }}>
+                <i className="fa-solid fa-box-archive" style={{ color: "#d97706", marginRight: 4 }} />
+                {s.storageLocation}
+              </span>
+            ) : (
+              <span style={{ color: "#94a3b8" }}>-</span>
+            )}
+          </ListCellSmall>
 
           <ListCellLink href={s.referenceTrack} icon="fab fa-youtube" label="音源" />
 
@@ -118,6 +128,13 @@ export function ScoreListClient({ initialData }: Props) {
           </ListCellSmall>
 
           <ListCellSmall>{s.abbreviation}</ListCellSmall>
+
+          {/* 関連リンク */}
+          <ListCellLink
+            href={s.scoreUrl}
+            icon="fa-solid fa-arrow-up-right-from-square"
+            label="リンク"
+          />
         </ListRow>
       ))}
     </SearchableListLayout>

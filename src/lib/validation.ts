@@ -6,6 +6,18 @@ export const rules = {
   instagramOptional: (v: string) => !v || isValidInstagramUrl(v) || "InstagramのURLの形式が不正です",
   youtubeOptional: (v: string) => !v || isValidYouTubeUrl(v) || "YouTubeの形式が不正です",
   googleDriveOptional: (v: string) => !v || isValidGoogleDriveUrl(v) || "Google Driveの形式が不正です",
+  url: (v: string) => isValidUrl(v) || "有効なURLを入力してください (http/https)",
+  urlOptional: (v: string) => !v || isValidUrl(v) || "有効なURLを入力してください (http/https)",
+};
+
+export const isValidUrl = (url: string): boolean => {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 };
 
 export const isRequired = (value: any): boolean => {

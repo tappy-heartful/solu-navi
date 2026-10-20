@@ -257,7 +257,7 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>譜面管理</span>
-              <span className={styles.quickKeyword}>楽譜PDF・参考音源</span>
+              <span className={styles.quickKeyword}>保管ボックス・編成情報</span>
             </div>
             <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
           </Link>
