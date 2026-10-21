@@ -110,8 +110,8 @@ export function buildYouTubeHtml(
       : `https://www.youtube.com/watch?v=${embedId}`;
 
   return `
-    <div class="youtube-embed-wrapper" style="margin: 12px 0;">
-      <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+    <div class="youtube-embed-wrapper" style="margin: 12px 0; width: 100%; max-width: 100%; box-sizing: border-box;">
+      <div style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
         <iframe src="https://www.youtube.com/embed/${embedId}?loop=1&playlist=${embedId}" allowfullscreen style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;"></iframe>
       </div>
       <div style="margin-top: 8px; font-size: 13px;">

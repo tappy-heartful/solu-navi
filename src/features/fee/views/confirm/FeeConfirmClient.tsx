@@ -42,7 +42,7 @@ export function FeeConfirmClient({
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
       { label: "部費・集金管理", href: "/fee" },
-      { label: fee?.title ? `部費詳細 (${fee.title})` : "部費詳細" },
+      { label: fee?.title ? `部費確認 (${fee.title})` : "部費確認" },
     ]);
   }, [setBreadcrumbs, fee?.title]);
 
@@ -142,7 +142,7 @@ export function FeeConfirmClient({
       <div className="page-header">
         <h1>
           <i className="fa-solid fa-coins" style={{ marginRight: "0.5rem" }} />
-          部費・集金詳細
+          部費・集金確認
         </h1>
       </div>
 

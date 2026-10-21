@@ -50,7 +50,7 @@ export function ScoreConfirmClient({
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
       { label: "譜面一覧", href: "/score" },
-      { label: scoreData?.title ? `譜面詳細 (${scoreData.title})` : "譜面詳細" },
+      { label: scoreData?.title ? `譜面確認 (${scoreData.title})` : "譜面確認" },
     ]);
   }, [setBreadcrumbs, scoreData?.title]);
 
@@ -88,7 +88,7 @@ export function ScoreConfirmClient({
       <div className="page-header">
         <h1>
           <FontAwesomeIcon icon={faMusic} style={{ marginRight: "0.5rem" }} />
-          譜面詳細
+          譜面確認
         </h1>
       </div>
 

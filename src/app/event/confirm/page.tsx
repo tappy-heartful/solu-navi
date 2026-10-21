@@ -1,4 +1,4 @@
-﻿import { notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { fetchEventConfirmData, fetchEvent } from "@/features/event/api/event-server-actions";
 import { EventConfirmClient } from "@/features/event/views/confirm/EventConfirmClient";
 import type { Metadata } from "next";
@@ -11,11 +11,11 @@ export async function generateMetadata({
   searchParams: Promise<{ eventId?: string }>;
 }): Promise<Metadata> {
   const { eventId } = await searchParams;
-  if (!eventId) return { title: "イベント詳細" };
+  if (!eventId) return { title: "イベント確認" };
 
   const event = await fetchEvent(eventId);
   return {
-    title: event?.title ? `${event.title} - イベント詳細` : "イベント詳細",
+    title: event?.title ? `${event.title} - イベント確認` : "イベント確認",
   };
 }
 

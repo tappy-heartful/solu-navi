@@ -66,7 +66,7 @@ export async function sendFeeRemindAction(feeId: string): Promise<{
     }
 
     const amountStr = Number(fee.amount || 0).toLocaleString();
-    const text = `【部費・集金 納入のお願い】\n「${fee.title}」のお支払いが未納となっております。\n\n・金額: ¥${amountStr}\n・支払期日: ${fee.dueDate}\n\n会計担当の負担軽減と円滑なサークル運営のため、期日までのお支払いをお願いします！\n\n▼ 納入確認・詳細はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.web.app"}/fee/confirm?feeId=${feeId}`;
+    const text = `【部費・集金 納入のお願い】\n「${fee.title}」のお支払いが未納となっております。\n\n・金額: ¥${amountStr}\n・支払期日: ${fee.dueDate}\n\n会計担当の負担軽減と円滑なサークル運営のため、期日までのお支払いをお願いします！\n\n▼ 納入確認はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.web.app"}/fee/confirm?feeId=${feeId}`;
 
     const res = await sendLineMulticastMessage(lineUids, [{ type: "text", text }]);
     return {

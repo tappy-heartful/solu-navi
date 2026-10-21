@@ -26,6 +26,10 @@
 13. **コマンド経由での Firestore 直接接続の絶対禁止**:
     - PowerShell、Node.js スクリプト、curl、Firebase CLI などのターミナル・シェルコマンドを介して、Firestore データベースに直接アクセス・接続・クエリ実行・読み書きを行うことは一切禁止とする。
     - データの取得・検証・更新は、必ずアプリケーションコード（Next.js App Router の Server Components、Server Actions、API Routes、またはブラウザ上の管理画面UI）を通じて行うこと。
+14. **チェックボックスの中央揃え規約 (`AppInput` & `checkbox-group`)**:
+    - 「ホームに表示」をはじめとするフォーム最下部のチェックボックス設定項目や、`AppInput`（`type="checkbox"`）を用いてレンダリングされる単独チェックボックスは、必ず中央揃え（`display: flex; justify-content: center; align-items: center;`）で配置すること。左寄せの不自然な余白やデザインの偏りを防ぎ、スマートフォンの画面中央に美しく押しやすいタッチターゲットを確保すること。
+15. **画面名・パンくずリスト・メタデータの「確認画面」統一規約**:
+    - 各機能のデータ内容の閲覧・表示・削除・編集導線を提供する詳細・確認画面（`/score/confirm`, `/media/confirm`, `/fee/confirm`, `/event/confirm`, `/vote/confirm`, `/call/confirm`, `/user/detail` など）において、画面タイトル（`h1`）、レイアウトヘッダー（`ConfirmLayout`, `AnswerConfirmLayout`）、パンくずリスト（`Breadcrumbs`）、およびページメタデータ（`generateMetadata` の `title`）は、**「○○詳細」ではなく必ず「○○確認」**（例: `譜面確認`, `メディア確認`, `部費・集金確認`, `イベント確認`, `曲投票確認`, `曲募集確認`, `ユーザ確認`）に統一すること。
 
 ---
 

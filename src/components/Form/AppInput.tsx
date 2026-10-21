@@ -54,14 +54,33 @@ export function AppInput({
   // チェックボックス
   if (type === "checkbox") {
     return (
-      <div className="form-group checkbox-group" style={{ display: "flex", alignItems: "center", gap: "8px", margin: "8px 0" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+      <div
+        className="form-group checkbox-group"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          margin: "16px 0",
+        }}
+      >
+        <label
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+            fontWeight: 600,
+            color: "#1e293b",
+            userSelect: "none",
+          }}
+        >
           <input
             type="checkbox"
             checked={!!value}
             disabled={disabled}
             onChange={(e) => updateField(field, e.target.checked)}
-            style={{ width: "18px", height: "18px" }}
+            style={{ width: "18px", height: "18px", cursor: "pointer" }}
           />
           {label}
         </label>

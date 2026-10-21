@@ -134,7 +134,7 @@ export function HomeClient({
                 >
                   <span className={styles.scoreCardTitle}>🎼 {score.title}</span>
                   <div className={styles.scoreCardMeta}>
-                    <span>{score.abbreviation || score.note || "譜面詳細"}</span>
+                    <span>{score.abbreviation || score.note || "譜面確認"}</span>
                     {score.youtubeId && (
                       <i className={`fa-brands fa-youtube ${styles.scoreHasYoutube}`} title="参考音源あり" />
                     )}

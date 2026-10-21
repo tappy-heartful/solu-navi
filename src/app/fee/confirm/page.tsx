@@ -11,11 +11,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const resolvedParams = await searchParams;
   const feeId = resolvedParams.feeId;
 
-  if (!feeId) return { title: "部費詳細" };
+  if (!feeId) return { title: "部費確認" };
 
   const data = await getFeeDetailServer(feeId);
   return {
-    title: data.fee?.title ? `${data.fee.title} - 部費詳細` : "部費詳細",
+    title: data.fee?.title ? `${data.fee.title} - 部費確認` : "部費確認",
   };
 }
 

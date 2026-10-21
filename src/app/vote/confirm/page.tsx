@@ -12,11 +12,11 @@ type Props = {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { voteId } = await searchParams;
-  if (!voteId) return { title: "曲投票詳細 | Solu Navi" };
+  if (!voteId) return { title: "曲投票確認 | Solu Navi" };
 
   const vote = await fetchVote(voteId);
   return {
-    title: vote?.name ? `${vote.name} - 曲投票詳細 | Solu Navi` : "曲投票詳細 | Solu Navi",
+    title: vote?.name ? `${vote.name} - 曲投票確認 | Solu Navi` : "曲投票確認 | Solu Navi",
   };
 }
 

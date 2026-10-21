@@ -39,7 +39,7 @@ export function UserConfirmClient() {
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
       { label: "ユーザ", href: "/user" },
-      { label: "プロフィール詳細" },
+      { label: "プロフィール確認" },
     ]);
 
     async function load() {
@@ -74,7 +74,7 @@ export function UserConfirmClient() {
 
   if (loading) {
     return (
-      <ConfirmLayout title="ユーザ詳細">
+      <ConfirmLayout title="ユーザ確認">
         <div className={styles.loading}>読み込み中...</div>
       </ConfirmLayout>
     );
@@ -82,7 +82,7 @@ export function UserConfirmClient() {
 
   if (!targetUser) {
     return (
-      <ConfirmLayout title="ユーザ詳細">
+      <ConfirmLayout title="ユーザ確認">
         <div className={styles.notFound}>ユーザ情報が見つかりませんでした。</div>
       </ConfirmLayout>
     );
@@ -90,7 +90,7 @@ export function UserConfirmClient() {
 
   return (
     <ConfirmLayout
-      title="ユーザ詳細"
+      title="ユーザ確認"
       icon={<FontAwesomeIcon icon={faIdCard} />}
       backHref="/user"
       backText="ユーザ一覧"

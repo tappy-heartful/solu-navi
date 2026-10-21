@@ -11,11 +11,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const resolvedParams = await searchParams;
   const mediaId = resolvedParams.mediaId;
 
-  if (!mediaId) return { title: "メディア詳細" };
+  if (!mediaId) return { title: "メディア確認" };
 
   const mediaData = await getMediaServer(mediaId);
   return {
-    title: mediaData?.title ? `${mediaData.title} - メディア詳細` : "メディア詳細",
+    title: mediaData?.title ? `${mediaData.title} - メディア確認` : "メディア確認",
   };
 }
 

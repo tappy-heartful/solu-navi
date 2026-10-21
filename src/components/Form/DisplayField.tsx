@@ -28,13 +28,14 @@ export const DisplayField = ({ label, children, preWrap = false }: Props) => {
         style={{
           fontSize: "1rem",
           color: "#0f172a",
-          padding: "0.5rem 0.75rem",
+          padding: "0.625rem 0.875rem",
           backgroundColor: "#f8fafc",
           border: "1px solid #e2e8f0",
           borderRadius: "6px",
           minHeight: "42px",
-          display: "flex",
-          alignItems: "center",
+          width: "100%",
+          boxSizing: "border-box",
+          lineHeight: 1.5,
           whiteSpace: preWrap ? "pre-wrap" : "normal",
         }}
       >

@@ -9,11 +9,11 @@ type Props = {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { callId } = await searchParams;
-  if (!callId) return { title: "曲募集詳細 | Solu Navi" };
+  if (!callId) return { title: "曲募集確認 | Solu Navi" };
 
   const callData = await getCallServer(callId);
   return {
-    title: callData?.title ? `${callData.title} - 曲募集詳細 | Solu Navi` : "曲募集詳細 | Solu Navi",
+    title: callData?.title ? `${callData.title} - 曲募集確認 | Solu Navi` : "曲募集確認 | Solu Navi",
   };
 }
 

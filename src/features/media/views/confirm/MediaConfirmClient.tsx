@@ -33,7 +33,7 @@ export function MediaConfirmClient({ mediaData, mediaId }: Props) {
     setBreadcrumbs([
       { label: "ホーム", href: "/" },
       { label: "メディア・音源一覧", href: "/media" },
-      { label: mediaData?.title ? `メディア詳細 (${mediaData.title})` : "メディア詳細" },
+      { label: mediaData?.title ? `メディア確認 (${mediaData.title})` : "メディア確認" },
     ]);
   }, [setBreadcrumbs, mediaData?.title]);
 
@@ -63,7 +63,7 @@ export function MediaConfirmClient({ mediaData, mediaId }: Props) {
       <div className="page-header">
         <h1>
           <i className="fa-solid fa-photo-film" style={{ marginRight: "0.5rem" }} />
-          メディア詳細
+          メディア確認
         </h1>
       </div>
 

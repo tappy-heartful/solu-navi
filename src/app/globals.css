@@ -447,14 +447,35 @@ textarea:focus {
 .label-value {
   font-size: 1rem;
   color: #0f172a;
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.875rem;
   background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   min-height: 42px;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.5;
   word-break: break-all;
+}
+
+.youtube-display-area {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.youtube-embed-wrapper {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 16px 0;
+  text-align: center;
 }
 
 
