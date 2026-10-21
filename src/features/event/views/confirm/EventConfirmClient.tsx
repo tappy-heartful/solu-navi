@@ -375,40 +375,6 @@ export function EventConfirmClient({ eventId, data }: Props) {
             </div>
           );
         })}
-        {localUnansweredUids.length > 0 && isAdmin && (
-          <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
-            <button
-              type="button"
-              className={styles.unansweredBtn}
-              style={{
-                backgroundColor: "#06c755",
-                color: "#fff",
-                borderColor: "#06c755",
-              }}
-              onClick={async () => {
-                const confirmed = await showDialog(
-                  `未回答の部員（${localUnansweredUids.length}名）にLINEリマインド通知を送信しますか？`
-                );
-                if (!confirmed) return;
-                showSpinner();
-                try {
-                  const { sendAdjustRemindAction } = await import(
-                    "@/features/event/api/event-notification-server-actions"
-                  );
-                  const res = await sendAdjustRemindAction(eventId);
-                  hideSpinner();
-                  await showDialog(res.message, true);
-                } catch (e: any) {
-                  hideSpinner();
-                  await showDialog(`送信に失敗しました: ${e.message}`, true);
-                }
-              }}
-            >
-              <i className="fa-brands fa-line" style={{ marginRight: "4px" }} />
-              日程調整 未回答者にLINEリマインド送信 ({localUnansweredUids.length}人)
-            </button>
-          </div>
-        )}
       </div>
     );
   };
@@ -485,38 +451,6 @@ export function EventConfirmClient({ eventId, data }: Props) {
             >
               未回答者を見る ({localUnansweredUids.length}人)
             </button>
-            {isAdmin && (
-              <button
-                type="button"
-                className={styles.unansweredBtn}
-                style={{
-                  backgroundColor: "#06c755",
-                  color: "#fff",
-                  borderColor: "#06c755",
-                }}
-                onClick={async () => {
-                  const confirmed = await showDialog(
-                    `未回答の部員（${localUnansweredUids.length}名）にLINEリマインド通知を送信しますか？`
-                  );
-                  if (!confirmed) return;
-                  showSpinner();
-                  try {
-                    const { sendAttendanceRemindAction } = await import(
-                      "@/features/event/api/event-notification-server-actions"
-                    );
-                    const res = await sendAttendanceRemindAction(eventId);
-                    hideSpinner();
-                    await showDialog(res.message, true);
-                  } catch (e: any) {
-                    hideSpinner();
-                    await showDialog(`送信に失敗しました: ${e.message}`, true);
-                  }
-                }}
-              >
-                <i className="fa-brands fa-line" style={{ marginRight: "4px" }} />
-                LINEリマインド送信
-              </button>
-            )}
           </div>
         )}
       </>

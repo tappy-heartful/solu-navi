@@ -47,6 +47,19 @@ body {
   overflow-wrap: break-word;
 }
 
+/* ログイン画面・コールバック画面等、全画面表示を必要とする画面用のレスポンシブ拡張 (PC/iPad表示崩れ防止) */
+body:has([data-page="login"]) {
+  max-width: 100% !important;
+  margin: 0 !important;
+  background-color: #05141d !important;
+}
+
+body:has([data-page="callback"]) {
+  max-width: 100% !important;
+  margin: 0 !important;
+  background-color: #f8fafc !important;
+}
+
 /* フォーム入力要素共通ベース (白背景・視認性保証) */
 textarea,
 select,

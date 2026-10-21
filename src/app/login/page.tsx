@@ -205,7 +205,7 @@ function LoginContent() {
   }, [user, pwaSessionId, completePwaLogin, redirectPath, router]);
 
   return (
-    <div className={styles.loginPage}>
+    <div className={styles.loginPage} data-page="login">
       {/* 背景アンビエント光彩 */}
       <div className={styles.ambientGlowTeal} />
       <div className={styles.ambientGlowAmber} />
@@ -326,7 +326,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className={styles.loginPage}>読み込み中...</div>}>
+    <Suspense fallback={<div className={styles.loginPage} data-page="login">読み込み中...</div>}>
       <LoginContent />
     </Suspense>
   );

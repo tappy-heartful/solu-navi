@@ -9,7 +9,6 @@ import { Fee, FeePayment, User } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { updateFeePaymentStatus } from "@/features/fee/api/fee-client-service";
-import { sendFeeRemindAction } from "@/features/fee/api/fee-notification-server-actions";
 import {
   showDialog,
   showSpinner,
@@ -54,8 +53,6 @@ export function FeeConfirmClient({
     return map;
   });
 
-  const [isSendingRemind, setIsSendingRemind] = useState(false);
-
   const myPayment = payments[uid || ""];
   const isMyPaid = myPayment?.status === "paid";
   const isMyExempt = myPayment?.status === "exempt";
@@ -90,31 +87,6 @@ export function FeeConfirmClient({
     } catch (err: any) {
       hideSpinner();
       showDialog(`更新に失敗しました: ${err.message}`, true);
-    }
-  };
-
-  const handleSendRemind = async () => {
-    if (unpaidUsers.length === 0) {
-      showDialog("未払いの部員はいません（全員納入済み、または免除です）。", true);
-      return;
-    }
-
-    const ok = await showDialog(
-      `未納の部員（${unpaidUsers.length}名）にLINE催促通知を一括送信しますか？\n（未納者のみに届きます）`
-    );
-    if (!ok) return;
-
-    try {
-      setIsSendingRemind(true);
-      showSpinner();
-      const res = await sendFeeRemindAction(feeId);
-      hideSpinner();
-      setIsSendingRemind(false);
-      await showDialog(res.message, true);
-    } catch (err: any) {
-      hideSpinner();
-      setIsSendingRemind(false);
-      showDialog(`送信に失敗しました: ${err.message}`, true);
     }
   };
 
@@ -232,7 +204,7 @@ export function FeeConfirmClient({
           </div>
         </div>
 
-        {/* 会計係・管理者向け: 部員別納入一覧 & LINE催促 */}
+        {/* 会計係・管理者向け: 部員別納入一覧 */}
         {isAdmin && (
           <div style={{ marginTop: "2rem" }}>
             <div className={styles.adminActionBar}>
@@ -240,15 +212,6 @@ export function FeeConfirmClient({
                 <i className="fa-solid fa-users" style={{ marginRight: "0.5rem" }} />
                 部員の納入管理 ({users.length - unpaidUsers.length} / {users.length}名 納入済)
               </h3>
-              <button
-                type="button"
-                className={styles.remindBtn}
-                onClick={handleSendRemind}
-                disabled={isSendingRemind || unpaidUsers.length === 0}
-              >
-                <i className="fa-brands fa-line" />
-                未払い者へLINE催促通知を送る ({unpaidUsers.length}名)
-              </button>
             </div>
 
             <div className={styles.tableWrapper}>

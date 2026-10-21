@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./CalendarView.module.css";
 import { DailyAgendaModal, AgendaItem } from "@/features/home/components/DailyAgendaModal";
 import EventModal from "./EventModal";
+import { EventDetailModal } from "./EventDetailModal";
 import { Event, Vote, Call } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
@@ -61,24 +62,28 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
   const [activeModalEvent, setActiveModalEvent] = useState<Partial<Event> | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // イベント確認モーダルのステート
+  const [detailModalEventId, setDetailModalEventId] = useState<string | null>(null);
+
   // 自分の出欠回答を取得
-  useEffect(() => {
+  const fetchAnswers = useCallback(async () => {
     if (!uid) return;
-    const fetchAnswers = async () => {
-      try {
-        const q = query(collection(db, "eventAttendanceAnswers"), where("uid", "==", uid));
-        const snap = await getDocs(q);
-        const map: Record<string, string> = {};
-        snap.docs.forEach((d) => {
-          map[d.data().eventId] = d.data().status;
-        });
-        setMyAttendanceAnswers(map);
-      } catch (err) {
-        console.error("fetchAnswers error:", err);
-      }
-    };
-    fetchAnswers();
+    try {
+      const q = query(collection(db, "eventAttendanceAnswers"), where("uid", "==", uid));
+      const snap = await getDocs(q);
+      const map: Record<string, string> = {};
+      snap.docs.forEach((d) => {
+        map[d.data().eventId] = d.data().status;
+      });
+      setMyAttendanceAnswers(map);
+    } catch (err) {
+      console.error("fetchAnswers error:", err);
+    }
   }, [uid]);
+
+  useEffect(() => {
+    fetchAnswers();
+  }, [fetchAnswers]);
 
   const handlePrevMonth = () => {
     if (month === 0) {
@@ -650,6 +655,21 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
           onClose={() => setIsAgendaOpen(false)}
           onAddEvent={handleAddNewEvent}
           onEditEvent={handleEditEvent}
+          onViewEventDetail={(id) => setDetailModalEventId(id)}
+        />
+      )}
+
+      {detailModalEventId && (
+        <EventDetailModal
+          eventId={detailModalEventId}
+          onClose={() => setDetailModalEventId(null)}
+          onEditEvent={(id) => {
+            setDetailModalEventId(null);
+            handleEditEvent(id);
+          }}
+          onAnswerUpdated={() => {
+            fetchAnswers();
+          }}
         />
       )}
 

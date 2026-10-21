@@ -77,7 +77,7 @@ export function HomeClient({
     .join(",");
 
   return (
-    <BaseLayout showBreadcrumbs={false}>
+    <BaseLayout showBreadcrumbs={false} stickyHeader={false}>
       <div className={styles.container}>
         {/* 画面タイトル (streak-navi準拠) */}
         <div className={styles.header}>
@@ -241,7 +241,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>イベント・出欠</span>
-              <span className={styles.quickKeyword}>練習日程・回答</span>
             </div>
             <FontAwesomeIcon icon={faCalendarDays} className={styles.watermarkIcon} />
           </Link>
@@ -257,7 +256,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>譜面管理</span>
-              <span className={styles.quickKeyword}>保管ボックス・編成情報</span>
             </div>
             <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
           </Link>
@@ -273,7 +271,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>録音・メディア</span>
-              <span className={styles.quickKeyword}>練習録音・YouTube</span>
             </div>
             <FontAwesomeIcon icon={faPhotoFilm} className={styles.watermarkIcon} />
           </Link>
@@ -289,7 +286,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>部費・集金</span>
-              <span className={styles.quickKeyword}>納入管理・催促通知</span>
             </div>
             <FontAwesomeIcon icon={faCoins} className={styles.watermarkIcon} />
           </Link>
@@ -305,7 +301,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>曲募集</span>
-              <span className={styles.quickKeyword}>リクエスト応募</span>
             </div>
             <FontAwesomeIcon icon={faMusic} className={styles.watermarkIcon} />
           </Link>
@@ -321,7 +316,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>曲投票</span>
-              <span className={styles.quickKeyword}>選曲・順位投票</span>
             </div>
             <FontAwesomeIcon icon={faSquarePollVertical} className={styles.watermarkIcon} />
           </Link>
@@ -337,7 +331,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>マスタ管理</span>
-              <span className={styles.quickKeyword}>パート・楽器設定</span>
             </div>
             <FontAwesomeIcon icon={faSliders} className={styles.watermarkIcon} />
           </Link>
@@ -362,7 +355,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>ユーザ</span>
-              <span className={styles.quickKeyword}>ユーザ一覧</span>
             </div>
             <FontAwesomeIcon icon={faUsers} className={styles.watermarkIcon} />
           </Link>
@@ -378,7 +370,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>マイプロフィール</span>
-              <span className={styles.quickKeyword}>登録情報確認</span>
             </div>
             <FontAwesomeIcon icon={faIdCard} className={styles.watermarkIcon} />
           </Link>
@@ -394,7 +385,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>登録情報変更</span>
-              <span className={styles.quickKeyword}>パート・楽器変更</span>
             </div>
             <FontAwesomeIcon icon={faUserPen} className={styles.watermarkIcon} />
           </Link>
@@ -410,7 +400,6 @@ export function HomeClient({
             </div>
             <div className={styles.quickInfo}>
               <span className={styles.quickLabel}>サークル利用規約</span>
-              <span className={styles.quickKeyword}>活動ルールと規程</span>
             </div>
             <FontAwesomeIcon icon={faFileShield} className={styles.watermarkIcon} />
           </Link>

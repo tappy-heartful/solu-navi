@@ -2,10 +2,10 @@
 .loginPage {
   position: relative;
   width: 100%;
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -23,8 +23,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(90vw, 720px);
-  height: min(90vw, 720px);
+  width: min(85vmin, 640px);
+  height: min(85vmin, 640px);
   border-radius: 50%;
   overflow: hidden;
   pointer-events: none;

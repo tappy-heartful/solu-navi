@@ -5,20 +5,45 @@
   background-color: var(--bg-main, #f7f9fa);
 }
 
+.headerGroup {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.headerGroup.sticky {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
 .breadcrumbBar {
   width: 100%;
-  max-width: 768px;
-  margin: 0.5rem auto 0 auto;
-  padding: 0.25rem 0.75rem;
+  background: #ffffff;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #f1f5f9;
   box-sizing: border-box;
 }
 
 .breadcrumbContainer {
   width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0.375rem max(1rem, env(safe-area-inset-right, 0px)) 0.375rem max(1rem, env(safe-area-inset-left, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  box-sizing: border-box;
 }
 
 .breadcrumbNav {

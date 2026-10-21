@@ -2,7 +2,7 @@
 
 import React, { ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotateRight, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { Header } from "./Header";
@@ -16,6 +16,7 @@ interface BaseLayoutProps {
   title?: string;
   showBreadcrumbs?: boolean;
   showActions?: boolean;
+  stickyHeader?: boolean;
 }
 
 export function BaseLayout({
@@ -23,9 +24,14 @@ export function BaseLayout({
   title,
   showBreadcrumbs = true,
   showActions = true,
+  stickyHeader,
 }: BaseLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { breadcrumbs } = useBreadcrumb();
+
+  const isHome = pathname === "/" || pathname === "/home";
+  const isSticky = stickyHeader !== undefined ? stickyHeader : !isHome;
 
   const handleRefresh = () => {
     showSpinner();
@@ -54,62 +60,64 @@ export function BaseLayout({
 
   return (
     <div className={styles.wrapper}>
-      <Header />
+      <div className={`${styles.headerGroup} ${isSticky ? styles.sticky : ""}`}>
+        <Header />
 
-      {/* パンくずリスト & アクション (streak-navi準拠) */}
-      {shouldRenderBar && (
-        <div className={styles.breadcrumbBar}>
-          <div className={styles.breadcrumbContainer}>
-            {hasBreadcrumbs && (
-              <nav className={styles.breadcrumbNav}>
-                {breadcrumbs.map((item, index) => {
-                  const isLast = index === breadcrumbs.length - 1;
-                  return (
-                    <span key={index} className={styles.breadcrumbItem}>
-                      {index > 0 && <span className={styles.separator}>›</span>}
-                      {item.href && !isLast ? (
-                        <Link
-                          href={item.href}
-                          prefetch={false}
-                          className={styles.breadcrumbLink}
-                          onClick={() => showSpinner()}
-                        >
-                          {item.label}
-                        </Link>
-                      ) : (
-                        <span className={isLast ? styles.breadcrumbCurrent : ""}>{item.label}</span>
-                      )}
-                    </span>
-                  );
-                })}
-              </nav>
-            )}
+        {/* パンくずリスト & アクション (ヘッダー同様に固定) */}
+        {shouldRenderBar && (
+          <div className={styles.breadcrumbBar}>
+            <div className={styles.breadcrumbContainer}>
+              {hasBreadcrumbs && (
+                <nav className={styles.breadcrumbNav}>
+                  {breadcrumbs.map((item, index) => {
+                    const isLast = index === breadcrumbs.length - 1;
+                    return (
+                      <span key={index} className={styles.breadcrumbItem}>
+                        {index > 0 && <span className={styles.separator}>›</span>}
+                        {item.href && !isLast ? (
+                          <Link
+                            href={item.href}
+                            prefetch={false}
+                            className={styles.breadcrumbLink}
+                            onClick={() => showSpinner()}
+                          >
+                            {item.label}
+                          </Link>
+                        ) : (
+                          <span className={isLast ? styles.breadcrumbCurrent : ""}>{item.label}</span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </nav>
+              )}
 
-            {showActions && (
-              <div className={styles.breadcrumbActions}>
-                <button
-                  type="button"
-                  className={styles.refreshButton}
-                  onClick={handleRefresh}
-                  title="画面を更新"
-                  aria-label="画面を更新"
-                >
-                  <FontAwesomeIcon icon={faRotateRight} />
-                </button>
-                <button
-                  type="button"
-                  className={styles.shareButton}
-                  onClick={handleShare}
-                  title="共有"
-                  aria-label="共有"
-                >
-                  <FontAwesomeIcon icon={faShareNodes} />
-                </button>
-              </div>
-            )}
+              {showActions && (
+                <div className={styles.breadcrumbActions}>
+                  <button
+                    type="button"
+                    className={styles.refreshButton}
+                    onClick={handleRefresh}
+                    title="画面を更新"
+                    aria-label="画面を更新"
+                  >
+                    <FontAwesomeIcon icon={faRotateRight} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.shareButton}
+                    onClick={handleShare}
+                    title="共有"
+                    aria-label="共有"
+                  >
+                    <FontAwesomeIcon icon={faShareNodes} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <main className={styles.main}>
         {title && <h1 className={styles.pageTitle}>{title}</h1>}

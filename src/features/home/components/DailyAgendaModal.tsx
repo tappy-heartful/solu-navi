@@ -22,6 +22,7 @@ interface DailyAgendaModalProps {
   onClose: () => void;
   onAddEvent?: (dateStr: string) => void;
   onEditEvent?: (eventId: string) => void;
+  onViewEventDetail?: (eventId: string) => void;
 }
 
 export function DailyAgendaModal({
@@ -30,6 +31,7 @@ export function DailyAgendaModal({
   onClose,
   onAddEvent,
   onEditEvent,
+  onViewEventDetail,
 }: DailyAgendaModalProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -247,7 +249,9 @@ export function DailyAgendaModal({
                   className={`${styles.itemRow} ${styles.eventRow} ${getThemeClass(item.type)}`}
                   onClick={() => {
                     onClose();
-                    if (isEventItem && onEditEvent) {
+                    if (isEventItem && onViewEventDetail) {
+                      onViewEventDetail(item.id);
+                    } else if (isEventItem && onEditEvent) {
                       onEditEvent(item.id);
                     } else {
                       router.push(item.link);
@@ -260,9 +264,9 @@ export function DailyAgendaModal({
                   <div className={styles.contentCol}>
                     <div className={styles.itemMeta}>
                       <span className={styles.typeBadge}>{getTypeLabel(item.type)}</span>
-                      {isEventItem && onEditEvent && (
+                      {isEventItem && (
                         <span style={{ fontSize: "10px", color: "#64748b", fontWeight: 600 }}>
-                          タップで編集
+                          タップで詳細確認
                         </span>
                       )}
                     </div>
@@ -272,11 +276,15 @@ export function DailyAgendaModal({
                     <button
                       type="button"
                       className={styles.miniDetailBtn}
-                      title="出欠・詳細確認画面を開く"
+                      title="イベント確認モーダルを開く"
                       onClick={(e) => {
                         e.stopPropagation();
                         onClose();
-                        router.push(item.link);
+                        if (onViewEventDetail) {
+                          onViewEventDetail(item.id);
+                        } else {
+                          router.push(item.link);
+                        }
                       }}
                     >
                       <span>確認</span>
