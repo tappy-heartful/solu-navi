@@ -1,4 +1,4 @@
-/* EventDetailModal.module.css - Solu Navi イベント詳細・確認モーダル */
+/* EventDetailModal.module.css - Solu Navi & CANDY準拠 イベント詳細・確認・出欠回答モーダル */
 
 .modalOverlay {
   position: fixed;
@@ -6,7 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 3000;
@@ -20,13 +20,13 @@
 .eventDetailModal {
   background: #ffffff !important;
   width: 100%;
-  max-width: 540px;
+  max-width: 520px;
   max-height: 88vh;
-  border-radius: 20px;
+  border-radius: 24px;
   position: relative;
-  padding: 22px 18px 16px;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.2), 0 10px 15px -5px rgba(15, 23, 42, 0.1);
+  padding: 22px 20px 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.2), 0 10px 15px -5px rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
   animation: modalEnter 0.2s ease-out;
   display: flex;
@@ -46,15 +46,15 @@
   }
 }
 
+/* ヘッダー */
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
   padding-bottom: 12px;
-  border-bottom: 1.5px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
   flex-shrink: 0;
-  position: relative;
 }
 
 .headerTitleCol {
@@ -62,20 +62,18 @@
   min-width: 0;
 }
 
-.modalTitle {
-  font-size: 19px;
-  font-weight: 800;
-  color: #146081;
-  margin: 0 0 6px 0;
-  line-height: 1.35;
-  word-break: break-word;
-}
-
 .badgeRow {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.dateLabel {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
 }
 
 .typeBadge {
@@ -114,31 +112,60 @@
   color: #64748b;
 }
 
-.headerActions {
+.modalTitle {
+  font-size: 19px;
+  font-weight: 800;
+  color: #146081;
+  margin: 0;
+  line-height: 1.35;
+  word-break: break-word;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.modalTitle i {
+  color: #146081;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.btnEditHeader {
-  background: #f0f7fa;
-  border: 1px solid #146081;
-  color: #146081;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 8px;
-  cursor: pointer;
+.headerActions {
   display: flex;
   align-items: center;
-  gap: 4px;
-  transition: all 0.15s;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.btnEditHeader:hover {
-  background: #146081;
-  color: #ffffff;
+.btnActionIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #146081;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnActionIcon:hover {
+  background: #e2e8f0;
+  color: #0f4c67;
+  transform: translateY(-1px);
+}
+
+.btnDeleteIcon {
+  color: #dc2626;
+}
+
+.btnDeleteIcon:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
 }
 
 .modalClose {
@@ -151,7 +178,7 @@
   align-items: center;
   justify-content: center;
   color: #64748b;
-  font-size: 17px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -161,6 +188,7 @@
   color: #1e293b;
 }
 
+/* スクロール本文エリア */
 .modalScrollArea {
   flex: 1;
   overflow-y: auto;
@@ -168,6 +196,250 @@
   flex-direction: column;
   gap: 12px;
   padding: 12px 2px 8px 0;
+}
+
+/* 1. 出欠回答セクションカード (CANDY 準拠のインライン回答) */
+.answerSectionCard {
+  background: #f8fafc;
+  border: 1.5px solid #b6d8e8;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(20, 96, 129, 0.06);
+}
+
+.answerSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.answerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.answerSectionTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #146081;
+}
+
+.btnCancelAnswer {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.btnCancelAnswer:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.btnCancelAnswer:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.answerFormContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 出欠ステータス選択グリッド */
+.statusOptionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.statusOptionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 42px;
+}
+
+.statusOptionBtn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.statusOptionBtnSelected {
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+/* コメント入力 */
+.commentInputRow {
+  width: 100%;
+}
+
+.commentInput {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 13px;
+  box-sizing: border-box;
+  color: #1e293b;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.commentInput:focus {
+  border-color: #146081;
+  box-shadow: 0 0 0 2px rgba(20, 96, 129, 0.15);
+}
+
+/* 送信ボタン */
+.btnSubmitAnswer {
+  width: 100%;
+  background: #146081;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 10px rgba(20, 96, 129, 0.2);
+}
+
+.btnSubmitAnswer:hover:not(:disabled) {
+  background: #0f4c67;
+  transform: translateY(-1px);
+}
+
+.btnSubmitAnswer:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 日程調整用候補日リスト */
+.adjustCandidateList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adjustCandidateRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.adjustDateBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.adjustDateDay {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.adjustOptionGroup {
+  display: flex;
+  gap: 6px;
+}
+
+.adjustChoiceBtn {
+  width: 36px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.adjustChoiceBtn:hover {
+  background: #f1f5f9;
+}
+
+.adjustChoiceBtnSelected {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
+}
+
+/* 受付終了・期間外バナー */
+.closedAnswerBanner {
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.closedStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.closedStatusLabel {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.closedStatusValue {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.closedNote {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 /* カード共通 */
@@ -241,8 +513,8 @@
   color: #0f766e;
   font-size: 12px;
   font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
   text-decoration: none;
   margin-top: 2px;
   transition: all 0.15s;
@@ -250,81 +522,6 @@
 
 .linkBanner:hover {
   background: #ccfbf1;
-}
-
-/* 自分の回答カード */
-.myAnswerCard {
-  background: #f0f7fa;
-  border: 1.5px solid #b6d8e8;
-  border-radius: 14px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.myAnswerHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.myAnswerLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: #146081;
-}
-
-.myStatusVal {
-  font-size: 15px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btnAnswerRow {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.btnAnswer {
-  flex: 1;
-  background: #146081;
-  color: #ffffff;
-  border: none;
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-decoration: none;
-  transition: all 0.15s;
-}
-
-.btnAnswer:hover {
-  background: #0f4c67;
-}
-
-.btnCancelAnswer {
-  background: #ffffff;
-  color: #dc2626;
-  border: 1px solid #fca5a5;
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btnCancelAnswer:hover {
-  background: #fee2e2;
 }
 
 /* 出欠集計バッジ群 */
@@ -401,6 +598,12 @@
   border-radius: 50%;
   object-fit: cover;
   background: #e2e8f0;
+}
+
+.userCommentBubble {
+  font-size: 12px;
+  margin-left: 2px;
+  cursor: help;
 }
 
 /* 日程調整候補日テーブル */
@@ -504,36 +707,18 @@
 .modalFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   padding-top: 12px;
   margin-top: 8px;
-  border-top: 1.5px solid #f1f5f9;
+  border-top: 1px solid #f1f5f9;
   flex-shrink: 0;
 }
 
-.btnFullConfirm {
-  background: #f8fafc;
-  color: #146081;
-  border: 1.5px solid #146081;
-  border-radius: 10px;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-
-.btnFullConfirm:hover {
-  background: #f0f7fa;
-}
-
 .btnCloseFooter {
-  padding: 9px 18px;
-  border-radius: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
   color: #475569;

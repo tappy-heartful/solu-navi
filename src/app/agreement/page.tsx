@@ -11,6 +11,7 @@ import {
   faHouse,
   faArrowLeft,
   faCircleCheck,
+  faTriangleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveUserDoc } from "@/lib/firestore";
@@ -112,6 +113,28 @@ export default function AgreementPage() {
         </div>
 
         <div className={styles.termsContent}>
+          {/* 重要注意事項ハイライトボックス */}
+          <div className={styles.cautionBox}>
+            <div className={styles.cautionHeader}>
+              <FontAwesomeIcon icon={faTriangleExclamation} className={styles.cautionIcon} />
+              <span>重要事項：個人情報・著作物の取り扱いと法令遵守</span>
+            </div>
+            <ul className={styles.cautionList}>
+              <li className={styles.cautionItem}>
+                <strong>個人情報の登録・アップロード禁止：</strong>
+                本名、住所、電話番号、金融口座、マイナンバー等の機密情報の入力・公開は禁止です。
+              </li>
+              <li className={styles.cautionItem}>
+                <strong>著作物の不正アップロード禁止：</strong>
+                権利者の許諾のない市販楽譜（PDF等）、市販CD/有料配信音源、映像等の無断アップロードは著作権法により固く禁じられています。
+              </li>
+              <li className={styles.cautionItem}>
+                <strong>法令遵守・迷惑行為の禁止：</strong>
+                誹謗中傷、不正アクセス、サークル運営や他部員の活動を妨害する行為は禁止します。
+              </li>
+            </ul>
+          </div>
+
           <section className={styles.termSection}>
             <h3>第1条（総則・利用目的）</h3>
             <p>
@@ -140,18 +163,62 @@ export default function AgreementPage() {
           </section>
 
           <section className={styles.termSection}>
-            <h3>第4条（活動・利用ルール）</h3>
+            <h3>第4条（個人情報・機密情報の保護および投稿禁止）</h3>
             <p>
-              1. イベントの出欠回答や日程調整回答、選曲募集への応募および選曲投票は、サークル運営に支障をきたさないよう指定された期日までに正確に行ってください。
+              1. ユーザーは、本サービスにおいて、自己または第三者の詳細な個人情報（本名、住所の番地以降、電話番号、金融機関の口座情報、クレジットカード番号、マイナンバー、その他プライバシーに関する機密情報）をプロフィール、フォーム、掲示板、コメント欄、アップロードファイル等に入力・登録・公開してはなりません。
               <br />
-              2. 掲示板や録音リンク、各種回答欄において、他の部員への誹謗中傷、公序良俗に反する投稿、またはサークル活動を妨害する行為を禁止します。
+              2. 本サークルは、部員のプライバシーを尊重するため、LINE表示名・略称・パート・楽器・入学年度のみを扱い、過度な個人情報の収集は行いません。
             </p>
           </section>
 
           <section className={styles.termSection}>
-            <h3>第5条（規約の改定）</h3>
+            <h3>第5条（著作権の尊重および著作物の不正アップロード禁止）</h3>
             <p>
-              本規約は、サークル運営上の必要や機能アップデートに応じて幹部会の承認により改定されることがあります。改定後の内容は本ポータル上にて周知します。
+              1. ユーザーは、著作権法その他関連法令を遵守し、正当な権利者の許諾を得ていない市販楽譜（スコア、パート譜、PDF、画像データ等）、市販CD/有料配信の楽曲音源、市販映像、および他者の著作物を本サービス上にアップロード、無断複製、配布、転載、または公開してはなりません。
+              <br />
+              2. 楽譜管理（`/score`）や録音・メディア管理（`/media`）等で共有・登録できるデータは、本サークルが正規に購入または利用許諾を得ているもの、サークルメンバーが独自に作編曲・制作したもの、著作権の存続期間が満了しているパブリックドメイン楽曲、または本サークル自身の演奏録音・動画等の適法なデータに限られます。
+              <br />
+              3. 万一、第三者の著作権その他の知的財産権を侵害するデータがアップロードされた場合、サークル幹部会およびシステム管理者は事前の通知なく当該データを削除し、必要な措置を講じることができます。
+            </p>
+          </section>
+
+          <section className={styles.termSection}>
+            <h3>第6条（禁止事項および法令遵守）</h3>
+            <p>
+              ユーザーは、本サービスの利用にあたり、以下の各号に該当する行為（それらを誘発・助長する行為を含みます）を行ってはなりません。
+            </p>
+            <ul className={styles.termList}>
+              <li className={styles.termListItem}>日本国の法令、条例、公序良俗に違反する行為、または犯罪行為に関連する行為</li>
+              <li className={styles.termListItem}>他の部員、サークル関係者、または第三者の著作権、商標権、プライバシー権、肖像権、名誉その他一切の権利を侵害する行為</li>
+              <li className={styles.termListItem}>誹謗中傷、嫌がらせ、差別的表現、または他の利用者に不快感を与える表現を投稿・共有する行為</li>
+              <li className={styles.termListItem}>本サービスのサーバー、ネットワーク、またはシステムに不正にアクセスする行為、脆弱性を突く行為、有害なプログラムやスクリプトを送信する行為</li>
+              <li className={styles.termListItem}>自動巡回プログラム（クローラー、ボット等）を用いたスクレイピングや、サーバーに過度な負荷を与える行為</li>
+              <li className={styles.termListItem}>本サービスの運営、サークルの活動、または他の部員による利用を妨害する行為</li>
+            </ul>
+          </section>
+
+          <section className={styles.termSection}>
+            <h3>第7条（違反行為に対する措置）</h3>
+            <p>
+              ユーザーが本規約の条項に違反した場合、本サークルは事前の予告なく、違反に該当するデータの即時削除、アカウントの利用停止、またはサークル活動への参加制限・除名等の処分を行うことができるものとします。重大な法令違反が発生した場合は、関係機関への報告や法的措置を検討する場合があります。
+            </p>
+          </section>
+
+          <section className={styles.termSection}>
+            <h3>第8条（活動・利用ルール）</h3>
+            <p>
+              1. イベントの出欠回答や日程調整回答、選曲募集への応募および選曲投票は、サークル運営に支障をきたさないよう指定された期日までに正確に行ってください。
+              <br />
+              2. 共有されるスケジュールや部内連絡事項を定期的に確認し、円滑なサークル運営にご協力ください。
+            </p>
+          </section>
+
+          <section className={styles.termSection}>
+            <h3>第9条（免責事項および規約の改定）</h3>
+            <p>
+              1. ユーザーが本規約に違反したことにより生じた損害やトラブル（著作権侵害による損害賠償請求等を含みます）について、本サークルおよび管理者は故意または重過失がある場合を除き、一切の責任を負いません。
+              <br />
+              2. 本規約は、サークル運営上の必要、法令の改正、または機能アップデートに応じて幹部会の承認により改定されることがあります。改定後の内容は本ポータル上にて周知します。
             </p>
           </section>
         </div>

@@ -175,6 +175,12 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
             const myStatus = myAttendanceAnswers[ev.id];
             if (scopeFilter === "my" && !myStatus && ev.createdBy !== uid) return;
 
+            const timeText = ev.isAllDay
+              ? "終日"
+              : ev.startTime
+              ? `${ev.startTime}〜${ev.endTime || ""}`
+              : "終日";
+
             items.push({
               type: "event",
               iconClass: "fa-solid fa-calendar-check",
@@ -182,6 +188,8 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
               link: `/event/confirm?eventId=${ev.id}`,
               id: ev.id,
               status: myStatus,
+              isAllDay: ev.isAllDay ?? true,
+              timeText,
               createdBy: ev.createdBy,
             });
           }
@@ -197,6 +205,8 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
               label: `[日程調整] ${ev.title}`,
               link: `/event/confirm?eventId=${ev.id}`,
               id: ev.id,
+              isAllDay: true,
+              timeText: "調整中",
               createdBy: ev.createdBy,
             });
           }
@@ -213,6 +223,8 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
               label: `[投票] ${v.name}`,
               link: `/vote/confirm?voteId=${v.id}`,
               id: v.id,
+              isAllDay: true,
+              timeText: "投票期間",
               createdBy: v.createdBy,
             });
           }
@@ -229,6 +241,8 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
               label: `[募集] ${c.title}`,
               link: `/call/confirm?callId=${c.id}`,
               id: c.id,
+              isAllDay: true,
+              timeText: "募集期間",
               createdBy: c.createdBy,
             });
           }
@@ -463,20 +477,25 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
   };
 
   const handleDeleteEvent = async (id: string, targetRange?: "only" | "all") => {
-    if (!canEditEvent(activeModalEvent, userData)) {
+    const targetEvent =
+      activeModalEvent?.id === id
+        ? activeModalEvent
+        : calendarEvents.find((e) => e.id === id);
+
+    if (!canEditEvent(targetEvent, userData)) {
       showDialog("この予定を削除する権限がありません", true);
       return;
     }
     showSpinner();
     try {
-      if (activeModalEvent?.isRecurring && targetRange === "all" && activeModalEvent.recurrenceId) {
+      if (targetEvent?.isRecurring && targetRange === "all" && targetEvent.recurrenceId) {
         // すべての繰り返し予定を一括削除
         const recurringEvents = calendarEvents.filter(
-          (e) => e.recurrenceId === activeModalEvent.recurrenceId
+          (e) => e.recurrenceId === targetEvent.recurrenceId
         );
         await Promise.all(recurringEvents.map((e) => deleteEventWithAnswers(e.id)));
         setCalendarEvents((prev) =>
-          prev.filter((e) => e.recurrenceId !== activeModalEvent.recurrenceId)
+          prev.filter((e) => e.recurrenceId !== targetEvent.recurrenceId)
         );
       } else {
         // この予定のみ削除 (または通常削除)
@@ -486,6 +505,7 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
 
       setIsModalOpen(false);
       setActiveModalEvent(null);
+      setDetailModalEventId(null);
       showDialog("予定を削除しました", true);
       router.refresh();
     } catch (err) {
@@ -667,8 +687,10 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
             setDetailModalEventId(null);
             handleEditEvent(id);
           }}
+          onDeleteEvent={handleDeleteEvent}
           onAnswerUpdated={() => {
             fetchAnswers();
+            router.refresh();
           }}
         />
       )}
