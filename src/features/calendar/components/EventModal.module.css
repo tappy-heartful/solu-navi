@@ -1,0 +1,629 @@
+/* EventModal.module.css - Solu Navi スタイルに準拠 */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.eventModal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  border-radius: 20px;
+  position: relative;
+  padding: 24px 20px 20px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.15), 0 10px 15px -5px rgba(15, 23, 42, 0.08);
+  box-sizing: border-box;
+  animation: modalEnter 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes modalEnter {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modalClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.modalClose:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.modalTitle {
+  font-size: 19px;
+  font-weight: 800;
+  color: #146081;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modalTitle i {
+  color: #146081;
+  font-size: 20px;
+}
+
+.detailLinkBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.detailLinkBanner:hover {
+  background: #ccfbf1;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.modalScrollArea {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+  margin-bottom: 4px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldLabel i {
+  color: #146081;
+  font-size: 13px;
+}
+
+.requiredBadge {
+  font-size: 11px;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.inputField {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  outline: none;
+  font-size: 15px;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #1e293b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.inputField:focus {
+  border-color: #146081;
+  box-shadow: 0 0 0 3px rgba(20, 96, 129, 0.15);
+}
+
+.titleInput {
+  font-size: 17px;
+  font-weight: 700;
+  border-color: #94a3b8;
+}
+
+/* トグル行 */
+.toggleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.toggleLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+
+.toggleSwitch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.25s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.toggleSwitch input:checked+.slider {
+  background-color: #146081;
+}
+
+.toggleSwitch input:checked+.slider:before {
+  transform: translateX(20px);
+}
+
+/* 日時入力行 */
+.timeRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dateInput {
+  flex: 3;
+  height: 42px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 14px;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.dateInput:focus {
+  border-color: #146081;
+}
+
+.timeInput {
+  flex: 2;
+  height: 42px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 14px;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.timeInput:focus {
+  border-color: #146081;
+}
+
+/* 繰り返し設定ボックス */
+.recurrenceSettings {
+  background: #f0fdfa;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1.5px dashed #0d9488;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: modalEnter 0.2s ease-out;
+}
+
+.recurrenceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.recurrenceSelect {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #0d9488;
+  font-size: 14px;
+  background: white;
+  color: #0f766e;
+  font-weight: 700;
+  outline: none;
+}
+
+.recurrenceRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.recurrenceRadioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+
+.recurrenceRadioLabel input {
+  accent-color: #146081;
+  width: 16px;
+  height: 16px;
+}
+
+.notesArea {
+  min-height: 70px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.linkInputWrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.linkOpenButton {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.linkOpenButton:hover {
+  background: #bae6fd;
+}
+
+/* フッターボタングループ */
+.modalFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footerRow {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.btnSave,
+.btnCancel,
+.btnDelete,
+.btnCopy {
+  flex: 1;
+  padding: 12px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.btnSave {
+  border: none;
+  color: white;
+  background: #146081;
+  box-shadow: 0 4px 10px rgba(20, 96, 129, 0.25);
+}
+
+.btnSave:hover {
+  background: #0f4c67;
+}
+
+.btnSave:active {
+  transform: scale(0.98);
+}
+
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  background: #ffffff;
+}
+
+.btnCancel:hover {
+  background: #f8fafc;
+}
+
+.btnCancel:active {
+  transform: scale(0.98);
+}
+
+.btnDelete {
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.btnDelete:hover {
+  background: #fee2e2;
+}
+
+.btnDelete:active {
+  transform: scale(0.98);
+}
+
+.btnCopy {
+  border: 1px solid #cbd5e1;
+  color: #0369a1;
+  background: #f0f9ff;
+}
+
+.btnCopy:hover {
+  background: #e0f2fe;
+}
+
+.btnCopy:active {
+  transform: scale(0.98);
+}
+
+/* 繰り返し変更/削除ポップアップ (確認用) */
+.confirmOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 20px;
+}
+
+.confirmBox {
+  background: #ffffff;
+  width: 100%;
+  max-width: 340px;
+  border-radius: 16px;
+  border: 2px solid #146081;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  box-sizing: border-box;
+  animation: modalEnter 0.15s ease-out;
+}
+
+.confirmMessage {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.confirmButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmBtn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  transition: transform 0.1s;
+}
+
+.confirmBtn:active {
+  transform: scale(0.98);
+}
+
+.btnConfirmOnly {
+  background: #0d9488;
+  color: white;
+}
+
+.btnConfirmOnly:hover {
+  background: #0f766e;
+}
+
+.btnConfirmAll {
+  background: #146081;
+  color: white;
+}
+
+.btnConfirmAll:hover {
+  background: #0f4c67;
+}
+
+.btnConfirmCancel {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+}
+
+.btnConfirmCancel:hover {
+  background: #f1f5f9;
+}
+
+/* 閲覧専用バッジ */
+.readonlyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid #fca5a5;
+  margin-left: 8px;
+}
+
+/* ラベルカラー選択 */
+.colorPaletteRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+
+.colorSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  padding: 0;
+}
+
+.colorSwatch:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.colorSwatchActive {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #146081;
+}
+
+.colorPickerBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.nativeColorInput {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+  box-sizing: border-box;
+}
+
+.colorPreviewPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}

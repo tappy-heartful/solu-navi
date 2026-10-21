@@ -277,6 +277,11 @@ export interface Event {
   title: string;
   attendanceType: "schedule" | "attendance";
   date?: string;              // "yyyy.MM.dd" (出欠タイプ)
+  startDate?: string;         // "yyyy.MM.dd" または "yyyy-MM-dd"
+  endDate?: string;           // "yyyy.MM.dd" または "yyyy-MM-dd"
+  isAllDay?: boolean;
+  startTime?: string;         // "HH:mm"
+  endTime?: string;           // "HH:mm"
   candidateDates?: string[];  // "yyyy.MM.dd"[] (日程調整タイプ)
   acceptStartDate: string;
   acceptEndDate: string;
@@ -284,6 +289,7 @@ export interface Event {
   prefectureId?: string;
   municipalityId?: string;
   website?: string;
+  link?: string;
   access?: string;
   googleMap?: string;
   youtubeUrl?: string;
@@ -294,10 +300,16 @@ export interface Event {
   bring?: string;
   rent?: string;
   other?: string;
+  note?: string;
   allowAssign?: boolean;
   setlist?: SetlistGroup[];
   instrumentConfig?: Record<string, InstrumentPart[]>;
   isVenueReserved?: boolean;
+  isRecurring?: boolean;
+  recurrenceId?: string;
+  color?: string;
+  createdUid?: string;
+  createdByUid?: string;
   createdBy?: string;
   createdAt?: number;
   updatedAt?: number;

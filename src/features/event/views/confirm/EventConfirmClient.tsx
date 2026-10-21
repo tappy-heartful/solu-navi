@@ -36,6 +36,7 @@ import {
   deleteRecording,
 } from "@/features/event/api/event-client-service";
 import { SetlistConfirm } from "@/components/Setlist/SetlistConfirm";
+import { canEditEvent } from "@/features/event/lib/event-utils";
 import styles from "./EventConfirm.module.css";
 
 type Props = {
@@ -108,9 +109,17 @@ export function EventConfirmClient({ eventId, data }: Props) {
   const answeredUids = answers.map((a) => a.uid);
   const unansweredUids = allUserUids.filter((u) => !answeredUids.includes(u));
 
+  // 編集・削除権限: イベント管理者、システム管理者、または作成者本人
+  const canManage = canEditEvent(event, userData);
+
   // ---- Handlers ----
 
   const handleDelete = async () => {
+    if (!canManage) {
+      await showDialog("イベントを削除する権限がありません", true);
+      return;
+    }
+
     const confirmed = await showDialog("イベントと全員の回答を削除しますか？\nこの操作は元に戻せません");
     if (!confirmed) return;
     const confirmed2 = await showDialog("本当に削除しますか？");
@@ -558,6 +567,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
         isActive={isActive}
         onDelete={handleDelete}
         answerMenuSlot={answerMenuSlot}
+        canManage={canManage}
       >
         {/* 日付 / 候補日 */}
         <DisplayField label={isSchedule ? "候補日" : "日付"}>

@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarDays, faPlus, faTrash, faClock } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarDays, faPlus, faTrash, faClock, faPalette, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { FormButtons } from "@/components/Form/FormButtons";
 import { FormFooter } from "@/components/Form/FormFooter";
+import { DEFAULT_EVENT_COLOR, PRESET_EVENT_COLORS } from "@/features/calendar/lib/color-constants";
+import { canEditEvent } from "@/features/event/lib/event-utils";
 import {
   Event,
   Score,
@@ -95,6 +97,8 @@ export function EventEditClient({
   const [title, setTitle] = useState(
     (initialEvent?.title || "") + (mode === "copy" ? "（コピー）" : "")
   );
+  const [color, setColor] = useState(initialEvent?.color || DEFAULT_EVENT_COLOR);
+  const canEdit = canEditEvent(initialEvent, userData);
   const [prefectureId, setPrefectureId] = useState(initialEvent?.prefectureId || "");
   const [municipalityId, setMunicipalityId] = useState(initialEvent?.municipalityId || "");
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
@@ -269,8 +273,14 @@ export function EventEditClient({
         }
       }
 
+      if (isEdit && !canEdit) {
+        await showDialog("このイベントを編集する権限がありません", true);
+        return;
+      }
+
       const payload: Partial<Event> = removeUndefined({
         title: title.trim(),
+        color: color || DEFAULT_EVENT_COLOR,
         attendanceType,
         date: attendanceType === "attendance" ? hyphenDateToDot(date) : "",
         candidateDates:
@@ -300,8 +310,12 @@ export function EventEditClient({
 
       let newId = eventId;
       if (isEdit && eventId) {
+        if (!initialEvent?.createdUid && userData?.id) {
+          payload.createdUid = initialEvent?.createdUid || userData.id;
+        }
         await updateEvent(eventId, payload);
       } else {
+        payload.createdUid = userData?.id || "";
         payload.createdBy = userData?.displayName || "";
         newId = await addEvent(payload as Omit<Event, "id">);
       }
@@ -328,8 +342,34 @@ export function EventEditClient({
     }
   };
 
-  if (loading || !isAdmin) {
+  if (loading) {
     return <div style={{ padding: "2rem", textAlign: "center", color: "#64748b" }}>権限を確認中...</div>;
+  }
+
+  if (isEdit && !canEdit) {
+    return (
+      <BaseLayout>
+        <div className={styles.wrapper}>
+          <div className={styles.card} style={{ textAlign: "center", padding: "3rem 1.5rem" }}>
+            <FontAwesomeIcon icon={faLock} style={{ fontSize: "2.5rem", color: "#ef4444", marginBottom: "1rem" }} />
+            <h2 style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#1e293b", marginBottom: "0.5rem" }}>
+              編集権限がありません
+            </h2>
+            <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+              このイベントを編集できるのは、イベント管理者、システム管理者、またはイベント作成者のみです。
+            </p>
+            <button
+              type="button"
+              className="save-button"
+              style={{ maxWidth: "200px", margin: "0 auto" }}
+              onClick={() => router.push(eventId ? `/event/confirm?eventId=${eventId}` : "/event")}
+            >
+              戻る
+            </button>
+          </div>
+        </div>
+      </BaseLayout>
+    );
   }
 
   return (
@@ -384,6 +424,46 @@ export function EventEditClient({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+
+          {/* カレンダー表示色 (ラベルカラー) */}
+          <div className={styles.formGroup}>
+            <label className={styles.label}>
+              <FontAwesomeIcon icon={faPalette} style={{ marginRight: "6px" }} />
+              カレンダー表示色（ラベルカラー）
+            </label>
+            <div className={styles.colorPaletteRow}>
+              {PRESET_EVENT_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  className={`${styles.colorSwatch} ${
+                    color === c.value ? styles.colorSwatchActive : ""
+                  }`}
+                  style={{ backgroundColor: c.value }}
+                  onClick={() => setColor(c.value)}
+                  title={c.label}
+                />
+              ))}
+              <div className={styles.colorPickerBox}>
+                <input
+                  type="color"
+                  className={styles.nativeColorInput}
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  title="カスタムカラーを選択"
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "4px" }}>
+              <span
+                className={styles.colorPreviewPill}
+                style={{ backgroundColor: color }}
+              >
+                <FontAwesomeIcon icon={faCalendarDays} style={{ marginRight: "4px" }} />
+                {title.trim() || "プレビュー: イベント名"}
+              </span>
+            </div>
           </div>
 
           {/* 日付 / 候補日 */}

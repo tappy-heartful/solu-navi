@@ -26,6 +26,7 @@ type Props = {
   hideCopy?: boolean;
   answerMenuSlot?: React.ReactNode;
   adminExtraSlot?: React.ReactNode;
+  canManage?: boolean;
   children: React.ReactNode;
 };
 
@@ -44,6 +45,7 @@ export const AnswerConfirmLayout = ({
   hideCopy,
   answerMenuSlot,
   adminExtraSlot,
+  canManage,
   children,
 }: Props) => {
   const router = useRouter();
@@ -126,11 +128,11 @@ export const AnswerConfirmLayout = ({
           </div>
         )}
 
-        {/* 管理者メニュー */}
-        {isAdmin && (
+        {/* 管理者・作成者メニュー */}
+        {(canManage !== undefined ? canManage : isAdmin) && (
           <>
             <DetailActionButtons
-              show={isAdmin}
+              show={true}
               onEdit={onEdit}
               onCopy={onCopy}
               onDelete={handleDelete}

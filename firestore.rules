@@ -127,7 +127,11 @@ service cloud.firestore {
     // イベント機能
     match /events/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if isEventAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isEventAdmin() || 
+        resource.data.createdUid == request.auth.uid || 
+        resource.data.createdByUid == request.auth.uid || 
+        resource.data.createdBy == request.auth.uid;
     }
     match /eventAttendanceAnswers/{answerId} {
       allow read: if isAuthenticated();

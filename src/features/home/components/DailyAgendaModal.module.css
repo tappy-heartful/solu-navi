@@ -1,78 +1,60 @@
+/* DailyAgendaModal.module.css - Solu Navi & EventModal スタイル完全準拠 */
+
 .modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(4px);
-  z-index: 2000;
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 3000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
+.eventModal,
+.agendaModal,
 .bottomSheet {
-  background: white;
+  background: #ffffff !important;
   width: 100%;
-  max-width: 500px;
-  border-radius: 24px 24px 0 0;
-  padding: 16px 20px 40px;
+  max-width: 480px;
+  max-height: 85vh;
+  border-radius: 20px;
+  position: relative;
+  padding: 24px 20px 18px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.15), 0 10px 15px -5px rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
-  animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
-  min-height: 40vh;
-  max-height: 80vh;
+  animation: modalEnter 0.2s ease-out;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  margin: auto;
 }
 
-@keyframes slideUp {
+@keyframes modalEnter {
   from {
-    transform: translateY(100%);
+    transform: scale(0.95);
+    opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
-.dragHandleContainer {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-  flex-shrink: 0;
-}
-
-.dragHandle {
-  width: 44px;
-  height: 5px;
-  background-color: #e2e8f0;
-  border-radius: 3px;
+.modalClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 18px;
+  color: #64748b;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.dragHandle:hover {
-  background-color: #cbd5e1;
-}
-
-.headerRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  flex-shrink: 0;
-}
-
-.dateTitle {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.closeBtn {
   background: #f1f5f9;
   border: none;
   width: 32px;
@@ -81,46 +63,89 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
+  z-index: 10;
 }
 
-.closeBtn:hover {
+.modalClose:hover {
   background: #e2e8f0;
-  color: #334155;
+  color: #1e293b;
 }
 
-.actionsGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+.modalTitle,
+.dateTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #146081;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 36px;
+}
+
+.modalTitle i,
+.dateTitle i {
+  color: #146081;
+  font-size: 19px;
+}
+
+.actionsContainer {
+  margin-bottom: 14px;
   flex-shrink: 0;
 }
 
 .actionBtn {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 12px;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-decoration: none !important;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
   border: none;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
-.eventBtn {
-  background-color: #e3f2fd;
-  color: #1565c0;
+.quickAddBtn {
+  background-color: #146081;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(20, 96, 129, 0.25);
 }
 
-.eventBtn:hover {
-  background-color: #bbdefb;
+.quickAddBtn:hover {
+  background-color: #0f4c67;
+  transform: translateY(-1px);
+}
+
+.quickAddBtn:active {
+  transform: scale(0.98);
+}
+
+.miniDetailBtn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #146081;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.miniDetailBtn:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .itemList {
@@ -128,34 +153,39 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-right: 2px;
+  max-height: 50vh;
 }
 
 .emptyState {
   text-align: center;
   color: #94a3b8;
   font-size: 0.9rem;
-  padding: 48px 16px;
+  padding: 36px 16px;
 }
 
-.itemRow {
+.itemRow,
+.eventRow {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 14px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, opacity 0.15s;
   border-left: 4px solid #cbd5e1;
+  background-color: #f8fafc;
 }
 
-.itemRow:hover {
-  transform: translateY(-2px);
+.itemRow:hover,
+.eventRow:hover {
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.itemRow:active {
+.itemRow:active,
+.eventRow:active {
   opacity: 0.7;
 }
 
@@ -177,7 +207,7 @@
   display: flex;
   gap: 6px;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .typeBadge {
@@ -185,7 +215,7 @@
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.8);
   display: inline-block;
 }
 
@@ -205,7 +235,8 @@
   transition: transform 0.2s;
 }
 
-.itemRow:hover .arrowCol {
+.itemRow:hover .arrowCol,
+.eventRow:hover .arrowCol {
   transform: translateX(3px);
 }
 
@@ -213,9 +244,11 @@
   background-color: #eff6ff;
   border-left-color: #3b82f6;
 }
+
 .eventTheme .iconCol {
   color: #2563eb;
 }
+
 .eventTheme .typeBadge {
   color: #1d4ed8;
   background-color: #dbeafe;
@@ -225,9 +258,11 @@
   background-color: #fffbef;
   border-left-color: #f59e0b;
 }
+
 .scheduleAdjustTheme .iconCol {
   color: #d97706;
 }
+
 .scheduleAdjustTheme .typeBadge {
   color: #b45309;
   background-color: #fef3c7;
@@ -237,9 +272,11 @@
   background-color: #fff7ed;
   border-left-color: #f97316;
 }
+
 .voteTheme .iconCol {
   color: #ea580c;
 }
+
 .voteTheme .typeBadge {
   color: #c2410c;
   background-color: #ffedd5;
@@ -249,40 +286,41 @@
   background-color: #faf5ff;
   border-left-color: #a855f7;
 }
+
 .callTheme .iconCol {
   color: #9333ea;
 }
+
 .callTheme .typeBadge {
   color: #7e22ce;
   background-color: #f3e8ff;
 }
 
-@media (min-width: 501px) {
-  .modalOverlay {
-    align-items: center;
-  }
-  .bottomSheet {
-    width: 90%;
-    max-width: 460px;
-    border-radius: 20px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-    animation: scaleIn 0.2s ease-out;
-  }
-  .dragHandleContainer {
-    display: none;
-  }
-  .headerRow {
-    margin-top: 4px;
-  }
+/* フッター */
+.modalFooter {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.btnCloseFooter {
+  width: 100%;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-sizing: border-box;
+}
+
+.btnCloseFooter:hover {
+  background: #f1f5f9;
+  color: #1e293b;
 }
