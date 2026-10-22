@@ -24,14 +24,13 @@ export function BaseLayout({
   title,
   showBreadcrumbs = true,
   showActions = true,
-  stickyHeader,
+  stickyHeader = true,
 }: BaseLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { breadcrumbs } = useBreadcrumb();
 
-  const isHome = pathname === "/" || pathname === "/home";
-  const isSticky = stickyHeader !== undefined ? stickyHeader : !isHome;
+  const isSticky = stickyHeader;
 
   const handleRefresh = () => {
     showSpinner();

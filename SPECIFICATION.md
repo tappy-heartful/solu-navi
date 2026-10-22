@@ -51,8 +51,8 @@
 - **入力要素の白背景・デザイン統一 (`input`, `textarea`, `select`)**:
   - CSSリセットによる背景透過を防ぐため、`globals.css` および各画面の CSS Modules において `textarea` を含む全フォーム要素の背景色を常に白（`background-color: #ffffff`）で統一。
   - 枠線（`border: 1.5px solid #94a3b8`）、角丸（`border-radius: 0.5rem`）、薄いシャドウ、フォーカス時のプライマリカラー発光を全フォーム要素で調和させて視認性を最大化。
-- **ヘッダー上部固定仕様 (`Header` & `Header.module.css`)**:
-  - スクロール時も画面上部に常時固定（`position: sticky; top: 0; z-index: 1000;`）され、背景色白（`#ffffff`）、境界線（`border-bottom: 1px solid #e2e8f0`）、薄いシャドウ（`box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05)`）を保持。
+- **ヘッダー上部固定仕様 (`Header` & `Header.module.css` / `BaseLayout`)**:
+  - ホーム画面を含む全画面において、スクロール時も画面上部に常時固定（`position: sticky; top: 0; z-index: 1000;`）され、背景色白（`#ffffff`）、境界線（`border-bottom: 1px solid #e2e8f0`）、薄いシャドウ（`box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05)`）を保持。
   - セーフエリア対応（`padding-top: calc(10px + env(safe-area-inset-top, 0px))`）により、iPhoneのノッチ・Dynamic Island環境下でもコンテンツと被らず安定表示。
 - **ヘッダー一重化規約**:
   - `EditFormLayout` や `ConfirmLayout` などの内部で `BaseLayout` を呼び出すレイアウトコンポーネントを使用する画面では、親側でさらに `BaseLayout` を重複して囲わない（ヘッダー・パンくず二重化の防止）。`ScoreEditClient`, `MediaEditClient`, `FeeEditClient` 等では直接 `EditFormLayout` を返却する。

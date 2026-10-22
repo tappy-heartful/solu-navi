@@ -77,7 +77,7 @@ export function HomeClient({
     .join(",");
 
   return (
-    <BaseLayout showBreadcrumbs={false} stickyHeader={false}>
+    <BaseLayout showBreadcrumbs={false} stickyHeader={true}>
       <div className={styles.container}>
         {/* 画面タイトル (streak-navi準拠) */}
         <div className={styles.header}>
