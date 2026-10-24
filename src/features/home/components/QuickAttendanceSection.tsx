@@ -13,6 +13,7 @@ import {
   faCheckDouble,
   faSpinner,
   faPaperPlane,
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { Event, AttendanceStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/functions";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { EventDetailModal } from "@/features/calendar/components/EventDetailModal";
 import styles from "./QuickAttendanceSection.module.css";
 
 interface QuickAttendanceSectionProps {
@@ -54,22 +56,26 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
   const [savingMap, setSavingMap] = useState<Record<string, SaveStatus>>({});
   const [isAllSaving, setIsAllSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  // 今日以降の直近3件の出欠イベントを抽出
+  // 今日から今後1週間（今日〜7日後）の出欠イベントを件数制限なく全件抽出
   const upcomingEvents = useMemo(() => {
-    const today = format(new Date(), "yyyy.MM.dd");
+    const now = new Date();
+    const today = format(now, "yyyy.MM.dd");
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const maxDate = format(nextWeek, "yyyy.MM.dd");
+
     return events
       .filter((e) => {
         const isAttendance = e.attendanceType === "attendance" || !e.attendanceType;
         const eDate = e.date || e.startDate || "";
-        return isAttendance && eDate >= today;
+        return isAttendance && eDate >= today && eDate <= maxDate;
       })
       .sort((a, b) => {
         const da = a.date || a.startDate || "";
         const dbDate = b.date || b.startDate || "";
         return da.localeCompare(dbDate);
-      })
-      .slice(0, 3);
+      });
   }, [events]);
 
   // ステータスマスタおよび回答データの取得
@@ -347,7 +353,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
             <div>
               <div className={styles.titleRow}>
                 <h3 className={styles.title}>出欠クイック登録</h3>
-                <span className={styles.countBadge}>直近{upcomingEvents.length}件</span>
+                <span className={styles.countBadge}>今後1週間（{upcomingEvents.length}件）</span>
               </div>
               <p className={styles.subtitle}>ボタンをタップするとその場で即座に回答完了します</p>
             </div>
@@ -380,7 +386,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
           )}
         </div>
 
-        {/* イベント一覧（3件） */}
+        {/* イベント一覧（今後1週間） */}
         <div className={styles.eventList}>
           {upcomingEvents.map((ev) => {
             const dateStr = ev.date || ev.startDate || "";
@@ -418,7 +424,16 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                   {/* イベント情報 */}
                   <div className={styles.infoCol}>
                     <div className={styles.eventTitleRow}>
-                      <span className={styles.eventTitle}>{ev.title}</span>
+                      <button
+                        type="button"
+                        className={styles.eventTitleBtn}
+                        onClick={() => setSelectedEventId(ev.id)}
+                        title="イベント確認モーダルを開く"
+                        aria-label={`${ev.title}のイベント詳細・確認を表示`}
+                      >
+                        <span className={styles.eventTitle}>{ev.title}</span>
+                        <FontAwesomeIcon icon={faArrowUpRightFromSquare} className={styles.eventTitleIcon} />
+                      </button>
                       {isEventSaved && (
                         <span className={styles.savedBadge}>
                           <FontAwesomeIcon icon={faCheck} /> 回答完了
@@ -526,6 +541,30 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
           })}
         </div>
       </div>
+
+      {/* イベント確認モーダル */}
+      {selectedEventId && (
+        <EventDetailModal
+          eventId={selectedEventId}
+          initialMode="view"
+          onClose={() => setSelectedEventId(null)}
+          onSaveSuccess={() => {
+            loadData();
+            router.refresh();
+            if (onUpdated) onUpdated();
+          }}
+          onDeleteSuccess={() => {
+            loadData();
+            router.refresh();
+            if (onUpdated) onUpdated();
+          }}
+          onAnswerUpdated={() => {
+            loadData();
+            router.refresh();
+            if (onUpdated) onUpdated();
+          }}
+        />
+      )}
     </section>
   );
 };

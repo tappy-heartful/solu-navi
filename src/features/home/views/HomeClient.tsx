@@ -208,16 +208,16 @@ export function HomeClient({
         {/* 1. 受付中のお知らせ (曲募集・曲投票・リマインド等) */}
         <HomeAnnouncementSection announcements={initialAnnouncements} />
 
-        {/* 2. サークルカレンダー */}
+        {/* 2. 出欠クイック登録 (今後1週間の出欠登録カード) */}
+        <QuickAttendanceSection events={events} />
+
+        {/* 3. サークルカレンダー */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
             <span className={styles.titleIcon}>📅</span> サークルカレンダー
           </h3>
         </div>
         <CalendarView events={events} votes={votes} calls={calls} />
-
-        {/* 3. 出欠一括登録 (直近3件の出欠登録カード) */}
-        <QuickAttendanceSection events={events} />
 
         {/* 4. 新着譜面セクション */}
         <div className={styles.sectionTitleRow}>
