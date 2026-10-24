@@ -59,33 +59,38 @@ export const SearchableListLayout = <
     <BaseLayout>
       <div className={styles.wrapper}>
         {/* 画面ヘッダー */}
-        <div className={styles.header}>
-          <h1 className={styles.title}>
-            {icon && <i className={`${icon} ${styles.headerIcon}`} />}
-            <span>{title}一覧</span>
-            <span className={styles.headerCount}>({count}件)</span>
-          </h1>
+        <div className={styles.pageHeader}>
+          <div className={styles.titleArea}>
+            <h1 className={styles.pageTitle}>
+              {icon && <i className={`${icon} ${styles.titleIcon}`} />}
+              <span>{title}一覧</span>
+              <span className={styles.titleCount}>({count}件)</span>
+            </h1>
+          </div>
 
-          {isAdmin && !hideAddButton && (
-            <Link
-              href={`${basePath}/edit?mode=new`}
-              prefetch={false}
-              className={styles.addButton}
-            >
-              <FontAwesomeIcon icon={faPlus} />
-              <span>新規作成</span>
-            </Link>
-          )}
+          <div className={styles.headerActions}>
+            {extraHeaderContent}
+            {isAdmin && !hideAddButton && (
+              <Link
+                href={`${basePath}/edit?mode=new`}
+                prefetch={false}
+                className={styles.addButton}
+              >
+                <FontAwesomeIcon icon={faPlus} />
+                <span>新規作成</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* トップスロット（カスタムバナーやアナウンス等） */}
         {topSlot && <div className={styles.topSlotArea}>{topSlot}</div>}
 
-        {/* 検索カード */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>
-              <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.cardTitleIcon} />
+        {/* 絞り込み検索セクション */}
+        <div className={styles.searchSection}>
+          <div className={styles.searchSectionHeader}>
+            <h2 className={styles.searchSectionTitle}>
+              <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.searchTitleIcon} />
               <span>絞り込み検索</span>
             </h2>
             {extraSearchHeaderContent}
@@ -100,7 +105,7 @@ export const SearchableListLayout = <
               onClick={list.resetFilters}
             >
               <FontAwesomeIcon icon={faRotateLeft} />
-              <span>クリア</span>
+              <span>条件クリア</span>
             </button>
             {onSearch && (
               <button
@@ -115,15 +120,14 @@ export const SearchableListLayout = <
           </div>
         </div>
 
-        {/* 一覧カード */}
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>
-              {icon && <i className={`${icon} ${styles.cardTitleIcon}`} />}
+        {/* 一覧結果セクション */}
+        <div className={styles.listSection}>
+          <div className={styles.listSectionHeader}>
+            <div className={styles.listSectionTitle}>
+              {icon && <i className={`${icon} ${styles.listTitleIcon}`} />}
               <span>{title}</span>
-              <span className={styles.cardCount}>({count}件)</span>
-            </h2>
-            {extraHeaderContent}
+              <span className={styles.listCount}>({count}件)</span>
+            </div>
           </div>
 
           {count > 0 ? (

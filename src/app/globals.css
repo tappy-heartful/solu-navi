@@ -180,6 +180,21 @@ textarea:focus {
   border-bottom: none;
 }
 
+@media (max-width: 640px) {
+  .list-table {
+    font-size: 0.8125rem;
+  }
+  .list-table th,
+  .list-table td {
+    padding: 0.625rem 0.625rem;
+  }
+  .list-table th:first-child,
+  .list-table td:first-child {
+    max-width: 130px;
+    min-width: 95px;
+  }
+}
+
 /* テーブル内の行タイトルリンク（第1列） */
 .list-table-row-header {
   font-weight: 600;
