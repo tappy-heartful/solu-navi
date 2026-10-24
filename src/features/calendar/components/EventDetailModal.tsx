@@ -97,7 +97,7 @@ export function EventDetailModal({
   const [formAttendanceType, setFormAttendanceType] = useState<"attendance" | "schedule">("attendance");
   const [formDate, setFormDate] = useState("");
   const [formCandidateDates, setFormCandidateDates] = useState<string[]>([""]);
-  const [formIsAllDay, setFormIsAllDay] = useState(true);
+  const [formIsAllDay, setFormIsAllDay] = useState(false);
   const [formStartTime, setFormStartTime] = useState("18:00");
   const [formEndTime, setFormEndTime] = useState("21:00");
   const [formPrefectureId, setFormPrefectureId] = useState("");
@@ -106,14 +106,11 @@ export function EventDetailModal({
   const [formPlaceName, setFormPlaceName] = useState("");
   const [formWebsite, setFormWebsite] = useState("");
   const [formGoogleMap, setFormGoogleMap] = useState("");
-  const [formAccess, setFormAccess] = useState("");
   const [formIsVenueReserved, setFormIsVenueReserved] = useState(false);
   const [formRentTimeRanges, setFormRentTimeRanges] = useState<{ startTime: string; endTime: string }[]>([]);
   const [formSchedule, setFormSchedule] = useState("");
   const [formDress, setFormDress] = useState("");
   const [formBring, setFormBring] = useState("");
-  const [formRent, setFormRent] = useState("");
-  const [formYoutubeUrl, setFormYoutubeUrl] = useState("");
   const [formSetlist, setFormSetlist] = useState<SetlistGroup[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [isSetlistAccordionOpen, setIsSetlistAccordionOpen] = useState(false);
@@ -172,7 +169,8 @@ export function EventDetailModal({
         ? ev.candidateDates.map(dotDateToHyphen)
         : [""]
     );
-    setFormIsAllDay(ev.isAllDay ?? true);
+    const isAllDay = ev.isAllDay === true && !ev.startTime;
+    setFormIsAllDay(isAllDay);
     setFormStartTime(ev.startTime || "18:00");
     setFormEndTime(ev.endTime || "21:00");
     setFormPrefectureId(ev.prefectureId || "");
@@ -180,14 +178,11 @@ export function EventDetailModal({
     setFormPlaceName(ev.placeName || "");
     setFormWebsite(ev.website || "");
     setFormGoogleMap(ev.googleMap || "");
-    setFormAccess(ev.access || "");
     setFormIsVenueReserved(ev.isVenueReserved ?? false);
     setFormRentTimeRanges(ev.rentTimeRanges || []);
     setFormSchedule(ev.schedule || ev.note || "");
     setFormDress(ev.dress || "");
     setFormBring(ev.bring || "");
-    setFormRent(ev.rent || "");
-    setFormYoutubeUrl(ev.youtubeUrl || "");
     setFormSetlist(ev.setlist || []);
     setIsRecurring(false);
     setRecurrenceInterval(1);
@@ -253,6 +248,9 @@ export function EventDetailModal({
       setFormDate(parsedDate);
       setFormCandidateDates(parsedDate ? [parsedDate] : [""]);
       setFormColor(DEFAULT_EVENT_COLOR);
+      setFormIsAllDay(false);
+      setFormStartTime("18:00");
+      setFormEndTime("21:00");
       setIsRecurring(false);
       setRecurrenceInterval(1);
       setRecurrenceUnit("week");
@@ -448,15 +446,12 @@ export function EventDetailModal({
         placeName: formPlaceName.trim(),
         website: formWebsite.trim(),
         googleMap: formGoogleMap.trim(),
-        access: formAccess.trim(),
         isVenueReserved: formIsVenueReserved,
         rentTimeRanges: formRentTimeRanges.filter((r) => r.startTime && r.endTime),
         schedule: formSchedule.trim(),
         note: formSchedule.trim(),
         dress: formDress.trim(),
         bring: formBring.trim(),
-        rent: formRent.trim(),
-        youtubeUrl: formYoutubeUrl.trim(),
         setlist: formSetlist,
         createdUid: event?.createdUid || uid || "",
         createdBy: event?.createdBy || userData?.displayName || uid || "",
@@ -524,11 +519,22 @@ export function EventDetailModal({
         } else if (
           isAttendance &&
           (event?.isRecurring || event?.recurrenceId) &&
-          targetRange === "all" &&
-          event?.recurrenceId
+          targetRange === "all"
         ) {
+          const recId = event?.recurrenceId;
+          if (!recId) {
+            // 繰り返しIDが存在しない場合は単体更新として処理
+            await updateEvent(eventId, payload);
+            await writeLog({ dataId: eventId, action: "イベント更新(単独)" });
+            hideSpinner();
+            await showDialog("イベントを更新しました", true);
+            await loadData();
+            setMode("view");
+            if (onSaveSuccess) onSaveSuccess(eventId);
+            return;
+          }
+
           // 一括編集: 繰り返しIDで検索して全件を一括更新 (日付差分シフト) (CANDY準拠)
-          const recId = event.recurrenceId;
           const oldStart = event.date || event.startDate || "";
           const newStart = isAttendance ? hyphenDateToDot(formDate) : oldStart;
           const diffDays = getDaysDiff(oldStart, newStart);
@@ -629,38 +635,40 @@ export function EventDetailModal({
       if (
         event?.attendanceType === "attendance" &&
         (event?.isRecurring || event?.recurrenceId) &&
-        targetRange === "all" &&
-        event?.recurrenceId
+        targetRange === "all"
       ) {
-        // 一括削除: 繰り返しIDで検索して全件一括削除 (回答も完全削除)
-        const recId = event.recurrenceId;
-        const q = query(collection(db, "events"), where("recurrenceId", "==", recId));
-        const snap = await getDocs(q);
-        await Promise.all(snap.docs.map((docSnap) => deleteEventWithAnswers(docSnap.id)));
-        await writeLog({
-          dataId: eventId,
-          action: `繰り返しイベント一括削除(${snap.docs.length}件)`,
-        });
-        hideSpinner();
-        await showDialog(
-          `すべての繰り返し予定（${snap.docs.length}件）を一括削除しました`,
-          true
-        );
-        if (onDeleteSuccess) onDeleteSuccess(eventId);
-        onClose();
-      } else {
-        // 個別削除 (または通常削除)
-        if (onDeleteEvent) {
-          await onDeleteEvent(eventId);
-        } else {
-          await deleteEventWithAnswers(eventId);
+        const recId = event?.recurrenceId;
+        if (recId) {
+          // 一括削除: 繰り返しIDで検索して全件一括削除 (回答も完全削除)
+          const q = query(collection(db, "events"), where("recurrenceId", "==", recId));
+          const snap = await getDocs(q);
+          await Promise.all(snap.docs.map((docSnap) => deleteEventWithAnswers(docSnap.id)));
+          await writeLog({
+            dataId: eventId,
+            action: `繰り返しイベント一括削除(${snap.docs.length}件)`,
+          });
+          hideSpinner();
+          await showDialog(
+            `すべての繰り返し予定（${snap.docs.length}件）を一括削除しました`,
+            true
+          );
+          if (onDeleteSuccess) onDeleteSuccess(eventId);
+          onClose();
+          return;
         }
-        await writeLog({ dataId: eventId, action: "イベント削除(モーダル)" });
-        hideSpinner();
-        await showDialog("イベントを削除しました", true);
-        if (onDeleteSuccess) onDeleteSuccess(eventId);
-        onClose();
       }
+
+      // 個別削除 (または通常削除)
+      if (onDeleteEvent) {
+        await onDeleteEvent(eventId);
+      } else {
+        await deleteEventWithAnswers(eventId);
+      }
+      await writeLog({ dataId: eventId, action: "イベント削除(モーダル)" });
+      hideSpinner();
+      await showDialog("イベントを削除しました", true);
+      if (onDeleteSuccess) onDeleteSuccess(eventId);
+      onClose();
     } catch (err: any) {
       hideSpinner();
       console.error("[EventDetailModal] イベント削除エラー:", err);
@@ -780,9 +788,24 @@ export function EventDetailModal({
 
                   {event?.date && (
                     <span className={styles.dateLabel}>
-                      {event.date} ({getDayOfWeek(event.date)})
+                      <i className="fa-regular fa-calendar" /> {event.date} ({getDayOfWeek(event.date, true)})
                     </span>
                   )}
+
+                  {/* 時間バッジ */}
+                  {event?.isAllDay ? (
+                    <span className={styles.timeBadgeAllDay}>
+                      <i className="fa-regular fa-clock" /> 終日
+                    </span>
+                  ) : event?.startTime ? (
+                    <span className={styles.timeBadge}>
+                      <i className="fa-regular fa-clock" /> {event.startTime}{event.endTime ? `〜${event.endTime}` : ""}
+                    </span>
+                  ) : event?.rentTimeRanges && event.rentTimeRanges.length > 0 ? (
+                    <span className={styles.timeBadge}>
+                      <i className="fa-regular fa-clock" /> {event.rentTimeRanges.map((r) => `${r.startTime}〜${r.endTime}`).join(", ")}
+                    </span>
+                  ) : null}
                 </div>
 
                 <h2 className={styles.modalTitle}>
@@ -1146,6 +1169,42 @@ export function EventDetailModal({
                       <i className="fa-solid fa-plus" />
                       <span>候補日を追加</span>
                     </button>
+
+                    {/* 日程調整時の時間帯設定 */}
+                    <div className={styles.checkboxCenterRow} style={{ marginTop: "12px" }}>
+                      <input
+                        type="checkbox"
+                        id="modalScheduleIsAllDay"
+                        checked={formIsAllDay}
+                        onChange={(e) => setFormIsAllDay(e.target.checked)}
+                      />
+                      <label htmlFor="modalScheduleIsAllDay" className={styles.checkboxLabel}>
+                        終日（特定の時間指定なし）
+                      </label>
+                    </div>
+
+                    {!formIsAllDay && (
+                      <div className={styles.formGrid2}>
+                        <div className={styles.formField}>
+                          <span className={styles.fieldLabel}>予定開始時間</span>
+                          <input
+                            type="time"
+                            className={styles.formInput}
+                            value={formStartTime}
+                            onChange={(e) => setFormStartTime(e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.formField}>
+                          <span className={styles.fieldLabel}>予定終了時間</span>
+                          <input
+                            type="time"
+                            className={styles.formInput}
+                            value={formEndTime}
+                            onChange={(e) => setFormEndTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1250,17 +1309,6 @@ export function EventDetailModal({
                 </div>
 
                 <div className={styles.formField}>
-                  <span className={styles.fieldLabel}>アクセス・行き方案内</span>
-                  <input
-                    type="text"
-                    className={styles.formInput}
-                    placeholder="例: 伊予鉄市内電車 赤十字病院前駅より徒歩5分"
-                    value={formAccess}
-                    onChange={(e) => setFormAccess(e.target.value)}
-                  />
-                </div>
-
-                <div className={styles.formField}>
                   <span className={styles.fieldLabel}>施設WebサイトURL</span>
                   <input
                     type="url"
@@ -1326,28 +1374,6 @@ export function EventDetailModal({
                     />
                   </div>
                 </div>
-
-                <div className={styles.formField}>
-                  <span className={styles.fieldLabel}>費用・部費負担</span>
-                  <input
-                    type="text"
-                    className={styles.formInput}
-                    placeholder="例: 会場費 500円 / 人"
-                    value={formRent}
-                    onChange={(e) => setFormRent(e.target.value)}
-                  />
-                </div>
-
-                <div className={styles.formField}>
-                  <span className={styles.fieldLabel}>参考音源 (YouTube URL)</span>
-                  <input
-                    type="url"
-                    className={styles.formInput}
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    value={formYoutubeUrl}
-                    onChange={(e) => setFormYoutubeUrl(e.target.value)}
-                  />
-                </div>
               </div>
 
               {/* 4. セットリスト・演奏曲 (折りたたみ式アコーディオン) */}
@@ -1407,6 +1433,23 @@ export function EventDetailModal({
 
                 {!isPast ? (
                   <div className={styles.answerFormContainer}>
+                    {/* イベント開催日時・時間サマリー */}
+                    <div className={styles.answerTargetSchedule}>
+                      <i className="fa-regular fa-calendar-check" />
+                      <span>{event.date ? `${event.date} (${getDayOfWeek(event.date, true)})` : "日程調整"}</span>
+                      <span className={styles.scheduleDivider}>•</span>
+                      <i className="fa-regular fa-clock" />
+                      <span>
+                        {event.isAllDay
+                          ? "終日"
+                          : event.startTime
+                          ? `${event.startTime}〜${event.endTime || ""}`
+                          : event.rentTimeRanges && event.rentTimeRanges.length > 0
+                          ? event.rentTimeRanges.map((r) => `${r.startTime}〜${r.endTime}`).join(", ")
+                          : "時間未定"}
+                      </span>
+                    </div>
+
                     {!isSchedule ? (
                       <>
                         <div className={styles.statusOptionGrid}>
@@ -1474,7 +1517,7 @@ export function EventDetailModal({
                           {(event.candidateDates || []).map((dateStr) => {
                             const parts = dateStr.split(".");
                             const dateLabel = parts.length === 3 ? `${parts[1]}/${parts[2]}` : dateStr;
-                            const dayOfWeek = getDayOfWeek(dateStr);
+                            const dayOfWeek = getDayOfWeek(dateStr, true);
                             const currentVal = adjustAnswers[dateStr] || "";
 
                             return (
@@ -1588,27 +1631,46 @@ export function EventDetailModal({
                   </div>
                 )}
 
-                {/* 日時 */}
+                {/* 開催日 */}
+                <div className={styles.infoRow}>
+                  <i className={`fa-regular fa-calendar ${styles.infoIcon}`} />
+                  <div className={styles.infoContent}>
+                    <strong>開催日: </strong>
+                    {event.date ? (
+                      <span>
+                        {event.date} ({getDayOfWeek(event.date, true)})
+                      </span>
+                    ) : (
+                      <span>日程調整中（候補日 {event.candidateDates?.length || 0}件）</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 時間 */}
                 <div className={styles.infoRow}>
                   <i className={`fa-regular fa-clock ${styles.infoIcon}`} />
                   <div className={styles.infoContent}>
-                    <strong>日時: </strong>
-                    {event.date ? (
-                      <span>
-                        {event.date} ({getDayOfWeek(event.date)})
-                        {event.rentTimeRanges && event.rentTimeRanges.length > 0 ? (
-                          <span>
-                            {" "}
-                            {event.rentTimeRanges
-                              .map((r) => `${r.startTime}〜${r.endTime}`)
-                              .join(", ")}
-                          </span>
-                        ) : (
-                          event.startTime && <span> {event.startTime}〜{event.endTime || ""}</span>
-                        )}
+                    <strong>時間: </strong>
+                    {event.isAllDay ? (
+                      <span className={styles.timeHighlightBadge}>終日</span>
+                    ) : event.startTime ? (
+                      <span className={styles.timeHighlightText}>
+                        {event.startTime} 〜 {event.endTime || ""}
+                      </span>
+                    ) : event.rentTimeRanges && event.rentTimeRanges.length > 0 ? (
+                      <span className={styles.timeHighlightText}>
+                        {event.rentTimeRanges.map((r) => `${r.startTime}〜${r.endTime}`).join(", ")}
                       </span>
                     ) : (
-                      <span>日程調整中（複数候補日あり）</span>
+                      <span style={{ color: "#94a3b8" }}>未定 / 時間指定なし</span>
+                    )}
+
+                    {/* 施設利用枠がある場合は補足表示 */}
+                    {event.rentTimeRanges && event.rentTimeRanges.length > 0 && event.startTime && (
+                      <div className={styles.rentTimeSubRow}>
+                        <span className={styles.rentTimeBadge}>施設利用枠</span>
+                        <span>{event.rentTimeRanges.map((r) => `${r.startTime}〜${r.endTime}`).join(", ")}</span>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1648,17 +1710,6 @@ export function EventDetailModal({
                   </div>
                 )}
 
-                {/* アクセス情報 */}
-                {event.access && (
-                  <div className={styles.infoRow}>
-                    <i className={`fa-solid fa-train ${styles.infoIcon}`} />
-                    <div className={styles.infoContent}>
-                      <strong>アクセス: </strong>
-                      {event.access}
-                    </div>
-                  </div>
-                )}
-
                 {/* 案内・備考 */}
                 {(event.note || event.schedule) && (
                   <div className={styles.infoRow}>
@@ -1688,17 +1739,6 @@ export function EventDetailModal({
                     <div className={styles.infoContent}>
                       <strong>服装: </strong>
                       {event.dress}
-                    </div>
-                  </div>
-                )}
-
-                {/* 費用 */}
-                {event.rent && (
-                  <div className={styles.infoRow}>
-                    <i className={`fa-solid fa-coins ${styles.infoIcon}`} />
-                    <div className={styles.infoContent}>
-                      <strong>費用・部費負担: </strong>
-                      {event.rent}
                     </div>
                   </div>
                 )}
@@ -1921,7 +1961,7 @@ export function EventDetailModal({
                           return (
                             <tr key={dateStr}>
                               <td className={styles.adjustDateCol}>
-                                {label} ({getDayOfWeek(dateStr)})
+                                {label} ({getDayOfWeek(dateStr, true)})
                               </td>
                               <td style={{ color: "#16a34a", fontWeight: 700 }}>
                                 {circleCount}
@@ -1952,45 +1992,17 @@ export function EventDetailModal({
                 </div>
               )}
 
-              {/* 5. 録音・参考音源 */}
-              {((data.recordings && data.recordings.length > 0) || event.youtubeUrl) && (
+              {/* 5. 録音・動画記録 */}
+              {data.recordings && data.recordings.length > 0 && (
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <h3 className={styles.sectionTitle}>
                       <i className="fa-solid fa-headphones" />
-                      <span>音源・参考動画</span>
+                      <span>音源・録音動画</span>
                     </h3>
                   </div>
 
-                  {event.youtubeUrl && (
-                    <div style={{ marginBottom: "12px" }}>
-                      <div className={styles.recordingHeader} style={{ marginBottom: "6px" }}>
-                        <span className={styles.recordingTitle}>参考音源</span>
-                        <a
-                          href={event.youtubeUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={styles.linkBanner}
-                          style={{ margin: 0, padding: "3px 8px" }}
-                        >
-                          <i className="fa-solid fa-arrow-up-right-from-square" /> YouTubeで開く
-                        </a>
-                      </div>
-                      {extractYouTubeId(event.youtubeUrl) && (
-                        <div className={styles.youtubeContainer}>
-                          <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${extractYouTubeId(event.youtubeUrl)}`}
-                            title="参考音源"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {data.recordings && data.recordings.length > 0 && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                       {data.recordings.map((rec) => {
                         const ytId = extractYouTubeId(rec.url);
 
@@ -2023,7 +2035,6 @@ export function EventDetailModal({
                         );
                       })}
                     </div>
-                  )}
                 </div>
               )}
             </>

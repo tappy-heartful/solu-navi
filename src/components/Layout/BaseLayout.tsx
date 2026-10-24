@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotateRight, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { Header } from "./Header";
+import { PageHelpButton } from "@/components/Help/PageHelpModal";
 import { useBreadcrumb } from "../../contexts/BreadcrumbContext";
 import { showSpinner, hideSpinner } from "../Common/Spinner";
 import { showDialog } from "../Common/CommonDialog";
@@ -17,6 +18,7 @@ interface BaseLayoutProps {
   showBreadcrumbs?: boolean;
   showActions?: boolean;
   stickyHeader?: boolean;
+  showHelpButton?: boolean;
 }
 
 export function BaseLayout({
@@ -25,6 +27,7 @@ export function BaseLayout({
   showBreadcrumbs = true,
   showActions = true,
   stickyHeader = true,
+  showHelpButton = true,
 }: BaseLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -121,6 +124,7 @@ export function BaseLayout({
       <main className={styles.main}>
         {title && <h1 className={styles.pageTitle}>{title}</h1>}
         <div className={styles.content}>{children}</div>
+        {showHelpButton && <PageHelpButton />}
       </main>
     </div>
   );

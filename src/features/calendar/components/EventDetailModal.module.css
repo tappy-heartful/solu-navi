@@ -72,8 +72,99 @@
 
 .dateLabel {
   font-size: 11px;
-  color: #64748b;
+  color: #475569;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.timeBadge {
+  font-size: 11px;
+  color: #0f766e;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0fdfa;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid #ccfbf1;
+}
+
+.timeBadgeAllDay {
+  font-size: 11px;
+  color: #1d4ed8;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eff6ff;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+}
+
+.timeHighlightText {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f766e;
+  letter-spacing: 0.02em;
+}
+
+.timeHighlightBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #dbeafe;
+}
+
+.rentTimeSubRow {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.rentTimeBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.answerTargetSchedule {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #146081;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.scheduleDivider {
+  color: #94a3b8;
+  font-size: 10px;
 }
 
 .typeBadge {
@@ -1211,7 +1302,7 @@
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
-  border-radius: 20px;
+  border-radius: 24px;
 }
 
 .confirmBox {
@@ -1337,5 +1428,98 @@
   font-size: 11px;
   color: #64748b;
   font-weight: 500;
+}
+
+/* 繰り返しイベント編集/削除 確認ポップアップ (CANDY完全準拠) */
+.confirmOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  border-radius: 24px;
+}
+
+.confirmBox {
+  background: #ffffff;
+  width: 100%;
+  max-width: 340px;
+  border-radius: 20px;
+  border: 2px solid #146081;
+  padding: 24px 20px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.25);
+  text-align: center;
+  box-sizing: border-box;
+  animation: modalEnter 0.18s ease-out;
+}
+
+.confirmMessage {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.confirmButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirmBtn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13.5px;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.confirmBtn:active {
+  transform: scale(0.97);
+}
+
+.btnConfirmOnly {
+  background: #0d9488;
+  color: #ffffff;
+}
+
+.btnConfirmOnly:hover {
+  background: #0f766e;
+}
+
+.btnConfirmAll {
+  background: #146081;
+  color: #ffffff;
+}
+
+.btnConfirmAll:hover {
+  background: #0f4963;
+}
+
+.btnConfirmCancel {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #64748b;
+}
+
+.btnConfirmCancel:hover {
+  background: #f1f5f9;
+  color: #334155;
 }
 

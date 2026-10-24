@@ -104,16 +104,13 @@ export function EventEditClient({
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [placeName, setPlaceName] = useState(initialEvent?.placeName || "");
   const [website, setWebsite] = useState(initialEvent?.website || "");
-  const [access, setAccess] = useState(initialEvent?.access || "");
   const [googleMap, setGoogleMap] = useState(initialEvent?.googleMap || "");
-  const [youtubeUrl, setYoutubeUrl] = useState(initialEvent?.youtubeUrl || "");
   const [rentTimeRanges, setRentTimeRanges] = useState<{ startTime: string; endTime: string }[]>(
     initialEvent?.rentTimeRanges || []
   );
   const [schedule, setSchedule] = useState(initialEvent?.schedule || "");
   const [dress, setDress] = useState(initialEvent?.dress || "");
   const [bring, setBring] = useState(initialEvent?.bring || "");
-  const [rent, setRent] = useState(initialEvent?.rent || "");
   const [other, setOther] = useState(initialEvent?.other || "");
   const [allowAssign, setAllowAssign] = useState(initialEvent?.allowAssign ?? false);
   const [isVenueReserved, setIsVenueReserved] = useState(initialEvent?.isVenueReserved ?? false);
@@ -293,14 +290,11 @@ export function EventEditClient({
         prefectureId: prefectureId || "",
         municipalityId: municipalityId || "",
         website: website.trim(),
-        access: access.trim(),
         googleMap: googleMap.trim(),
-        youtubeUrl: youtubeUrl.trim(),
         rentTimeRanges: rentTimeRanges.filter((r) => r.startTime && r.endTime),
         schedule: schedule.trim(),
         dress: dress.trim(),
         bring: bring.trim(),
-        rent: rent.trim(),
         other: other.trim(),
         allowAssign: !!allowAssign,
         isVenueReserved: !!isVenueReserved,
@@ -634,17 +628,6 @@ export function EventEditClient({
               placeholder="例: 譜面、ミュート、筆記用具"
               value={bring}
               onChange={(e) => setBring(e.target.value)}
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label}>会場費・部費・参加費</label>
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="例: 500円（当日徴収）"
-              value={rent}
-              onChange={(e) => setRent(e.target.value)}
             />
           </div>
 

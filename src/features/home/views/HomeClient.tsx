@@ -23,6 +23,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
+import { QuickAttendanceSection } from "../components/QuickAttendanceSection";
 import { HomeAnnouncement } from "../types";
 import { CalendarView } from "@/features/calendar/components/CalendarView";
 import { Event, Vote, Call, Fee, Score, BlueNote } from "@/lib/firestore/types";
@@ -215,7 +216,10 @@ export function HomeClient({
         </div>
         <CalendarView events={events} votes={votes} calls={calls} />
 
-        {/* 3. 新着譜面セクション */}
+        {/* 3. 出欠一括登録 (直近3件の出欠登録カード) */}
+        <QuickAttendanceSection events={events} />
+
+        {/* 4. 新着譜面セクション */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
             <span className={styles.titleIcon}>🎼</span> 新着譜面

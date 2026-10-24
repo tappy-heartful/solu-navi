@@ -601,24 +601,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
               </div>
             </div>
 
-            {/* 交通アクセス */}
-            <div className={styles.locationField}>
-              <label className={styles.locationLabel}>交通アクセス・駐車場情報</label>
-              <div className={styles.locationValue}>
-                {event.access ? (
-                  /^https?:\/\//.test(event.access) ? (
-                    <a href={event.access} target="_blank" rel="noopener noreferrer" className={styles.linkText}>
-                      <i className="fa-solid fa-link" />
-                      {event.access}
-                    </a>
-                  ) : (
-                    <span style={{ whiteSpace: "pre-wrap" }}>{event.access}</span>
-                  )
-                ) : (
-                  <span className={styles.unsetText}>未設定</span>
-                )}
-              </div>
-            </div>
+
 
             {/* 会場押さえ状況 */}
             <div className={styles.locationField}>
@@ -638,56 +621,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
           </div>
         </div>
 
-        {/* YouTube */}
-        <DisplayField label="YouTube">
-          {event.youtubeUrl ? (
-            <>
-              <div
-                className="youtube-display-area"
-                dangerouslySetInnerHTML={{ __html: buildYouTubeHtml(event.youtubeUrl) }}
-              />
-              {event.youtubeTimestamps && event.youtubeTimestamps.length > 0 && (
-                <div className="youtube-timestamps" style={{ marginTop: "12px" }}>
-                  <h4 style={{ fontSize: "14px", marginBottom: "8px", color: "#666" }}>タイムスタンプ</h4>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                    {event.youtubeTimestamps.map((t, idx) => {
-                      const seconds = timestampToSeconds(t.time);
-                      const videoId = extractYouTubeId(event.youtubeUrl!);
-                      const timeUrl = `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`;
-                      return (
-                        <a
-                          key={idx}
-                          href={timeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="timestamp-link"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "6px 12px",
-                            background: "#f0f0f0",
-                            borderRadius: "16px",
-                            fontSize: "13px",
-                            color: "#333",
-                            textDecoration: "none",
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          <i className="fa-brands fa-youtube" style={{ color: "red" }} />
-                          <strong>{t.time}</strong>
-                          <span>{t.comment}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            "未設定"
-          )}
-        </DisplayField>
+
 
         {/* セットリスト */}
         <div className="form-group">
