@@ -99,3 +99,51 @@ export async function getUpcomingEventsWithSetlistServer(): Promise<EventWithSet
     return [];
   }
 }
+
+export type MediaSelectItem = {
+  id: string;
+  title: string;
+  date: string;
+};
+
+/**
+ * メディア一覧を取得（譜面・イベント選択肢用）
+ */
+export async function getMediasForSelectServer(): Promise<MediaSelectItem[]> {
+  try {
+    const snap = await adminDb.collection("medias").orderBy("date", "desc").get();
+    return snap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        title: data.title || "",
+        date: (data.date || "").replace(/-/g, "."),
+      };
+    });
+  } catch (err) {
+    console.error("[getMediasForSelectServer] Error:", err);
+    return [];
+  }
+}
+
+/**
+ * 紐づく単一メディア情報を取得
+ */
+export async function getLinkedMediaServer(
+  mediaId?: string
+): Promise<{ id: string; title: string; date: string } | null> {
+  if (!mediaId) return null;
+  try {
+    const docSnap = await adminDb.collection("medias").doc(mediaId).get();
+    if (!docSnap.exists) return null;
+    const data = docSnap.data() || {};
+    return {
+      id: docSnap.id,
+      title: data.title || "",
+      date: (data.date || "").replace(/-/g, "."),
+    };
+  } catch (err) {
+    console.error("[getLinkedMediaServer] Error:", err);
+    return null;
+  }
+}

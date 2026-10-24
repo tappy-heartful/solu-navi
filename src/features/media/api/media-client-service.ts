@@ -5,6 +5,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 export type MediaFormData = {
   date: string;
   title: string;
+  eventId?: string;
+  scoreId?: string;
   instagramUrl: string;
   youtubeUrl: string;
   driveUrl: string;
@@ -33,6 +35,8 @@ export const saveMedia = async (
 ): Promise<string> => {
   const payload = {
     ...data,
+    eventId: data.eventId || "",
+    scoreId: data.scoreId || "",
     date: data.date.replace(/-/g, "."),
     updatedAt: serverTimestamp(),
   };

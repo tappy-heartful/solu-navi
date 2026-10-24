@@ -105,6 +105,42 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
     setMonth(todayMonth);
   };
 
+  // スワイプの閾値（ピクセル）(streak-navi準拠)
+  const minSwipeDistance = 50;
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchEndY(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+    setTouchStartY(e.targetTouches[0].clientY);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+    setTouchEndY(e.targetTouches[0].clientY);
+  };
+
+  const onTouchEnd = () => {
+    if (touchStartX === null || touchEndX === null) return;
+    const distanceX = touchStartX - touchEndX;
+    const distanceY = touchStartY !== null && touchEndY !== null ? touchStartY - touchEndY : 0;
+
+    // 縦スクロールと競合しないよう、横の移動量が縦の移動量より大きく、かつ閾値を超えている場合のみ判定
+    if (Math.abs(distanceX) > Math.abs(distanceY) && Math.abs(distanceX) > minSwipeDistance) {
+      if (distanceX > 0) {
+        // 左スワイプ（右から左へスワイプ）: 次月へ
+        handleNextMonth();
+      } else {
+        // 右スワイプ（左から右へスワイプ）: 前月へ
+        handlePrevMonth();
+      }
+    }
+  };
+
   // カレンダーグリッドの日付セル生成
   const gridCells = useMemo(() => {
     const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 (Sun) - 6 (Sat)
@@ -359,7 +395,12 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
         <div className={`${styles.weekday} ${styles.weekdaySaturday}`}>土</div>
       </div>
 
-      <div className={styles.daysGrid}>
+      <div
+        className={styles.daysGrid}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {gridCells.map((cell, idx) => {
           const items = getItemsForDay(cell.year, cell.month, cell.dayNum);
           const isToday =

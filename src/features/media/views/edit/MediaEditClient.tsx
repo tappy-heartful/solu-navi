@@ -14,9 +14,17 @@ type Props = {
   mode: "new" | "edit" | "copy";
   mediaId?: string;
   initialMedia: Media | null;
+  events?: { id: string; title: string; date: string }[];
+  scores?: { id: string; title: string; storageLocation?: string }[];
 };
 
-export function MediaEditClient({ mode, mediaId, initialMedia }: Props) {
+export function MediaEditClient({
+  mode,
+  mediaId,
+  initialMedia,
+  events = [],
+  scores = [],
+}: Props) {
   const [isUploading, setIsUploading] = useState(false);
 
   const form = useAppForm(
@@ -25,6 +33,8 @@ export function MediaEditClient({ mode, mediaId, initialMedia }: Props) {
       title:
         (mode === "copy" ? `${initialMedia?.title}（コピー）` : initialMedia?.title) ??
         "",
+      eventId: initialMedia?.eventId ?? "",
+      scoreId: initialMedia?.scoreId ?? "",
       instagramUrl: initialMedia?.instagramUrl ?? "",
       youtubeUrl: initialMedia?.youtubeUrl ?? "",
       driveUrl: initialMedia?.driveUrl ?? "",
@@ -83,6 +93,63 @@ export function MediaEditClient({ mode, mediaId, initialMedia }: Props) {
           placeholder="例: 2026.05.10 練習録音 / 定期演奏会"
           {...inputProps("title")}
         />
+
+        {/* 関連イベント選択プルダウン（直近1ヶ月） */}
+        <div style={{ marginBottom: "1rem" }}>
+          <FormField label="関連イベント（過去1ヶ月）" error={form.errors.eventId}>
+            <select
+              className="form-control"
+              value={form.formData.eventId}
+              onChange={(e) => form.updateField("eventId", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1.5px solid #cbd5e1",
+                backgroundColor: "#ffffff",
+                fontSize: "0.9rem",
+                boxSizing: "border-box",
+                cursor: "pointer",
+              }}
+            >
+              <option value="">未選択（紐づけない）</option>
+              {events.map((ev) => (
+                <option key={ev.id} value={ev.id}>
+                  {ev.date} {ev.title}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        </div>
+
+        {/* 関連譜面選択プルダウン */}
+        <div style={{ marginBottom: "1rem" }}>
+          <FormField label="関連譜面" error={form.errors.scoreId}>
+            <select
+              className="form-control"
+              value={form.formData.scoreId}
+              onChange={(e) => form.updateField("scoreId", e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1.5px solid #cbd5e1",
+                backgroundColor: "#ffffff",
+                fontSize: "0.9rem",
+                boxSizing: "border-box",
+                cursor: "pointer",
+              }}
+            >
+              <option value="">未選択（紐づけない）</option>
+              {scores.map((sc) => (
+                <option key={sc.id} value={sc.id}>
+                  {sc.title}{sc.storageLocation ? ` (${sc.storageLocation})` : ""}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        </div>
+
         <AppInput
           label="YouTube URL"
           placeholder="https://www.youtube.com/watch?v=..."

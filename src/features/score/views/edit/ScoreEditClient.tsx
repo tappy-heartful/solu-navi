@@ -21,6 +21,7 @@ type Props = {
   allGenres: Genre[];
   allSections: SectionDoc[];
   allInstruments: InstrumentDoc[];
+  medias?: { id: string; title: string; date: string }[];
 };
 
 export function ScoreEditClient({
@@ -30,6 +31,7 @@ export function ScoreEditClient({
   allGenres,
   allSections,
   allInstruments,
+  medias = [],
 }: Props) {
   const { userData } = useAuth();
 
@@ -48,6 +50,7 @@ export function ScoreEditClient({
         (mode === "copy" ? `${initialScore?.title}（コピー）` : initialScore?.title) || "",
       storageLocation: initialScore?.storageLocation || "",
       scoreUrl: initialScore?.scoreUrl || "",
+      mediaId: initialScore?.mediaId || "",
       referenceTrack: initialScore?.referenceTrack || "",
       genres: (initialScore?.genres as string[]) || [""],
       abbreviation: initialScore?.abbreviation || "",
@@ -231,6 +234,34 @@ export function ScoreEditClient({
         placeholder="https://www.youtube.com/..."
         {...inputProps("referenceTrack")}
       />
+
+      {/* 関連録音・メディア選択プルダウン */}
+      <div style={{ marginBottom: "1rem" }}>
+        <FormField label="関連録音・メディア" error={form.errors.mediaId}>
+          <select
+            className="form-control"
+            value={form.formData.mediaId}
+            onChange={(e) => form.updateField("mediaId", e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              border: "1.5px solid #cbd5e1",
+              backgroundColor: "#ffffff",
+              fontSize: "0.9rem",
+              boxSizing: "border-box",
+              cursor: "pointer",
+            }}
+          >
+            <option value="">未選択（紐づけない）</option>
+            {medias.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.date} {m.title}
+              </option>
+            ))}
+          </select>
+        </FormField>
+      </div>
 
       <FormField label="ジャンル" required error={form.errors.genres}>
         <GenreInput

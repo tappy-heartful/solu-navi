@@ -21,9 +21,16 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 type Props = {
   mediaData: Media;
   mediaId: string;
+  linkedEvent?: { id: string; title: string; date: string } | null;
+  linkedScore?: { id: string; title: string; storageLocation?: string } | null;
 };
 
-export function MediaConfirmClient({ mediaData, mediaId }: Props) {
+export function MediaConfirmClient({
+  mediaData,
+  mediaId,
+  linkedEvent,
+  linkedScore,
+}: Props) {
   const router = useRouter();
   const { isAdmin } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -135,6 +142,54 @@ export function MediaConfirmClient({ mediaData, mediaId }: Props) {
           <DisplayField label="日付">{mediaData.date}</DisplayField>
 
           <DisplayField label="タイトル">{mediaData.title}</DisplayField>
+
+          <DisplayField label="関連イベント">
+            {linkedEvent ? (
+              <Link
+                href={`/event/confirm?eventId=${linkedEvent.id}`}
+                prefetch={false}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "var(--primary-color, #146081)",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  fontSize: "0.925rem",
+                }}
+              >
+                <i className="fa-solid fa-calendar-days" />
+                <span>{linkedEvent.date} {linkedEvent.title}</span>
+                <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: "0.75rem" }} />
+              </Link>
+            ) : (
+              "未設定"
+            )}
+          </DisplayField>
+
+          <DisplayField label="関連譜面">
+            {linkedScore ? (
+              <Link
+                href={`/score/confirm?scoreId=${linkedScore.id}`}
+                prefetch={false}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "var(--primary-color, #146081)",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  fontSize: "0.925rem",
+                }}
+              >
+                <i className="fa-solid fa-music" />
+                <span>{linkedScore.title}{linkedScore.storageLocation ? ` (${linkedScore.storageLocation})` : ""}</span>
+                <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: "0.75rem" }} />
+              </Link>
+            ) : (
+              "未設定"
+            )}
+          </DisplayField>
 
           <DisplayField label="Instagram">
             {mediaData.instagramUrl ? (

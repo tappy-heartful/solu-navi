@@ -1,4 +1,4 @@
-import { getMediaServer } from "@/features/media/api/media-server-actions";
+import { getMediaServer, getMediaConfirmDataServer } from "@/features/media/api/media-server-actions";
 import { MediaConfirmClient } from "@/features/media/views/confirm/MediaConfirmClient";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -27,8 +27,15 @@ export default async function MediaConfirmPage({ searchParams }: Props) {
 
   if (!mediaId) notFound();
 
-  const mediaData = await getMediaServer(mediaId);
-  if (!mediaData) notFound();
+  const confirmData = await getMediaConfirmDataServer(mediaId);
+  if (!confirmData) notFound();
 
-  return <MediaConfirmClient mediaData={mediaData} mediaId={mediaId} />;
+  return (
+    <MediaConfirmClient
+      mediaData={confirmData.media}
+      mediaId={mediaId}
+      linkedEvent={confirmData.linkedEvent}
+      linkedScore={confirmData.linkedScore}
+    />
+  );
 }

@@ -26,7 +26,7 @@ import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
 import { QuickAttendanceSection } from "../components/QuickAttendanceSection";
 import { HomeAnnouncement } from "../types";
 import { CalendarView } from "@/features/calendar/components/CalendarView";
-import { Event, Vote, Call, Fee, Score, BlueNote } from "@/lib/firestore/types";
+import { Event, Vote, Call, Fee, Score, BlueNote, Media } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
@@ -107,6 +107,7 @@ interface HomeClientProps {
   fees?: Fee[];
   scores?: Score[];
   blueNotes?: BlueNote[];
+  medias?: Media[];
 }
 
 export function HomeClient({
@@ -117,6 +118,7 @@ export function HomeClient({
   fees = [],
   scores = [],
   blueNotes = [],
+  medias = [],
 }: HomeClientProps) {
   const { userData } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -171,6 +173,7 @@ export function HomeClient({
   }, [scores, blueNotes]);
 
   const quickScores = (scores || []).slice(0, 6);
+  const recentMedias = (medias || []).slice(0, 4);
   const scorePlaylistIds = (scores || [])
     .map((s) => s.youtubeId)
     .filter(Boolean)
@@ -285,53 +288,57 @@ export function HomeClient({
           </div>
         </div>
 
-        {/* 4. 今日の一曲セクション (streak-navi 完全準拠) */}
-        {blueNotes.length > 0 && (
-          <>
-            <div className={styles.sectionTitleRow}>
-              <h3 className={styles.sectionTitle}>
-                <span className={styles.titleIcon}>💿</span> 今日の一曲
-              </h3>
-              {bnPlaylistIds && (
-                <a
-                  href={`https://www.youtube.com/watch_videos?video_ids=${bnPlaylistIds}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={styles.playlistBtn}
-                >
-                  <i className="fa-brands fa-youtube" /> プレイリスト
-                </a>
-              )}
-            </div>
+        {/* 5. 録音・メディア直近4件セクション */}
+        <div className={styles.sectionTitleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>🎙️</span> 録音・メディア
+          </h3>
+        </div>
 
-            <div className={styles.scoreSection}>
-              <Player
-                title={blueNotes[currentBNIdx]?.title}
-                subtitle={
-                  blueNotes[currentBNIdx]?.id
-                    ? `${parseInt(blueNotes[currentBNIdx].id.substring(0, 2))}月${parseInt(blueNotes[currentBNIdx].id.substring(2))}日の曲`
-                    : ""
-                }
-                data={blueNotes}
-                idx={currentBNIdx}
-                setIdx={setCurrentBNIdx}
-                onRandom={() =>
-                  setCurrentBNIdx(getRandomIndex(currentBNIdx, blueNotes.length))
-                }
-              />
-              <div className={styles.moreScoreRow}>
+        <div className={styles.mediaSection}>
+          {recentMedias.length > 0 ? (
+            <div className={styles.quickMediaGrid}>
+              {recentMedias.map((media) => (
                 <Link
-                  href="/blue-note"
+                  key={media.id}
+                  href={`/media/confirm?mediaId=${media.id}`}
                   prefetch={false}
-                  className={styles.moreScoreLink}
+                  className={styles.quickMediaCard}
                   onClick={() => showSpinner()}
                 >
-                  もっと見る <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "0.75rem" }} />
+                  <span className={styles.mediaCardTitle}>🎙️ {media.title}</span>
+                  <div className={styles.mediaCardMeta}>
+                    <span>{media.date || ""}</span>
+                    <div className={styles.mediaIcons}>
+                      {media.youtubeUrl && (
+                        <i className={`fa-brands fa-youtube ${styles.mediaIconYoutube}`} title="YouTube動画あり" />
+                      )}
+                      {media.driveUrl && (
+                        <i className={`fa-brands fa-google-drive ${styles.mediaIconDrive}`} title="録音/Driveあり" />
+                      )}
+                      {media.instagramUrl && (
+                        <i className={`fa-brands fa-instagram ${styles.mediaIconInsta}`} title="Instagramあり" />
+                      )}
+                    </div>
+                  </div>
                 </Link>
-              </div>
+              ))}
             </div>
-          </>
-        )}
+          ) : (
+            <div className={styles.emptyMediaMsg}>メディアはまだ登録されていません🍀</div>
+          )}
+
+          <div className={styles.moreMediaRow}>
+            <Link
+              href="/media"
+              prefetch={false}
+              className={styles.moreMediaLink}
+              onClick={() => showSpinner()}
+            >
+              もっと見る <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "0.75rem" }} />
+            </Link>
+          </div>
+        </div>
 
         {/* ユーザーウェルカムカード (いったん非表示) */}
         {/*
@@ -601,6 +608,54 @@ export function HomeClient({
             <FontAwesomeIcon icon={faRightLeft} className={styles.watermarkIcon} />
           </Link>
         </div>
+
+        {/* 6. 今日の一曲セクション (メニューの下に移動) */}
+        {blueNotes.length > 0 && (
+          <>
+            <div className={styles.sectionTitleRow}>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.titleIcon}>💿</span> 今日の一曲
+              </h3>
+              {bnPlaylistIds && (
+                <a
+                  href={`https://www.youtube.com/watch_videos?video_ids=${bnPlaylistIds}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.playlistBtn}
+                >
+                  <i className="fa-brands fa-youtube" /> プレイリスト
+                </a>
+              )}
+            </div>
+
+            <div className={styles.scoreSection}>
+              <Player
+                title={blueNotes[currentBNIdx]?.title}
+                subtitle={
+                  blueNotes[currentBNIdx]?.id
+                    ? `${parseInt(blueNotes[currentBNIdx].id.substring(0, 2))}月${parseInt(blueNotes[currentBNIdx].id.substring(2))}日の曲`
+                    : ""
+                }
+                data={blueNotes}
+                idx={currentBNIdx}
+                setIdx={setCurrentBNIdx}
+                onRandom={() =>
+                  setCurrentBNIdx(getRandomIndex(currentBNIdx, blueNotes.length))
+                }
+              />
+              <div className={styles.moreScoreRow}>
+                <Link
+                  href="/blue-note"
+                  prefetch={false}
+                  className={styles.moreScoreLink}
+                  onClick={() => showSpinner()}
+                >
+                  もっと見る <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "0.75rem" }} />
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </BaseLayout>
   );

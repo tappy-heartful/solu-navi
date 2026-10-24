@@ -8,6 +8,7 @@ export type ScoreFormData = {
   title: string;
   storageLocation?: string;
   scoreUrl?: string;
+  mediaId?: string;
   referenceTrack?: string;
   genres: string[];
   instrumentConfig?: Record<string, InstrumentPart[]>;

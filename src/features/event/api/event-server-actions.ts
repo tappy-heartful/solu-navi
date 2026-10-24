@@ -44,6 +44,7 @@ function toEventDoc(doc: FirebaseFirestore.DocumentSnapshot): Event {
     website: d.website || "",
     access: d.access || "",
     googleMap: d.googleMap || "",
+    mediaId: d.mediaId || "",
     youtubeUrl: d.youtubeUrl || "",
     youtubeTimestamps: (d.youtubeTimestamps || []).map((t: any) => ({
       time: t.time || "",
@@ -169,6 +170,7 @@ export type EventConfirmData = {
   allUserUids: string[];
   prefectureName?: string;
   municipalityName?: string;
+  linkedMedia?: { id: string; title: string; date: string } | null;
 };
 
 export async function fetchEventConfirmData(eventId: string): Promise<EventConfirmData | null> {
@@ -316,6 +318,23 @@ export async function fetchEventConfirmData(eventId: string): Promise<EventConfi
     }
   }
 
+  let linkedMedia: { id: string; title: string; date: string } | null = null;
+  if (event.mediaId) {
+    try {
+      const mediaDoc = await adminDb.collection("medias").doc(event.mediaId).get();
+      if (mediaDoc.exists) {
+        const mData = mediaDoc.data() || {};
+        linkedMedia = {
+          id: mediaDoc.id,
+          title: mData.title || "",
+          date: (mData.date || "").replace(/-/g, "."),
+        };
+      }
+    } catch (e) {
+      console.error("[fetchEventConfirmData] linkedMedia fetch error:", e);
+    }
+  }
+
   return {
     event,
     answers,
@@ -330,6 +349,7 @@ export async function fetchEventConfirmData(eventId: string): Promise<EventConfi
     allUserUids,
     prefectureName,
     municipalityName,
+    linkedMedia,
   };
 }
 

@@ -32,6 +32,7 @@ type Props = {
   allSections: SectionDoc[];
   allInstruments: InstrumentDoc[];
   scoreId: string;
+  linkedMedia?: { id: string; title: string; date: string } | null;
 };
 
 export function ScoreConfirmClient({
@@ -40,6 +41,7 @@ export function ScoreConfirmClient({
   allSections,
   allInstruments,
   scoreId,
+  linkedMedia,
 }: Props) {
   const router = useRouter();
   const { isAdmin } = useAuth();
@@ -180,6 +182,31 @@ export function ScoreConfirmClient({
                   __html: buildYouTubeHtml(scoreData.referenceTrack),
                 }}
               />
+            ) : (
+              "未設定"
+            )}
+          </DisplayField>
+
+          {/* 関連録音・メディア */}
+          <DisplayField label="関連録音・メディア">
+            {linkedMedia ? (
+              <Link
+                href={`/media/confirm?mediaId=${linkedMedia.id}`}
+                prefetch={false}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "var(--primary-color, #146081)",
+                  fontWeight: 600,
+                  textDecoration: "underline",
+                  fontSize: "0.925rem",
+                }}
+              >
+                <i className="fa-solid fa-photo-film" />
+                <span>{linkedMedia.date} {linkedMedia.title}</span>
+                <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ fontSize: "0.75rem" }} />
+              </Link>
             ) : (
               "未設定"
             )}

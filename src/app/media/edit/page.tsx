@@ -1,4 +1,8 @@
-import { getMediaServer } from "@/features/media/api/media-server-actions";
+import {
+  getMediaServer,
+  getPastMonthEventsServer,
+  getScoresForSelectServer,
+} from "@/features/media/api/media-server-actions";
 import { MediaEditClient } from "@/features/media/views/edit/MediaEditClient";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -30,7 +34,11 @@ export default async function MediaEditPage({ searchParams }: Props) {
   const validModes = ["new", "edit", "copy"];
   if (!mode || !validModes.includes(mode)) notFound();
 
-  const initialMedia = mediaId ? await getMediaServer(mediaId) : null;
+  const [initialMedia, events, scores] = await Promise.all([
+    mediaId ? getMediaServer(mediaId) : Promise.resolve(null),
+    getPastMonthEventsServer(),
+    getScoresForSelectServer(),
+  ]);
 
   if ((mode === "edit" || mode === "copy") && !initialMedia) {
     notFound();
@@ -41,6 +49,8 @@ export default async function MediaEditPage({ searchParams }: Props) {
       mode={mode as "new" | "edit" | "copy"}
       mediaId={mediaId}
       initialMedia={initialMedia}
+      events={events}
+      scores={scores}
     />
   );
 }

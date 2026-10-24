@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { AnswerConfirmLayout } from "@/components/Layout/AnswerConfirmLayout";
@@ -37,6 +38,7 @@ import {
 } from "@/features/event/api/event-client-service";
 import { SetlistConfirm } from "@/components/Setlist/SetlistConfirm";
 import { canEditEvent } from "@/features/event/lib/event-utils";
+import { DEFAULT_SECTIONS } from "@/lib/firestore/constants";
 import styles from "./EventConfirm.module.css";
 
 type Props = {
@@ -69,6 +71,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
     allUserUids,
     prefectureName,
     municipalityName,
+    linkedMedia,
   } = data;
 
   const [recordings, setRecordings] = useState<EventRecording[]>(initialRecordings);
@@ -383,77 +386,193 @@ export function EventConfirmClient({ eventId, data }: Props) {
 
   const renderAttendanceBlocks = (customAnswers?: EventAttendanceAnswer[]) => {
     const attAnswers = customAnswers || (attendanceAnswersProp || []);
-    const answeredAttUids = attAnswers.map((a) => a.uid);
-    const localUnansweredUids = allUserUids.filter((u) => !answeredAttUids.includes(u));
+    const answerMap: Record<string, EventAttendanceAnswer> = {};
+    attAnswers.forEach((a) => {
+      answerMap[a.uid] = a;
+    });
+
+    const statusMap: Record<string, (typeof attendanceStatuses)[0]> = {};
+    attendanceStatuses.forEach((st) => {
+      statusMap[st.id] = st;
+    });
+
+    // パート一覧の構築 (DEFAULT_SECTIONS + sectionsMapの追加分)
+    const sections = [...DEFAULT_SECTIONS];
+    Object.keys(sectionsMap).forEach((id) => {
+      if (!sections.some((s) => s.id === id)) {
+        sections.push({
+          id,
+          name: sectionsMap[id] || "その他",
+          shortName: sectionsMap[id] || "他",
+          order: 99,
+          color: "#64748b",
+        });
+      }
+    });
+    sections.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    // パートごとの部員グループ化
+    const sectionUsersMap: Record<string, { user: User; answer?: EventAttendanceAnswer }[]> = {};
+    sections.forEach((sec) => {
+      sectionUsersMap[sec.id] = [];
+    });
+    sectionUsersMap["unknown"] = [];
+
+    allUserUids.forEach((uid) => {
+      const user = usersMap[uid] || { id: uid, displayName: "退会済みユーザ", pictureUrl: "" };
+      const secId = user.sectionId && sectionUsersMap[user.sectionId] ? user.sectionId : "unknown";
+      sectionUsersMap[secId].push({
+        user,
+        answer: answerMap[uid],
+      });
+    });
+
+    const answeredCount = attAnswers.length;
+    const unansweredCount = allUserUids.length - answeredCount;
 
     return (
-      <>
-        {attendanceStatuses.map((status) => {
-          const filtered = attAnswers.filter((a) => a.status === status.id);
-          const grouped: Record<string, User[]> = {};
-          filtered.forEach((a) => {
-            const user = usersMap[a.uid];
-            const sectionId = user?.sectionId || "unknown";
-            if (!grouped[sectionId]) grouped[sectionId] = [];
-            grouped[sectionId].push(user || { id: a.uid, displayName: "退会済みユーザ", pictureUrl: "" });
-          });
+      <div className={styles.attendanceBySectionWrapper}>
+        {/* 全体サマリーピル */}
+        <div className={styles.overallStatusSummary}>
+          {attendanceStatuses.map((st) => {
+            const count = attAnswers.filter((a) => a.status === st.id).length;
+            return (
+              <span key={st.id} className={styles.summaryPill}>
+                {st.name} <strong>{count}名</strong>
+              </span>
+            );
+          })}
+          <span className={`${styles.summaryPill} ${styles.summaryPillUnanswered}`}>
+            未回答 <strong>{unansweredCount > 0 ? unansweredCount : 0}名</strong>
+          </span>
+        </div>
 
-          const sortedSections = Object.keys(sectionsMap).sort().filter((sid) => grouped[sid]);
+        {/* パートごとの出欠表示ブロック */}
+        {sections
+          .filter((sec) => (sectionUsersMap[sec.id] || []).length > 0)
+          .map((sec) => {
+            const members = sectionUsersMap[sec.id] || [];
+            const attendCount = members.filter((m) => {
+              const st = m.answer ? statusMap[m.answer.status] : null;
+              return st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
+            }).length;
 
-          return (
-            <div key={status.id} className={styles.attendanceStatusBlock}>
-              <h3>
-                <i className="fa-solid fa-users" style={{ marginRight: "0.5rem" }} />
-                {status.name}
-                {filtered.length > 0 ? ` (${filtered.length}人)` : ""}
-              </h3>
-              <div>
-                {filtered.length === 0 ? (
-                  <p className={styles.noUser}>該当者なし</p>
-                ) : (
-                  sortedSections.map((sectionId) => {
-                    const users = grouped[sectionId];
-                    if (!users) return null;
-                    const sectionName = sectionsMap[sectionId] || "❓未設定";
+            return (
+              <div key={sec.id} className={styles.sectionAttendanceCard}>
+                <div className={styles.sectionCardHeader} style={{ borderLeftColor: sec.color || "#146081" }}>
+                  <div className={styles.sectionCardTitleRow}>
+                    <h3 className={styles.sectionCardTitle}>
+                      <span className={styles.sectionColorDot} style={{ backgroundColor: sec.color || "#146081" }} />
+                      {sec.name}パート
+                    </h3>
+                    <span className={styles.sectionCardCountBadge}>
+                      出席 {attendCount} / {members.length}名
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.sectionMembersGrid}>
+                  {members.map(({ user, answer }, idx) => {
+                    const st = answer ? statusMap[answer.status] : null;
+                    const isAttending =
+                      st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
+                    const isAbsent =
+                      st && (st.name.includes("おやすみ") || st.name.includes("欠席") || st.name.includes("不参加"));
+
+                    let badgeClass = styles.statusBadgeUnanswered;
+                    let badgeLabel = "未回答";
+                    if (st) {
+                      badgeLabel = st.name;
+                      if (isAttending) badgeClass = styles.statusBadgeAttending;
+                      else if (isAbsent) badgeClass = styles.statusBadgeAbsent;
+                      else badgeClass = styles.statusBadgePending;
+                    }
+
                     return (
-                      <div key={sectionId} className={styles.attendanceSectionGroup}>
-                        <h4>
-                          {sectionName} ({users.length}人)
-                        </h4>
-                        <div className={styles.attendanceUsers}>
-                          {users.map((u, i) => (
-                            <div key={u.id || i} className={styles.attendanceUser}>
-                              <img
-                                src={u.pictureUrl || globalLineDefaultImage}
-                                alt={u.displayName || ""}
-                                onError={(e) => {
-                                  e.currentTarget.src = globalLineDefaultImage;
-                                }}
-                              />
-                              <span>{u.displayName || "退会済み"}</span>
+                      <div key={user.id || idx} className={styles.memberAttendanceItem}>
+                        <img
+                          src={user.pictureUrl || globalLineDefaultImage}
+                          alt={user.displayName || ""}
+                          className={styles.memberAvatar}
+                          onError={(e) => {
+                            e.currentTarget.src = globalLineDefaultImage;
+                          }}
+                        />
+                        <div className={styles.memberInfo}>
+                          <span className={styles.memberName}>{user.displayName || "退会済み"}</span>
+                          <span className={`${styles.statusBadge} ${badgeClass}`}>
+                            {badgeLabel}
+                          </span>
+                          {answer?.comment && (
+                            <div className={styles.memberComment} title={answer.comment}>
+                              💬 {answer.comment}
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     );
-                  })
-                )}
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+        {/* パート未設定メンバー */}
+        {(sectionUsersMap["unknown"] || []).length > 0 && (
+          <div className={styles.sectionAttendanceCard}>
+            <div className={styles.sectionCardHeader} style={{ borderLeftColor: "#94a3b8" }}>
+              <div className={styles.sectionCardTitleRow}>
+                <h3 className={styles.sectionCardTitle}>❓ パート未設定</h3>
+                <span className={styles.sectionCardCountBadge}>
+                  {sectionUsersMap["unknown"].length}名
+                </span>
               </div>
             </div>
-          );
-        })}
-        {localUnansweredUids.length > 0 && (
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
-            <button
-              type="button"
-              className={styles.unansweredBtn}
-              onClick={() => showUsersModal("出欠 未回答者", localUnansweredUids)}
-            >
-              未回答者を見る ({localUnansweredUids.length}人)
-            </button>
+            <div className={styles.sectionMembersGrid}>
+              {sectionUsersMap["unknown"].map(({ user, answer }, idx) => {
+                const st = answer ? statusMap[answer.status] : null;
+                const isAttending =
+                  st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
+                const isAbsent =
+                  st && (st.name.includes("おやすみ") || st.name.includes("欠席") || st.name.includes("不参加"));
+
+                let badgeClass = styles.statusBadgeUnanswered;
+                let badgeLabel = "未回答";
+                if (st) {
+                  badgeLabel = st.name;
+                  if (isAttending) badgeClass = styles.statusBadgeAttending;
+                  else if (isAbsent) badgeClass = styles.statusBadgeAbsent;
+                  else badgeClass = styles.statusBadgePending;
+                }
+
+                return (
+                  <div key={user.id || idx} className={styles.memberAttendanceItem}>
+                    <img
+                      src={user.pictureUrl || globalLineDefaultImage}
+                      alt={user.displayName || ""}
+                      className={styles.memberAvatar}
+                      onError={(e) => {
+                        e.currentTarget.src = globalLineDefaultImage;
+                      }}
+                    />
+                    <div className={styles.memberInfo}>
+                      <span className={styles.memberName}>{user.displayName || "退会済み"}</span>
+                      <span className={`${styles.statusBadge} ${badgeClass}`}>
+                        {badgeLabel}
+                      </span>
+                      {answer?.comment && (
+                        <div className={styles.memberComment} title={answer.comment}>
+                          💬 {answer.comment}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
-      </>
+      </div>
     );
   };
 
@@ -640,6 +759,31 @@ export function EventConfirmClient({ eventId, data }: Props) {
               <i className="fa-solid fa-music" style={{ marginRight: "6px" }} />
               譜割りを見る
             </a>
+          </DisplayField>
+        )}
+
+        {/* 録音・メディア */}
+        {event.mediaId && (
+          <DisplayField label="録音・メディア">
+            <Link
+              href={`/media/confirm?mediaId=${event.mediaId}`}
+              prefetch={false}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "var(--primary-color, #146081)",
+                fontWeight: 600,
+                textDecoration: "underline",
+                fontSize: "0.925rem",
+              }}
+            >
+              <i className="fa-solid fa-photo-film" />
+              <span>
+                {linkedMedia?.title ? `${linkedMedia.date} ${linkedMedia.title}` : "メディア確認を開く"}
+              </span>
+              <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: "0.75rem" }} />
+            </Link>
           </DisplayField>
         )}
 

@@ -1,4 +1,8 @@
-import { getScoreServer, getGenresServer } from "@/features/score/api/score-server-actions";
+import {
+  getScoreServer,
+  getGenresServer,
+  getMediasForSelectServer,
+} from "@/features/score/api/score-server-actions";
 import { getSectionsServer, getInstrumentsServer } from "@/features/user/api/user-server-actions";
 import { ScoreEditClient } from "@/features/score/views/edit/ScoreEditClient";
 import { notFound } from "next/navigation";
@@ -32,12 +36,14 @@ export default async function ScoreEditPage({ searchParams }: Props) {
   const validModes = ["new", "edit", "copy"];
   if (!mode || !validModes.includes(mode)) notFound();
 
-  const [initialScore, allGenresData, sectionsData, instrumentsData] = await Promise.all([
-    scoreId ? getScoreServer(scoreId) : null,
-    getGenresServer(),
-    getSectionsServer(),
-    getInstrumentsServer(),
-  ]);
+  const [initialScore, allGenresData, sectionsData, instrumentsData, mediasData] =
+    await Promise.all([
+      scoreId ? getScoreServer(scoreId) : null,
+      getGenresServer(),
+      getSectionsServer(),
+      getInstrumentsServer(),
+      getMediasForSelectServer(),
+    ]);
 
   const allGenres = allGenresData as Genre[];
   const allSections = sectionsData as SectionDoc[];
@@ -55,6 +61,7 @@ export default async function ScoreEditPage({ searchParams }: Props) {
       allGenres={allGenres}
       allSections={allSections}
       allInstruments={allInstruments}
+      medias={mediasData}
     />
   );
 }

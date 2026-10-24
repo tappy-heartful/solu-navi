@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventConfirmData } from "@/features/event/api/event-server-actions";
@@ -27,11 +28,11 @@ import {
   hyphenDateToDot,
   format,
 } from "@/lib/functions";
-import { DEFAULT_PREFECTURES } from "@/lib/firestore/constants";
+import { DEFAULT_PREFECTURES, DEFAULT_SECTIONS } from "@/lib/firestore/constants";
 import { DEFAULT_EVENT_COLOR, PRESET_EVENT_COLORS } from "@/features/calendar/lib/color-constants";
 import { SetlistConfirm } from "@/components/Setlist/SetlistConfirm";
 import { SetlistEdit } from "@/components/Setlist/SetlistEdit";
-import { Event, Municipality, Score, SetlistGroup } from "@/lib/firestore/types";
+import { Event, Municipality, Score, SetlistGroup, Media, User } from "@/lib/firestore/types";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { removeUndefined } from "@/lib/firestore/utils";
@@ -86,8 +87,8 @@ export function EventDetailModal({
   const [adjustAnswers, setAdjustAnswers] = useState<Record<string, string>>({});
   const [adjustComment, setAdjustComment] = useState<string>("");
 
-  // 集計表示用タブ
-  const [selectedStatusId, setSelectedStatusId] = useState<string | null>(null);
+  // 集計表示用タブ (all で全パート一覧表示)
+  const [selectedStatusId, setSelectedStatusId] = useState<string | null>("all");
   const [showUnansweredList, setShowUnansweredList] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
@@ -112,7 +113,9 @@ export function EventDetailModal({
   const [formDress, setFormDress] = useState("");
   const [formBring, setFormBring] = useState("");
   const [formSetlist, setFormSetlist] = useState<SetlistGroup[]>([]);
+  const [formMediaId, setFormMediaId] = useState("");
   const [scores, setScores] = useState<Score[]>([]);
+  const [medias, setMedias] = useState<Media[]>([]);
   const [isSetlistAccordionOpen, setIsSetlistAccordionOpen] = useState(false);
   const [isSavingEvent, setIsSavingEvent] = useState(false);
 
@@ -184,6 +187,7 @@ export function EventDetailModal({
     setFormDress(ev.dress || "");
     setFormBring(ev.bring || "");
     setFormSetlist(ev.setlist || []);
+    setFormMediaId(ev.mediaId || "");
     setIsRecurring(false);
     setRecurrenceInterval(1);
     setRecurrenceUnit("week");
@@ -201,9 +205,7 @@ export function EventDetailModal({
     try {
       const res = await getEventConfirmDataAction(eventId);
       setData(res);
-      if (res?.attendanceStatuses && res.attendanceStatuses.length > 0) {
-        setSelectedStatusId(res.attendanceStatuses[0].id);
-      }
+      setSelectedStatusId("all");
 
       // 自分の回答をフォームにセット
       if (res && uid) {
@@ -248,6 +250,7 @@ export function EventDetailModal({
       setFormDate(parsedDate);
       setFormCandidateDates(parsedDate ? [parsedDate] : [""]);
       setFormColor(DEFAULT_EVENT_COLOR);
+      setFormMediaId("");
       setFormIsAllDay(false);
       setFormStartTime("18:00");
       setFormEndTime("21:00");
@@ -292,6 +295,17 @@ export function EventDetailModal({
         .catch(console.error);
     }
   }, [mode]);
+
+  // メディア一覧の取得 (録音・メディア選択および閲覧用)
+  useEffect(() => {
+    getDocs(collection(db, "medias"))
+      .then((snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as Media[];
+        list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+        setMedias(list);
+      })
+      .catch(console.error);
+  }, []);
 
   const event = data?.event;
   const isSchedule = event?.attendanceType === "schedule";
@@ -453,6 +467,7 @@ export function EventDetailModal({
         dress: formDress.trim(),
         bring: formBring.trim(),
         setlist: formSetlist,
+        mediaId: formMediaId || "",
         createdUid: event?.createdUid || uid || "",
         createdBy: event?.createdBy || userData?.displayName || uid || "",
       });
@@ -1374,6 +1389,24 @@ export function EventDetailModal({
                     />
                   </div>
                 </div>
+
+                {/* 録音・メディア連携 */}
+                <div className={styles.formField} style={{ marginTop: "1rem" }}>
+                  <span className={styles.fieldLabel}>録音・メディア</span>
+                  <select
+                    className={styles.formInput}
+                    value={formMediaId}
+                    onChange={(e) => setFormMediaId(e.target.value)}
+                    style={{ cursor: "pointer", backgroundColor: "#fff" }}
+                  >
+                    <option value="">未選択（紐づけない）</option>
+                    {medias.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.date} {m.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* 4. セットリスト・演奏曲 (折りたたみ式アコーディオン) */}
@@ -1456,17 +1489,14 @@ export function EventDetailModal({
                           {(data.attendanceStatuses || []).map((st) => {
                             const isSelected = selectedStatus === st.id;
                             let statusColor = "#146081";
-                            let iconName = "fa-circle-check";
                             if (st.name.includes("欠席") || st.name.includes("不参加")) {
                               statusColor = "#ef4444";
-                              iconName = "fa-circle-xmark";
                             } else if (
                               st.name.includes("遅刻") ||
                               st.name.includes("早退") ||
                               st.name.includes("未定")
                             ) {
                               statusColor = "#f59e0b";
-                              iconName = "fa-circle-question";
                             }
 
                             return (
@@ -1483,7 +1513,6 @@ export function EventDetailModal({
                                 }
                                 onClick={() => setSelectedStatus(st.id)}
                               >
-                                <i className={`fa-solid ${isSelected ? iconName : "fa-circle"}`} />
                                 <span>{st.name}</span>
                               </button>
                             );
@@ -1760,6 +1789,28 @@ export function EventDetailModal({
                     </div>
                   </div>
                 )}
+
+                {/* 録音・メディア */}
+                {event.mediaId && (
+                  <div className={styles.infoRow}>
+                    <i className={`fa-solid fa-photo-film ${styles.infoIcon}`} style={{ color: "#146081" }} />
+                    <div className={styles.infoContent}>
+                      <strong>録音・メディア: </strong>
+                      <Link
+                        href={`/media/confirm?mediaId=${event.mediaId}`}
+                        prefetch={false}
+                        className={styles.linkBanner}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      >
+                        <i className="fa-solid fa-photo-film" />
+                        <span>
+                          {medias.find((m) => m.id === event.mediaId)?.title || "メディア確認を開く"}
+                        </span>
+                        <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: "11px" }} />
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 3. 出欠状況 / 日程調整集計カード */}
@@ -1774,11 +1825,23 @@ export function EventDetailModal({
                 {!isSchedule ? (
                   <>
                     <div className={styles.statusSummaryGrid}>
+                      {/* すべてピル */}
+                      <button
+                        type="button"
+                        className={`${styles.statusSummaryPill} ${
+                          selectedStatusId === "all" ? styles.statusSummaryPillActive : ""
+                        }`}
+                        onClick={() => setSelectedStatusId("all")}
+                      >
+                        <span>すべて</span>
+                        <strong>{(data.allUserUids || []).length}名</strong>
+                      </button>
+
                       {(data.attendanceStatuses || []).map((status) => {
                         const count = (data.attendanceAnswers || []).filter(
                           (a) => a.status === status.id
                         ).length;
-                        const isSelected = selectedStatusId === status.id && !showUnansweredList;
+                        const isSelected = selectedStatusId === status.id;
 
                         return (
                           <button
@@ -1787,10 +1850,7 @@ export function EventDetailModal({
                             className={`${styles.statusSummaryPill} ${
                               isSelected ? styles.statusSummaryPillActive : ""
                             }`}
-                            onClick={() => {
-                              setSelectedStatusId(status.id);
-                              setShowUnansweredList(false);
-                            }}
+                            onClick={() => setSelectedStatusId(status.id)}
                           >
                             <span>{status.name}</span>
                             <strong>{count}名</strong>
@@ -1798,13 +1858,13 @@ export function EventDetailModal({
                         );
                       })}
 
-                      {/* 未回答 */}
+                      {/* 未回答ピル */}
                       {(() => {
                         const answeredUids = (data.attendanceAnswers || []).map((a) => a.uid);
                         const unansweredUids = (data.allUserUids || []).filter(
                           (u) => !answeredUids.includes(u)
                         );
-                        const isSelected = showUnansweredList;
+                        const isSelected = selectedStatusId === "unanswered";
 
                         return (
                           <button
@@ -1812,7 +1872,7 @@ export function EventDetailModal({
                             className={`${styles.statusSummaryPill} ${
                               isSelected ? styles.statusSummaryPillActive : ""
                             }`}
-                            onClick={() => setShowUnansweredList(true)}
+                            onClick={() => setSelectedStatusId("unanswered")}
                           >
                             <span>未回答</span>
                             <strong style={{ color: isSelected ? "#fff" : "#ef4444" }}>
@@ -1823,94 +1883,214 @@ export function EventDetailModal({
                       })()}
                     </div>
 
-                    {showUnansweredList ? (
-                      <div className={styles.sectionGroup}>
-                        <div className={styles.sectionGroupTitle}>
-                          <i className="fa-solid fa-circle-question" style={{ color: "#ef4444" }} />
-                          <span>未回答の部員一覧</span>
-                        </div>
-                        <div className={styles.userGrid}>
-                          {(() => {
-                            const answeredUids = (data.attendanceAnswers || []).map((a) => a.uid);
-                            const unansweredUsers = (data.allUserUids || [])
-                              .filter((u) => !answeredUids.includes(u))
-                              .map((u) => data.usersMap[u])
-                              .filter(Boolean);
+                    {/* パートごとの出欠一覧 */}
+                    {(() => {
+                      const answerMap: Record<string, (typeof data.attendanceAnswers)[0]> = {};
+                      (data.attendanceAnswers || []).forEach((a) => {
+                        answerMap[a.uid] = a;
+                      });
 
-                            if (unansweredUsers.length === 0) {
-                              return (
-                                <span style={{ fontSize: "12px", color: "#64748b" }}>
-                                  全員回答済みです✨
-                                </span>
-                              );
-                            }
+                      const statusMap: Record<string, (typeof data.attendanceStatuses)[0]> = {};
+                      (data.attendanceStatuses || []).forEach((st) => {
+                        statusMap[st.id] = st;
+                      });
 
-                            return unansweredUsers.map((u) => (
-                              <div key={u.id} className={styles.userChip}>
-                                <img
-                                  src={u.pictureUrl || globalLineDefaultImage}
-                                  alt={u.displayName || ""}
-                                  className={styles.userAvatar}
-                                  onError={(e) => {
-                                    e.currentTarget.src = globalLineDefaultImage;
-                                  }}
-                                />
-                                <span>{u.displayName || "名前未設定"}</span>
-                              </div>
-                            ));
-                          })()}
-                        </div>
-                      </div>
-                    ) : (
-                      (() => {
-                        const targetAnswers = (data.attendanceAnswers || []).filter(
-                          (a) => a.status === selectedStatusId
-                        );
+                      // パート一覧の構築 (DEFAULT_SECTIONS + sectionsMapの追加分)
+                      const sections = [...DEFAULT_SECTIONS];
+                      Object.keys(data.sectionsMap || {}).forEach((id) => {
+                        if (!sections.some((s) => s.id === id)) {
+                          sections.push({
+                            id,
+                            name: data.sectionsMap[id] || "その他",
+                            shortName: data.sectionsMap[id] || "他",
+                            order: 99,
+                            color: "#64748b",
+                          });
+                        }
+                      });
+                      sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                        if (targetAnswers.length === 0) {
-                          return (
-                            <div style={{ fontSize: "12px", color: "#64748b", padding: "8px 0" }}>
-                              該当する部員はいません
-                            </div>
-                          );
+                      // パートごとに部員を分類
+                      const sectionUsersMap: Record<
+                        string,
+                        { user: User; answer?: (typeof data.attendanceAnswers)[0] }[]
+                      > = {};
+                      sections.forEach((sec) => {
+                        sectionUsersMap[sec.id] = [];
+                      });
+                      sectionUsersMap["unknown"] = [];
+
+                      (data.allUserUids || []).forEach((uid) => {
+                        const user = data.usersMap[uid] || {
+                          id: uid,
+                          displayName: "退会済みユーザ",
+                          pictureUrl: "",
+                        };
+                        const secId =
+                          user.sectionId && sectionUsersMap[user.sectionId]
+                            ? user.sectionId
+                            : "unknown";
+                        const ans = answerMap[uid];
+
+                        // フィルター判定
+                        let match = true;
+                        if (selectedStatusId === "all") {
+                          match = true;
+                        } else if (selectedStatusId === "unanswered") {
+                          match = !ans;
+                        } else if (selectedStatusId) {
+                          match = ans?.status === selectedStatusId;
                         }
 
-                        const groupedBySection: Record<string, typeof targetAnswers> = {};
-                        targetAnswers.forEach((ans) => {
-                          const user = data.usersMap[ans.uid];
-                          const secId = user?.sectionId || "other";
-                          if (!groupedBySection[secId]) groupedBySection[secId] = [];
-                          groupedBySection[secId].push(ans);
-                        });
+                        if (match) {
+                          sectionUsersMap[secId].push({ user, answer: ans });
+                        }
+                      });
 
-                        return Object.entries(groupedBySection).map(([secId, sAnswers]) => {
-                          const sectionName = data.sectionsMap[secId] || "その他";
+                      const availableSections = sections.filter(
+                        (sec) => (sectionUsersMap[sec.id] || []).length > 0
+                      );
+                      const hasUnknown = (sectionUsersMap["unknown"] || []).length > 0;
 
-                          return (
-                            <div key={secId} className={styles.sectionGroup}>
-                              <div className={styles.sectionGroupTitle}>
-                                <i className="fa-solid fa-tag" style={{ fontSize: "11px" }} />
-                                <span>
-                                  {sectionName} ({sAnswers.length}名)
-                                </span>
+                      if (availableSections.length === 0 && !hasUnknown) {
+                        return (
+                          <div style={{ fontSize: "12px", color: "#64748b", padding: "12px 0", textAlign: "center" }}>
+                            該当する部員はいません🍀
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+                          {availableSections.map((sec) => {
+                            const members = sectionUsersMap[sec.id] || [];
+                            const attendCount = members.filter((m) => {
+                              const st = m.answer ? statusMap[m.answer.status] : null;
+                              return st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
+                            }).length;
+
+                            return (
+                              <div key={sec.id} className={styles.sectionGroup}>
+                                <div className={styles.sectionGroupTitle}>
+                                  <span
+                                    style={{
+                                      width: "9px",
+                                      height: "9px",
+                                      borderRadius: "50%",
+                                      backgroundColor: sec.color || "#146081",
+                                      display: "inline-block",
+                                    }}
+                                  />
+                                  <span>
+                                    {sec.name}パート ({members.length}名{selectedStatusId === "all" ? `・出席${attendCount}名` : ""})
+                                  </span>
+                                </div>
+
+                                <div className={styles.userGrid}>
+                                  {members.map(({ user, answer }, idx) => {
+                                    const st = answer ? statusMap[answer.status] : null;
+                                    const isAttending =
+                                      st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
+                                    const isAbsent =
+                                      st && (st.name.includes("おやすみ") || st.name.includes("欠席") || st.name.includes("不参加"));
+
+                                    let badgeBg = "#f1f5f9";
+                                    let badgeColor = "#94a3b8";
+                                    let badgeLabel = "未回答";
+                                    if (st) {
+                                      badgeLabel = st.name;
+                                      if (isAttending) {
+                                        badgeBg = "#dcfce7";
+                                        badgeColor = "#15803d";
+                                      } else if (isAbsent) {
+                                        badgeBg = "#fee2e2";
+                                        badgeColor = "#dc2626";
+                                      } else {
+                                        badgeBg = "#fef3c7";
+                                        badgeColor = "#b45309";
+                                      }
+                                    }
+
+                                    return (
+                                      <div key={user.id || idx} className={styles.userChip}>
+                                        <img
+                                          src={user.pictureUrl || globalLineDefaultImage}
+                                          alt={user.displayName || ""}
+                                          className={styles.userAvatar}
+                                          onError={(e) => {
+                                            e.currentTarget.src = globalLineDefaultImage;
+                                          }}
+                                        />
+                                        <span className={styles.userName}>{user.displayName || "名前未設定"}</span>
+                                        <span
+                                          style={{
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            padding: "1px 5px",
+                                            borderRadius: "4px",
+                                            backgroundColor: badgeBg,
+                                            color: badgeColor,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {badgeLabel}
+                                        </span>
+                                        {answer?.comment && (
+                                          <span className={styles.userCommentBubble} title={answer.comment}>
+                                            💬
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
+                            );
+                          })}
 
+                          {/* パート未設定 */}
+                          {hasUnknown && (
+                            <div key="unknown" className={styles.sectionGroup}>
+                              <div className={styles.sectionGroupTitle}>
+                                <span
+                                  style={{
+                                    width: "9px",
+                                    height: "9px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#94a3b8",
+                                    display: "inline-block",
+                                  }}
+                                />
+                                <span>❓ パート未設定 ({sectionUsersMap["unknown"].length}名)</span>
+                              </div>
                               <div className={styles.userGrid}>
-                                {sAnswers.map((ans) => {
-                                  const u = data.usersMap[ans.uid];
+                                {sectionUsersMap["unknown"].map(({ user, answer }, idx) => {
+                                  const st = answer ? statusMap[answer.status] : null;
                                   return (
-                                    <div key={ans.id} className={styles.userChip}>
+                                    <div key={user.id || idx} className={styles.userChip}>
                                       <img
-                                        src={u?.pictureUrl || globalLineDefaultImage}
-                                        alt={u?.displayName || ""}
+                                        src={user.pictureUrl || globalLineDefaultImage}
+                                        alt={user.displayName || ""}
                                         className={styles.userAvatar}
                                         onError={(e) => {
                                           e.currentTarget.src = globalLineDefaultImage;
                                         }}
                                       />
-                                      <span>{u?.displayName || "名前未設定"}</span>
-                                      {ans.comment && (
-                                        <span className={styles.userCommentBubble} title={ans.comment}>
+                                      <span className={styles.userName}>{user.displayName || "名前未設定"}</span>
+                                      <span
+                                        style={{
+                                          fontSize: "10px",
+                                          fontWeight: 700,
+                                          padding: "1px 5px",
+                                          borderRadius: "4px",
+                                          backgroundColor: st ? "#dcfce7" : "#f1f5f9",
+                                          color: st ? "#15803d" : "#94a3b8",
+                                        }}
+                                      >
+                                        {st?.name || "未回答"}
+                                      </span>
+                                      {answer?.comment && (
+                                        <span className={styles.userCommentBubble} title={answer.comment}>
                                           💬
                                         </span>
                                       )}
@@ -1919,10 +2099,10 @@ export function EventDetailModal({
                                 })}
                               </div>
                             </div>
-                          );
-                        });
-                      })()
-                    )}
+                          )}
+                        </div>
+                      );
+                    })()}
                   </>
                 ) : (
                   /* 日程調整マトリクス集計 */

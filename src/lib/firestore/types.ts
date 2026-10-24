@@ -113,6 +113,7 @@ export interface Score {
   abbreviation?: string;
   storageLocation?: string; // 保管場所・ボックス番号 (例: ボックスA-3、部室 棚2段目など)
   scoreUrl?: string; // 関連リンク
+  mediaId?: string; // 関連する録音・メディアID
   genres?: string[];
   referenceTrack?: string;
   youtubeId?: string;
@@ -169,6 +170,8 @@ export interface Media {
   id: string;
   title: string;
   date: string;
+  eventId?: string; // 関連イベントID
+  scoreId?: string; // 関連譜面ID
   instagramUrl?: string;
   youtubeUrl?: string;
   driveUrl?: string;
@@ -293,6 +296,7 @@ export interface Event {
   link?: string;
   access?: string;
   googleMap?: string;
+  mediaId?: string; // 関連する録音・メディアID
   youtubeUrl?: string;
   youtubeTimestamps?: EventYouTubeTimestamp[];
   rentTimeRanges?: EventRentTimeRange[];

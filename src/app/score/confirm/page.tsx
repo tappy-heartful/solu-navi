@@ -1,4 +1,8 @@
-import { getScoreServer, getGenresServer } from "@/features/score/api/score-server-actions";
+import {
+  getScoreServer,
+  getGenresServer,
+  getLinkedMediaServer,
+} from "@/features/score/api/score-server-actions";
 import { getSectionsServer, getInstrumentsServer } from "@/features/user/api/user-server-actions";
 import { ScoreConfirmClient } from "@/features/score/views/confirm/ScoreConfirmClient";
 import { notFound } from "next/navigation";
@@ -37,10 +41,12 @@ export default async function ScoreConfirmPage({ searchParams }: Props) {
     getInstrumentsServer(),
   ]);
 
+  if (!scoreData) notFound();
+
   const allSections = sectionsData as SectionDoc[];
   const allInstruments = instrumentsData as InstrumentDoc[];
 
-  if (!scoreData) notFound();
+  const linkedMedia = await getLinkedMediaServer(scoreData.mediaId);
 
   return (
     <ScoreConfirmClient
@@ -49,6 +55,7 @@ export default async function ScoreConfirmPage({ searchParams }: Props) {
       allSections={allSections}
       allInstruments={allInstruments}
       scoreId={scoreId}
+      linkedMedia={linkedMedia}
     />
   );
 }
