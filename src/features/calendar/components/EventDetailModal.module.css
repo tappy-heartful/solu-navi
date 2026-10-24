@@ -20,11 +20,11 @@
 .eventDetailModal {
   background: #ffffff !important;
   width: 100%;
-  max-width: 520px;
-  max-height: 88vh;
+  max-width: 580px;
+  max-height: 90vh;
   border-radius: 24px;
   position: relative;
-  padding: 22px 20px 16px;
+  padding: 20px 18px 16px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.2), 0 10px 15px -5px rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
@@ -732,3 +732,610 @@
   background: #f1f5f9;
   color: #1e293b;
 }
+
+/* ===== イベント編集・新規作成フォーム用スタイル (認知負荷低減デザイン) ===== */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+.formSectionTitle {
+  font-size: 14px;
+  font-weight: 800;
+  color: #146081;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.formSectionTitle i {
+  color: #146081;
+  font-size: 14px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fieldLabelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.reqBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.optBadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.formInput,
+.formSelect,
+.formTextarea {
+  width: 100%;
+  padding: 8px 11px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff !important;
+  color: #1e293b;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: all 0.15s ease-in-out;
+  outline: none;
+}
+
+.formInput:focus,
+.formSelect:focus,
+.formTextarea:focus {
+  border-color: #146081;
+  box-shadow: 0 0 0 3px rgba(20, 96, 129, 0.12);
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+
+.formGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .formGrid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 種別トグルボタングループ */
+.typeToggleContainer {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+.typeToggleBtn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.typeToggleBtnActive {
+  background: #146081;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(20, 96, 129, 0.2);
+}
+
+/* 候補日リスト */
+.candidateDateList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.candidateDateRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnRemoveDate {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #fca5a5;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.btnRemoveDate:hover {
+  background: #fecaca;
+}
+
+.btnAddCandidate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed #146081;
+  background: #f0fdfa;
+  color: #146081;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: all 0.15s;
+}
+
+.btnAddCandidate:hover {
+  background: #ccfbf1;
+}
+
+/* カラーパレット */
+.colorPaletteRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.colorSwatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+}
+
+.colorSwatchActive {
+  box-shadow: 0 0 0 2.5px #146081;
+  transform: scale(1.08);
+}
+
+.customColorPicker {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+/* チェックボックス（中央揃え規約） */
+.checkboxCenterRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.checkboxCenterRow input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #146081;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* アコーディオン */
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.accordionHeader:hover {
+  background: #f1f5f9;
+}
+
+.accordionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accordionContent {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 編集フッターアクション */
+.formFooterActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.footerLeftActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerRightActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.btnCancelForm {
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnCancelForm:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.btnSaveForm {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #146081 0%, #0d4b66 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(20, 96, 129, 0.25);
+  transition: all 0.15s;
+}
+
+.btnSaveForm:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.btnSaveForm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnDeleteForm {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid #fca5a5;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+
+.btnDeleteForm:hover {
+  background: #fecaca;
+}
+
+/* 繰り返しIDバッジ */
+.recurrenceIdBadge {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  word-break: break-all;
+}
+
+/* 繰り返しイベント案内バナー (編集画面) */
+.recurringNoticeBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fdf4ff;
+  border: 1.5px solid #e879f9;
+  color: #86198f;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+/* 繰り返し登録設定 (新規作成画面 - CANDY準拠) */
+.recurrenceSettings {
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1.5px dashed #cbd5e1;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recurrenceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.recurrenceSelect {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 13px;
+  background: #ffffff;
+  color: #1e293b;
+  outline: none;
+}
+
+.recurrenceRadioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.recurrenceRadioLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* 繰り返し確認ダイアログ (CANDY準拠) */
+.confirmOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  border-radius: 20px;
+}
+
+.confirmBox {
+  background: #ffffff;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 16px;
+  border: 2px solid #146081;
+  padding: 22px 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  box-sizing: border-box;
+  animation: modalEnter 0.15s ease-out;
+}
+
+.confirmMessage {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.confirmButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirmBtn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  transition: transform 0.1s;
+}
+
+.confirmBtn:active {
+  transform: scale(0.98);
+}
+
+.btnConfirmOnly {
+  background: #0d9488;
+  color: white;
+}
+
+.btnConfirmOnly:hover {
+  background: #0f766e;
+}
+
+.btnConfirmAll {
+  background: #146081;
+  color: white;
+}
+
+.btnConfirmAll:hover {
+  background: #0f4c67;
+}
+
+.btnConfirmCancel {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+}
+
+.btnConfirmCancel:hover {
+  background: #f1f5f9;
+}
+
+/* 回答種別トグル */
+.typeToggleContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.typeToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.typeToggleBtn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #334155;
+}
+
+.typeToggleBtnActive {
+  background: #f0fdfa;
+  border-color: #0d9488;
+  color: #0d9488;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.15);
+}
+
+/* 編集時の固定回答種別表示 */
+.fixedTypeContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.fixedTypeNote {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+

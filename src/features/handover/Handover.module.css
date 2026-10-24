@@ -1,0 +1,502 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 3rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #146081;
+  margin: 0;
+}
+
+.headerIcon {
+  color: #146081;
+  font-size: 1.25rem;
+}
+
+/* 全体進捗カード */
+.progressCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+  border: 1.5px solid #ccfbf1;
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.progressTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.academicYearBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #0f766e;
+  background: #ccfbf1;
+  padding: 0.2rem 0.625rem;
+  border-radius: 6px;
+  width: fit-content;
+  border: 1px solid #99f6e4;
+}
+
+.progressMainTitle {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.progressSubtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.progressBadge {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f766e;
+  background: #ccfbf1;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.progressPercentNumber {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+/* プログレスバー */
+.progressBarTrack {
+  width: 100%;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0d9488, #10b981);
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 学年情報・統計サマリー */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.625rem;
+}
+
+.statItem {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statLabel {
+  font-size: 0.6875rem;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.statValue {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+/* フィルタータブ */
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filterBtn {
+  padding: 0.4375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterBtnActive {
+  background: #146081;
+  border-color: #146081;
+  color: #ffffff;
+}
+
+/* カードリスト */
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.itemCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.125rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.itemCardCompleted {
+  border-color: #a7f3d0;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.itemCardPending {
+  border-color: #fef08a;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
+}
+
+/* カードヘッダー */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cardTitleCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cardCategoryRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.categoryBadge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.cardDesc {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.statusBadgeCompleted {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.3125rem 0.625rem;
+  border-radius: 9999px;
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+.statusBadgePending {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.3125rem 0.625rem;
+  border-radius: 9999px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+/* 対比比較エリア (3回生 ➔ 2回生) */
+.comparisonGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.875rem;
+}
+
+@media (max-width: 600px) {
+  .comparisonGrid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+}
+
+.assigneeBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.assigneeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assigneeGradeLabel {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badgeRoleOld {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+.badgeRoleNew {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+}
+
+/* 部員アイテムリスト */
+.userList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.userItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.4375rem 0.625rem;
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid #cbd5e1;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userAbbr {
+  font-size: 0.6875rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.userSectionBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 9999px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.emptyUserBox {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.arrowCol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+  .arrowCol {
+    transform: rotate(90deg);
+    padding: 0.125rem 0;
+  }
+}
+
+.arrowCompleted {
+  color: #10b981;
+}
+
+/* カード下部のアクション */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.editLink {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #146081;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.editLink:hover {
+  background: #ccfbf1;
+  color: #0f4c67;
+}
+
+/* 2回生候補者一覧アコーディオン */
+.candidateSection {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.125rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.candidateHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.candidateTitle {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.candidateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.625rem;
+  margin-top: 0.875rem;
+}
+
+.candidateCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

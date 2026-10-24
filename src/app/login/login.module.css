@@ -209,6 +209,36 @@
   font-size: 1.625rem;
 }
 
+.addFriendBtn {
+  width: 100%;
+  background-color: #ffffff;
+  color: #06c755;
+  font-size: 0.9375rem;
+  padding: 0.8125rem 1.25rem;
+  border: 1.5px solid #06c755;
+  border-radius: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.addFriendBtn:hover {
+  background-color: #f0fdf4;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(6, 199, 85, 0.25);
+}
+
+.addFriendBtn:active {
+  transform: translateY(0);
+}
+
 .notes {
   font-size: 0.75rem;
   color: rgba(226, 232, 240, 0.75);

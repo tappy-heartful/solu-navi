@@ -221,13 +221,6 @@ service cloud.firestore {
       allow delete: if isFeeAdmin();
     }
 
-    // 今日の一曲 (BlueNote)
-    match /blueNotes/{dateId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isBlueNoteAdmin() || (isAuthenticated() && resource.data.createdBy == request.auth.uid);
-    }
-
     // 譜割り
     match /assigns/{assignId} {
       allow read: if isAuthenticated();

@@ -4,28 +4,11 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./CalendarView.module.css";
 import { DailyAgendaModal, AgendaItem } from "@/features/home/components/DailyAgendaModal";
-import EventModal from "./EventModal";
 import { EventDetailModal } from "./EventDetailModal";
 import { Event, Vote, Call } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import {
-  addEvent,
-  updateEvent,
-  deleteEventWithAnswers,
-} from "@/features/event/api/event-client-service";
-import {
-  toHyphenDate,
-  toDotDate,
-  getDaysDiff,
-  shiftDateString,
-  generateRecurrenceDates,
-  RecurrenceConfig,
-} from "../lib/recurrence-utils";
-import { showSpinner, hideSpinner } from "@/components/Common/Spinner";
-import { showDialog } from "@/components/Common/CommonDialog";
-import { canEditEvent } from "@/features/event/lib/event-utils";
 
 interface CalendarViewProps {
   events: Event[];
@@ -58,12 +41,26 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
     setCalendarEvents(events);
   }, [events]);
 
-  // イベント追加・編集用モーダルのステート
-  const [activeModalEvent, setActiveModalEvent] = useState<Partial<Event> | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // イベント統合モーダル (閲覧・出欠回答・編集・新規作成) のステート
+  const [detailModalConfig, setDetailModalConfig] = useState<{
+    eventId?: string | null;
+    mode?: "view" | "edit" | "create";
+    initialDate?: string;
+  } | null>(null);
 
-  // イベント確認モーダルのステート
-  const [detailModalEventId, setDetailModalEventId] = useState<string | null>(null);
+  // URLクエリパラメータ (?eventId=xxx, ?newEvent=true) による自動モーダル起動
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const evId = params.get("eventId");
+      const isNew = params.get("newEvent");
+      if (evId) {
+        setDetailModalConfig({ eventId: evId, mode: "view" });
+      } else if (isNew) {
+        setDetailModalConfig({ eventId: null, mode: "create" });
+      }
+    }
+  }, []);
 
   // 自分の出欠回答を取得
   const fetchAnswers = useCallback(async () => {
@@ -262,259 +259,26 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
     setIsAgendaOpen(true);
   };
 
-  // ===== イベントの追加・編集・削除ハンドラ (CANDY 準拠) =====
+  // ===== イベントの追加・編集・削除ハンドラ (ホーム画面統合モーダル) =====
 
   const handleAddNewEvent = (dateStr: string) => {
-    const dotDate = toDotDate(dateStr);
-    setActiveModalEvent({
-      date: dotDate,
-      startDate: dotDate,
-      endDate: dotDate,
-      isAllDay: true,
-      attendanceType: "attendance",
-    });
     setIsAgendaOpen(false);
-    setIsModalOpen(true);
+    setDetailModalConfig({
+      eventId: null,
+      mode: "create",
+      initialDate: dateStr,
+    });
   };
 
   const handleEditEvent = (eventId: string) => {
-    const target = calendarEvents.find((e) => e.id === eventId);
-    if (target) {
-      setActiveModalEvent(target);
-      setIsAgendaOpen(false);
-      setIsModalOpen(true);
-    }
-  };
-
-  const handleCopyEvent = (eventData: Partial<Event>) => {
-    setActiveModalEvent({
-      ...eventData,
-      id: undefined,
+    setIsAgendaOpen(false);
+    setDetailModalConfig({
+      eventId,
+      mode: "edit",
     });
   };
 
-  const handleSaveEvent = async (
-    eventData: Partial<Event> & { recurrenceConfig?: RecurrenceConfig },
-    targetRange?: "only" | "all"
-  ) => {
-    showSpinner();
-    try {
-      if (activeModalEvent?.id) {
-        // --- 編集モード ---
-        if (!canEditEvent(activeModalEvent, userData)) {
-          showDialog("この予定を編集する権限がありません", true);
-          return;
-        }
-        if (activeModalEvent.isRecurring && targetRange === "only") {
-          // この予定のみ変更 -> 繰り返しから外して単体化
-          const updatedData: Partial<Event> = {
-            ...eventData,
-            isRecurring: false,
-            recurrenceId: "",
-          };
-          delete (updatedData as any).recurrenceConfig;
 
-          await updateEvent(activeModalEvent.id, updatedData);
-          setCalendarEvents((prev) =>
-            prev.map((e) =>
-              e.id === activeModalEvent.id ? ({ ...e, ...updatedData } as Event) : e
-            )
-          );
-        } else if (
-          activeModalEvent.isRecurring &&
-          targetRange === "all" &&
-          activeModalEvent.recurrenceId
-        ) {
-          // すべての繰り返し予定を一括変更 (日付差分シフト)
-          const oldStart = activeModalEvent.startDate || activeModalEvent.date || "";
-          const oldEnd = activeModalEvent.endDate || oldStart;
-          const newStart = eventData.startDate || eventData.date || oldStart;
-          const newEnd = eventData.endDate || newStart;
-
-          const diffStart = getDaysDiff(oldStart, newStart);
-          const diffEnd = getDaysDiff(oldEnd, newEnd);
-
-          const recurringEvents = calendarEvents.filter(
-            (e) => e.recurrenceId === activeModalEvent.recurrenceId
-          );
-
-          const updates = recurringEvents.map(async (e) => {
-            const eStart = e.startDate || e.date || "";
-            const eEnd = e.endDate || eStart;
-            const nextStartDate = shiftDateString(eStart, diffStart);
-            const nextEndDate = shiftDateString(eEnd, diffEnd);
-
-            const dataToUpdate: Partial<Event> = {
-              ...eventData,
-              date: nextStartDate,
-              startDate: nextStartDate,
-              endDate: nextEndDate,
-            };
-            delete (dataToUpdate as any).recurrenceConfig;
-
-            await updateEvent(e.id, dataToUpdate);
-            return { id: e.id, data: dataToUpdate };
-          });
-
-          const results = await Promise.all(updates);
-          setCalendarEvents((prev) =>
-            prev.map((e) => {
-              const res = results.find((r) => r.id === e.id);
-              return res ? ({ ...e, ...res.data } as Event) : e;
-            })
-          );
-        } else {
-          // 通常編集
-          const dataToUpdate = { ...eventData };
-          delete (dataToUpdate as any).recurrenceConfig;
-
-          await updateEvent(activeModalEvent.id, dataToUpdate);
-          setCalendarEvents((prev) =>
-            prev.map((e) =>
-              e.id === activeModalEvent.id ? ({ ...e, ...dataToUpdate } as Event) : e
-            )
-          );
-        }
-      } else {
-        // --- 新規登録モード ---
-        const recurrenceConfig = eventData.recurrenceConfig;
-        if (eventData.isRecurring && recurrenceConfig) {
-          // 繰り返し予定の一括生成登録
-          const recId =
-            Math.random().toString(36).substring(2, 15) +
-            Math.random().toString(36).substring(2, 15);
-          const targetDates = generateRecurrenceDates(
-            eventData.startDate || eventData.date!,
-            recurrenceConfig
-          );
-
-          const baseData = { ...eventData };
-          delete baseData.recurrenceConfig;
-
-          const creations = targetDates.map(async (dHyphen) => {
-            const dDot = toDotDate(dHyphen);
-            const dateDiff = getDaysDiff(eventData.startDate || eventData.date!, dDot);
-            const nextEndDate = shiftDateString(
-              eventData.endDate || eventData.startDate || eventData.date!,
-              dateDiff
-            );
-
-            const itemData: Omit<Event, "id"> = {
-              title: baseData.title || "",
-              attendanceType: baseData.attendanceType || "attendance",
-              date: dDot,
-              startDate: dDot,
-              endDate: nextEndDate,
-              acceptStartDate: baseData.acceptStartDate || "",
-              acceptEndDate: baseData.acceptEndDate || "",
-              isAllDay: baseData.isAllDay ?? true,
-              startTime: baseData.startTime || "",
-              endTime: baseData.endTime || "",
-              placeName: baseData.placeName || "",
-              note: baseData.note || "",
-              link: baseData.link || "",
-              isRecurring: true,
-              recurrenceId: recId,
-              createdUid: uid || "",
-              createdBy: userData?.displayName || uid || "",
-            };
-
-            const newId = await addEvent(itemData);
-            return {
-              id: newId,
-              ...itemData,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-            } as Event;
-          });
-
-          const addedEvents = await Promise.all(creations);
-          setCalendarEvents((prev) => [...prev, ...addedEvents]);
-        } else {
-          // 通常登録
-          const baseData = { ...eventData };
-          delete (baseData as any).recurrenceConfig;
-
-          const itemData: Omit<Event, "id"> = {
-            title: baseData.title || "",
-            attendanceType: baseData.attendanceType || "attendance",
-            date: baseData.date || baseData.startDate || "",
-            startDate: baseData.startDate || baseData.date || "",
-            endDate: baseData.endDate || baseData.startDate || baseData.date || "",
-            acceptStartDate: baseData.acceptStartDate || "",
-            acceptEndDate: baseData.acceptEndDate || "",
-            isAllDay: baseData.isAllDay ?? true,
-            startTime: baseData.startTime || "",
-            endTime: baseData.endTime || "",
-            placeName: baseData.placeName || "",
-            note: baseData.note || "",
-            link: baseData.link || "",
-            createdUid: uid || "",
-            createdBy: userData?.displayName || uid || "",
-          };
-
-          const newId = await addEvent(itemData);
-          const newEventItem: Event = {
-            id: newId,
-            ...itemData,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-          };
-          setCalendarEvents((prev) => [...prev, newEventItem]);
-        }
-      }
-
-      setIsModalOpen(false);
-      setActiveModalEvent(null);
-      showDialog("予定を保存しました", true);
-      router.refresh();
-    } catch (err) {
-      console.error("Save event error:", err);
-      showDialog("予定の保存に失敗しました", true);
-    } finally {
-      hideSpinner();
-    }
-  };
-
-  const handleDeleteEvent = async (id: string, targetRange?: "only" | "all") => {
-    const targetEvent =
-      activeModalEvent?.id === id
-        ? activeModalEvent
-        : calendarEvents.find((e) => e.id === id);
-
-    if (!canEditEvent(targetEvent, userData)) {
-      showDialog("この予定を削除する権限がありません", true);
-      return;
-    }
-    showSpinner();
-    try {
-      if (targetEvent?.isRecurring && targetRange === "all" && targetEvent.recurrenceId) {
-        // すべての繰り返し予定を一括削除
-        const recurringEvents = calendarEvents.filter(
-          (e) => e.recurrenceId === targetEvent.recurrenceId
-        );
-        await Promise.all(recurringEvents.map((e) => deleteEventWithAnswers(e.id)));
-        setCalendarEvents((prev) =>
-          prev.filter((e) => e.recurrenceId !== targetEvent.recurrenceId)
-        );
-      } else {
-        // この予定のみ削除 (または通常削除)
-        await deleteEventWithAnswers(id);
-        setCalendarEvents((prev) => prev.filter((e) => e.id !== id));
-      }
-
-      setIsModalOpen(false);
-      setActiveModalEvent(null);
-      setDetailModalEventId(null);
-      showDialog("予定を削除しました", true);
-      router.refresh();
-    } catch (err) {
-      console.error("Delete event error:", err);
-      showDialog("予定の削除に失敗しました", true);
-    } finally {
-      hideSpinner();
-    }
-  };
 
   return (
     <section className={styles.calendarContainer}>
@@ -675,38 +439,28 @@ export function CalendarView({ events = [], votes = [], calls = [] }: CalendarVi
           onClose={() => setIsAgendaOpen(false)}
           onAddEvent={handleAddNewEvent}
           onEditEvent={handleEditEvent}
-          onViewEventDetail={(id) => setDetailModalEventId(id)}
+          onViewEventDetail={(id) => setDetailModalConfig({ eventId: id, mode: "view" })}
         />
       )}
 
-      {detailModalEventId && (
+      {detailModalConfig && (
         <EventDetailModal
-          eventId={detailModalEventId}
-          onClose={() => setDetailModalEventId(null)}
-          onEditEvent={(id) => {
-            setDetailModalEventId(null);
-            handleEditEvent(id);
+          eventId={detailModalConfig.eventId}
+          initialMode={detailModalConfig.mode}
+          initialDate={detailModalConfig.initialDate}
+          onClose={() => setDetailModalConfig(null)}
+          onSaveSuccess={() => {
+            fetchAnswers();
+            router.refresh();
           }}
-          onDeleteEvent={handleDeleteEvent}
+          onDeleteSuccess={() => {
+            fetchAnswers();
+            router.refresh();
+          }}
           onAnswerUpdated={() => {
             fetchAnswers();
             router.refresh();
           }}
-        />
-      )}
-
-      {isModalOpen && (
-        <EventModal
-          event={activeModalEvent}
-          currentUserId={uid || ""}
-          canEdit={canEditEvent(activeModalEvent, userData)}
-          onClose={() => {
-            setIsModalOpen(false);
-            setActiveModalEvent(null);
-          }}
-          onSave={handleSaveEvent}
-          onDelete={handleDeleteEvent}
-          onCopy={handleCopyEvent}
         />
       )}
     </section>

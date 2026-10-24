@@ -284,8 +284,8 @@ export interface Event {
   startTime?: string;         // "HH:mm"
   endTime?: string;           // "HH:mm"
   candidateDates?: string[];  // "yyyy.MM.dd"[] (日程調整タイプ)
-  acceptStartDate: string;
-  acceptEndDate: string;
+  acceptStartDate?: string;
+  acceptEndDate?: string;
   placeName?: string;
   prefectureId?: string;
   municipalityId?: string;

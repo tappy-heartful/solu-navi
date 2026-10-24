@@ -19,6 +19,7 @@ import {
   faPhotoFilm,
   faCoins,
   faRecordVinyl,
+  faRightLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
@@ -206,7 +207,15 @@ export function HomeClient({
         {/* 1. 受付中のお知らせ (曲募集・曲投票・リマインド等) */}
         <HomeAnnouncementSection announcements={initialAnnouncements} />
 
-        {/* 2. 新着譜面セクション */}
+        {/* 2. サークルカレンダー */}
+        <div className={styles.sectionTitleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>📅</span> サークルカレンダー
+          </h3>
+        </div>
+        <CalendarView events={events} votes={votes} calls={calls} />
+
+        {/* 3. 新着譜面セクション */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
             <span className={styles.titleIcon}>🎼</span> 新着譜面
@@ -272,7 +281,7 @@ export function HomeClient({
           </div>
         </div>
 
-        {/* 3. 今日の一曲セクション (streak-navi 完全準拠) */}
+        {/* 4. 今日の一曲セクション (streak-navi 完全準拠) */}
         {blueNotes.length > 0 && (
           <>
             <div className={styles.sectionTitleRow}>
@@ -319,14 +328,6 @@ export function HomeClient({
             </div>
           </>
         )}
-
-        {/* 4. サークルカレンダー */}
-        <div className={styles.sectionTitleRow}>
-          <h3 className={styles.sectionTitle}>
-            <span className={styles.titleIcon}>📅</span> サークルカレンダー
-          </h3>
-        </div>
-        <CalendarView events={events} votes={votes} calls={calls} />
 
         {/* ユーザーウェルカムカード (いったん非表示) */}
         {/*
@@ -534,6 +535,21 @@ export function HomeClient({
               <span className={styles.quickLabel}>ユーザ</span>
             </div>
             <FontAwesomeIcon icon={faUsers} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/handover"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardAmber}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
+              <FontAwesomeIcon icon={faRightLeft} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>引継ぎ</span>
+            </div>
+            <FontAwesomeIcon icon={faRightLeft} className={styles.watermarkIcon} />
           </Link>
 
           <Link

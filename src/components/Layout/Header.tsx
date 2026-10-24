@@ -21,6 +21,7 @@ import {
   faPhotoFilm,
   faCoins,
   faRecordVinyl,
+  faRightLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
@@ -211,6 +212,10 @@ export function Header() {
                 <Link href="/user" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faUsers} className={styles.subIcon} />
                   <span className={styles.subLabel}>ユーザ</span>
+                </Link>
+                <Link href="/handover" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faRightLeft} className={styles.subIcon} />
+                  <span className={styles.subLabel}>引継ぎ</span>
                 </Link>
                 <Link href="/master" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faSliders} className={styles.subIcon} />

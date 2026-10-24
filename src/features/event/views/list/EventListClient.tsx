@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays, faCalendarCheck, faHistory, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { Event } from "@/lib/firestore/types";
@@ -9,13 +10,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { BackNavigation } from "@/components/Common/BackNavigation";
-import { isInTerm, getDayOfWeek, format } from "@/lib/functions";
+import { EventDetailModal } from "@/features/calendar/components/EventDetailModal";
+import { getDayOfWeek, format } from "@/lib/functions";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { DEFAULT_ATTENDANCE_STATUSES, DEFAULT_EVENT_ADJUST_STATUSES } from "@/lib/firestore/constants";
 import styles from "./EventList.module.css";
-
-
 
 type Props = {
   events: Event[];
@@ -30,9 +30,15 @@ function isEventPast(event: Event): boolean {
 }
 
 export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }: Props) {
+  const router = useRouter();
   const { userData, isAdmin } = useAuth();
   const uid = userData?.uid || userData?.id;
   const { setBreadcrumbs } = useBreadcrumb();
+
+  const [modalConfig, setModalConfig] = useState<{
+    eventId?: string | null;
+    mode?: "view" | "create";
+  } | null>(null);
 
   const [myAttendanceAnswers, setMyAttendanceAnswers] = useState<Record<string, string>>({});
   const [myAdjustAnswers, setMyAdjustAnswers] = useState<Record<string, Record<string, string>>>({});
@@ -106,23 +112,10 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
     .filter((e) => isEventPast(e))
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  const renderTermDisplay = (e: Event) => {
-    if (!e.acceptStartDate && !e.acceptEndDate) return "-";
-    return (
-      <span className={styles.termText}>
-        {e.acceptStartDate || ""}
-        <br />
-        ～ {e.acceptEndDate || ""}
-      </span>
-    );
-  };
-
   const renderStatusCell = (e: Event, type: "schedule" | "future" | "closed") => {
     const isSchedule = e.attendanceType === "schedule";
     const hasAttended = myAttendanceAnswers[e.id];
     const hasAdjusted = myAdjustAnswers[e.id] && Object.keys(myAdjustAnswers[e.id]).length > 0;
-
-    const inTerm = isInTerm(e.acceptStartDate, e.acceptEndDate);
     const isPast = type === "closed";
 
     let displayAnswer: "attendance" | "adjust" | null = null;
@@ -180,10 +173,7 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
     if (isPast) {
       return <span className={`${styles.statusBadge} ${styles.closedBadge}`}>終了</span>;
     }
-    if (!inTerm) {
-      return <span className={`${styles.statusBadge} ${styles.closedBadge}`}>期間外</span>;
-    }
-    return <span className={`${styles.statusBadge} ${styles.pendingBadge}`}>受付中</span>;
+    return <span className={`${styles.statusBadge} ${styles.pendingBadge}`}>未回答</span>;
   };
 
   return (
@@ -197,10 +187,14 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
 
           {isAdmin && (
             <div className={styles.headerActions}>
-              <Link href="/event/edit?mode=new" prefetch={false} className={styles.addBtn}>
+              <button
+                type="button"
+                className={styles.addBtn}
+                onClick={() => setModalConfig({ eventId: null, mode: "create" })}
+              >
                 <FontAwesomeIcon icon={faPlus} />
                 <span>新規イベント作成</span>
-              </Link>
+              </button>
             </div>
           )}
         </div>
@@ -218,11 +212,6 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                   <tr>
                     <th>イベント名</th>
                     <th>回答</th>
-                    <th>
-                      日程調整
-                      <br />
-                      受付期間
-                    </th>
                     <th>
                       都道府県
                       <br />
@@ -242,12 +231,15 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                             </span>
                           ))}
                         </div>
-                        <Link href={`/event/confirm?eventId=${e.id}`} prefetch={false} className={styles.rowTitle}>
+                        <button
+                          type="button"
+                          className={styles.rowTitle}
+                          onClick={() => setModalConfig({ eventId: e.id, mode: "view" })}
+                        >
                           {e.title}
-                        </Link>
+                        </button>
                       </td>
                       <td>{renderStatusCell(e, "schedule")}</td>
-                      <td>{renderTermDisplay(e)}</td>
                       <td>
                         {e.prefectureId ? prefNamesMap[e.prefectureId] || "不明" : "-"}
                         <br />
@@ -289,11 +281,6 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                     <th>イベント名</th>
                     <th>回答</th>
                     <th>
-                      出欠確認
-                      <br />
-                      受付期間
-                    </th>
-                    <th>
                       都道府県
                       <br />
                       市区町村
@@ -312,12 +299,15 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                             </span>
                           </div>
                         )}
-                        <Link href={`/event/confirm?eventId=${e.id}`} prefetch={false} className={styles.rowTitle}>
+                        <button
+                          type="button"
+                          className={styles.rowTitle}
+                          onClick={() => setModalConfig({ eventId: e.id, mode: "view" })}
+                        >
                           {e.title}
-                        </Link>
+                        </button>
                       </td>
                       <td>{renderStatusCell(e, "future")}</td>
-                      <td>{renderTermDisplay(e)}</td>
                       <td>
                         {e.prefectureId ? prefNamesMap[e.prefectureId] || "不明" : "-"}
                         <br />
@@ -361,9 +351,13 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
                   {closedList.map((e) => (
                     <tr key={e.id}>
                       <td>
-                        <Link href={`/event/confirm?eventId=${e.id}`} prefetch={false} className={styles.rowTitle}>
+                        <button
+                          type="button"
+                          className={styles.rowTitle}
+                          onClick={() => setModalConfig({ eventId: e.id, mode: "view" })}
+                        >
                           {e.title}
-                        </Link>
+                        </button>
                       </td>
                       <td>{renderStatusCell(e, "closed")}</td>
                       <td>
@@ -378,6 +372,23 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
           </div>
         )}
       </div>
+
+      {modalConfig && (
+        <EventDetailModal
+          eventId={modalConfig.eventId}
+          initialMode={modalConfig.mode}
+          onClose={() => setModalConfig(null)}
+          onSaveSuccess={() => {
+            router.refresh();
+          }}
+          onDeleteSuccess={() => {
+            router.refresh();
+          }}
+          onAnswerUpdated={() => {
+            router.refresh();
+          }}
+        />
+      )}
 
       <BackNavigation href="/" label="ホーム" />
     </BaseLayout>

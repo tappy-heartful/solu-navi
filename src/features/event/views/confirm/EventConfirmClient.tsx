@@ -85,7 +85,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
 
   const isSchedule = event.attendanceType === "schedule";
   const isPast = isEventPast(event);
-  const inTerm = isInTerm(event.acceptStartDate, event.acceptEndDate);
+  const inTerm = isInTerm(event.acceptStartDate || "", event.acceptEndDate || "");
   const isActive = !isPast && inTerm;
 
   const myAnswerExists = answers.some((a) => a.uid === uid);
@@ -519,7 +519,7 @@ export function EventConfirmClient({ eventId, data }: Props) {
         {/* 受付期間 */}
         <DisplayField label={isSchedule ? "日程調整受付期間" : "出欠受付期間"}>
           {event.acceptStartDate || event.acceptEndDate
-            ? `${getDayOfWeek(event.acceptStartDate)} ～ ${getDayOfWeek(event.acceptEndDate)}`
+            ? `${getDayOfWeek(event.acceptStartDate || "")} ～ ${getDayOfWeek(event.acceptEndDate || "")}`
             : "未設定"}
         </DisplayField>
 

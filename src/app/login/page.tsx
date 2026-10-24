@@ -313,6 +313,16 @@ function LoginContent() {
                 <span>{loading ? "接続中..." : "LINEでログイン"}</span>
               </button>
             )}
+
+            <a
+              href="https://lin.ee/6mUKo94"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.addFriendBtn}
+            >
+              <FontAwesomeIcon icon={faLine} />
+              <span>公式LINEを友だち追加</span>
+            </a>
           </>
         )}
 
