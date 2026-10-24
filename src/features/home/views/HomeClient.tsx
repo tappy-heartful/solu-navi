@@ -538,21 +538,6 @@ export function HomeClient({
           </Link>
 
           <Link
-            href="/handover"
-            prefetch={false}
-            className={`${styles.quickCard} ${styles.cardAmber}`}
-            onClick={() => showSpinner()}
-          >
-            <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
-              <FontAwesomeIcon icon={faRightLeft} />
-            </div>
-            <div className={styles.quickInfo}>
-              <span className={styles.quickLabel}>引継ぎ</span>
-            </div>
-            <FontAwesomeIcon icon={faRightLeft} className={styles.watermarkIcon} />
-          </Link>
-
-          <Link
             href="/user/detail"
             prefetch={false}
             className={`${styles.quickCard} ${styles.cardCyan}`}
@@ -595,6 +580,21 @@ export function HomeClient({
               <span className={styles.quickLabel}>サークル利用規約</span>
             </div>
             <FontAwesomeIcon icon={faFileShield} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/handover"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardAmber}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconAmberBg}`}>
+              <FontAwesomeIcon icon={faRightLeft} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>引継ぎ</span>
+            </div>
+            <FontAwesomeIcon icon={faRightLeft} className={styles.watermarkIcon} />
           </Link>
         </div>
       </div>

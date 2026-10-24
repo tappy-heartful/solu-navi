@@ -213,10 +213,6 @@ export function Header() {
                   <FontAwesomeIcon icon={faUsers} className={styles.subIcon} />
                   <span className={styles.subLabel}>ユーザ</span>
                 </Link>
-                <Link href="/handover" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faRightLeft} className={styles.subIcon} />
-                  <span className={styles.subLabel}>引継ぎ</span>
-                </Link>
                 <Link href="/master" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faSliders} className={styles.subIcon} />
                   <span className={styles.subLabel}>マスタ管理</span>
@@ -232,6 +228,10 @@ export function Header() {
                 <Link href="/agreement" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faFileShield} className={styles.subIcon} />
                   <span className={styles.subLabel}>利用規約</span>
+                </Link>
+                <Link href="/handover" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faRightLeft} className={styles.subIcon} />
+                  <span className={styles.subLabel}>引継ぎ</span>
                 </Link>
               </div>
             </div>
