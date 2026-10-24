@@ -28,6 +28,7 @@ export interface UserDoc {
   isScoreAdmin?: boolean;     // 楽譜管理者
   isMediaAdmin?: boolean;     // メディア・録音管理者
   isFeeAdmin?: boolean;       // 会計・部費管理者
+  isBlueNoteAdmin?: boolean;  // 今日の一曲管理者
   isNoticeAdmin?: boolean;    // お知らせ管理者
   isLiveAdmin?: boolean;      // ライブ管理者
   isBoardAdmin?: boolean;     // 掲示板管理者
@@ -355,3 +356,13 @@ export interface EventRecording {
   url: string;
   createdAt?: number;
 }
+
+export interface BlueNote {
+  id: string; // MMDD
+  title: string;
+  youtubeId: string;
+  createdBy?: string;
+  createdAt?: number;
+  updatedAt?: number;
+}
+

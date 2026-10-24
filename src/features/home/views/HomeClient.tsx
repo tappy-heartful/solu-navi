@@ -18,18 +18,84 @@ import {
   faArrowRight,
   faPhotoFilm,
   faCoins,
+  faRecordVinyl,
 } from "@fortawesome/free-solid-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
 import { HomeAnnouncement } from "../types";
 import { CalendarView } from "@/features/calendar/components/CalendarView";
-import { Event, Vote, Call, Fee, Score } from "@/lib/firestore/types";
+import { Event, Vote, Call, Fee, Score, BlueNote } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
-import { getGradeFromEnrollmentYear } from "@/lib/functions";
+import {
+  getGradeFromEnrollmentYear,
+  buildYouTubeHtml,
+  getWatchVideosOrder,
+  getRandomIndex,
+  format,
+} from "@/lib/functions";
 import { showSpinner } from "@/components/Common/Spinner";
 import styles from "./HomeClient.module.css";
+
+const Player = React.memo(
+  ({
+    title,
+    subtitle,
+    data,
+    idx,
+    setIdx,
+    onRandom,
+  }: {
+    title?: string;
+    subtitle?: string;
+    data: (Score | BlueNote)[];
+    idx: number;
+    setIdx: React.Dispatch<React.SetStateAction<number>>;
+    onRandom: () => void;
+  }) => (
+    <div className={styles.playerWrapper}>
+      <h2 className={styles.playerTitle}>
+        {subtitle && <div className={styles.playerSubtitle}>{subtitle}</div>}
+        {title}
+      </h2>
+      <div
+        dangerouslySetInnerHTML={{
+          __html: buildYouTubeHtml(getWatchVideosOrder(idx, data), false),
+        }}
+      />
+      <div className={styles.playerControls}>
+        <button
+          type="button"
+          onClick={() => setIdx((idx - 1 + data.length) % data.length)}
+          className={styles.playerControl}
+          title="前へ"
+          aria-label="前へ"
+        >
+          <i className="fa-solid fa-backward-step"></i>
+        </button>
+        <button
+          type="button"
+          onClick={onRandom}
+          className={styles.playerControl}
+          title="ランダム再生"
+        >
+          ランダム <i className="fa-solid fa-arrows-rotate"></i>
+        </button>
+        <button
+          type="button"
+          onClick={() => setIdx((idx + 1) % data.length)}
+          className={styles.playerControl}
+          title="次へ"
+          aria-label="次へ"
+        >
+          <i className="fa-solid fa-forward-step"></i>
+        </button>
+      </div>
+    </div>
+  )
+);
+Player.displayName = "Player";
 
 interface HomeClientProps {
   initialAnnouncements?: HomeAnnouncement[];
@@ -38,6 +104,7 @@ interface HomeClientProps {
   calls?: Call[];
   fees?: Fee[];
   scores?: Score[];
+  blueNotes?: BlueNote[];
 }
 
 export function HomeClient({
@@ -47,6 +114,7 @@ export function HomeClient({
   calls = [],
   fees = [],
   scores = [],
+  blueNotes = [],
 }: HomeClientProps) {
   const { userData } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -70,11 +138,45 @@ export function HomeClient({
     userData?.instrumentIds?.length
   );
 
+  const [currentScoreIdx, setCurrentScoreIdx] = React.useState(0);
+  const [currentBNIdx, setCurrentBNIdx] = React.useState(0);
+
+  useEffect(() => {
+    if (scores.length) {
+      setCurrentScoreIdx(Math.floor(Math.random() * Math.min(scores.length, 6)));
+    }
+    if (blueNotes.length) {
+      const now = new Date();
+      const todayId = format(now, "MMdd");
+      const firstDayId = format(now, "MM") + "01";
+
+      const todayIdx = blueNotes.findIndex((n) => n.id === todayId);
+      if (todayIdx !== -1) {
+        setCurrentBNIdx(todayIdx);
+      } else {
+        const firstDayIdx = blueNotes.findIndex((n) => n.id === firstDayId);
+        if (firstDayIdx !== -1) {
+          setCurrentBNIdx(firstDayIdx);
+        } else {
+          const currentMonthPrefix = format(now, "MM");
+          const monthBlueNotesIdx = blueNotes.findIndex((n) => n.id.startsWith(currentMonthPrefix));
+          setCurrentBNIdx(
+            monthBlueNotesIdx !== -1 ? monthBlueNotesIdx : Math.floor(Math.random() * blueNotes.length)
+          );
+        }
+      }
+    }
+  }, [scores, blueNotes]);
+
   const quickScores = (scores || []).slice(0, 6);
   const scorePlaylistIds = (scores || [])
     .map((s) => s.youtubeId)
     .filter(Boolean)
     .join(",");
+  const bnPlaylistIds = React.useMemo(
+    () => getWatchVideosOrder(currentBNIdx, blueNotes)?.join(","),
+    [currentBNIdx, blueNotes]
+  );
 
   return (
     <BaseLayout showBreadcrumbs={false} stickyHeader={true}>
@@ -146,6 +248,18 @@ export function HomeClient({
             <div className={styles.emptyScoreMsg}>譜面はまだ登録されていません🍀</div>
           )}
 
+          {scores.length > 0 && (
+            <Player
+              title={scores[currentScoreIdx]?.title || "参考演奏"}
+              data={scores}
+              idx={currentScoreIdx}
+              setIdx={setCurrentScoreIdx}
+              onRandom={() =>
+                setCurrentScoreIdx(getRandomIndex(currentScoreIdx, scores.length))
+              }
+            />
+          )}
+
           <div className={styles.moreScoreRow}>
             <Link
               href="/score"
@@ -158,7 +272,55 @@ export function HomeClient({
           </div>
         </div>
 
-        {/* 3. サークルカレンダー */}
+        {/* 3. 今日の一曲セクション (streak-navi 完全準拠) */}
+        {blueNotes.length > 0 && (
+          <>
+            <div className={styles.sectionTitleRow}>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.titleIcon}>💿</span> 今日の一曲
+              </h3>
+              {bnPlaylistIds && (
+                <a
+                  href={`https://www.youtube.com/watch_videos?video_ids=${bnPlaylistIds}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.playlistBtn}
+                >
+                  <i className="fa-brands fa-youtube" /> プレイリスト
+                </a>
+              )}
+            </div>
+
+            <div className={styles.scoreSection}>
+              <Player
+                title={blueNotes[currentBNIdx]?.title}
+                subtitle={
+                  blueNotes[currentBNIdx]?.id
+                    ? `${parseInt(blueNotes[currentBNIdx].id.substring(0, 2))}月${parseInt(blueNotes[currentBNIdx].id.substring(2))}日の曲`
+                    : ""
+                }
+                data={blueNotes}
+                idx={currentBNIdx}
+                setIdx={setCurrentBNIdx}
+                onRandom={() =>
+                  setCurrentBNIdx(getRandomIndex(currentBNIdx, blueNotes.length))
+                }
+              />
+              <div className={styles.moreScoreRow}>
+                <Link
+                  href="/blue-note"
+                  prefetch={false}
+                  className={styles.moreScoreLink}
+                  onClick={() => showSpinner()}
+                >
+                  もっと見る <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "0.75rem" }} />
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* 4. サークルカレンダー */}
         <div className={styles.sectionTitleRow}>
           <h3 className={styles.sectionTitle}>
             <span className={styles.titleIcon}>📅</span> サークルカレンダー
@@ -333,6 +495,21 @@ export function HomeClient({
               <span className={styles.quickLabel}>マスタ管理</span>
             </div>
             <FontAwesomeIcon icon={faSliders} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/blue-note"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardCyan}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconCyanBg}`}>
+              <FontAwesomeIcon icon={faRecordVinyl} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>今日の一曲</span>
+            </div>
+            <FontAwesomeIcon icon={faRecordVinyl} className={styles.watermarkIcon} />
           </Link>
         </div>
 

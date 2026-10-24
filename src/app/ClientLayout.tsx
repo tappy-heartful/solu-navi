@@ -6,6 +6,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { BreadcrumbProvider } from "../contexts/BreadcrumbContext";
 import { AuthGuard } from "../components/AuthGuard";
 import { CommonDialog } from "../components/Common/CommonDialog";
+import CommonModal from "../components/CommonModal";
 import { Spinner, showSpinner } from "../components/Common/Spinner";
 import { ServiceWorkerRegister } from "../components/PWA/ServiceWorkerRegister";
 
@@ -42,6 +43,7 @@ export function ClientLayout({ children }: { children: ReactNode }) {
       <BreadcrumbProvider>
         <AuthGuard>{children}</AuthGuard>
         <CommonDialog />
+        <CommonModal />
         <Spinner />
         <ServiceWorkerRegister />
       </BreadcrumbProvider>

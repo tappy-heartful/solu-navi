@@ -20,6 +20,7 @@ import {
   faUserPen,
   faPhotoFilm,
   faCoins,
+  faRecordVinyl,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
@@ -202,6 +203,10 @@ export function Header() {
                 <Link href="/vote" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faSquarePollVertical} className={styles.subIcon} />
                   <span className={styles.subLabel}>曲投票</span>
+                </Link>
+                <Link href="/blue-note" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faRecordVinyl} className={styles.subIcon} />
+                  <span className={styles.subLabel}>今日の一曲</span>
                 </Link>
                 <Link href="/user" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faUsers} className={styles.subIcon} />

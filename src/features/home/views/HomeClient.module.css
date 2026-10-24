@@ -516,3 +516,58 @@
   color: #94a3b8;
   font-size: 0.8125rem;
 }
+
+/* ミニプレイヤー (streak-navi 完全準拠) */
+.playerWrapper {
+  margin: 12px 0 16px;
+  width: 100%;
+}
+
+.playerTitle {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 12px;
+  font-size: 15px;
+  color: #666;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
+  text-align: center;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerSubtitle {
+  font-size: 14px;
+  color: #146081;
+  margin-bottom: 4px;
+  font-weight: normal;
+}
+
+.playerControls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.playerControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #146081;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.playerControl:hover {
+  background-color: #0f4a64;
+}
+

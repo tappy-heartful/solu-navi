@@ -475,6 +475,20 @@ export function buildGoogleDriveHtml(driveUrl: string, showNotice = false): stri
   `;
 }
 
+// --- プレイヤー補助ロジック ---
+export function getWatchVideosOrder(currentIndex: number, items: any[]): string[] {
+  const ids = items.map(n => n.youtubeId || extractYouTubeId(n.referenceTrack || ""));
+  return [...ids.slice(currentIndex), ...ids.slice(0, currentIndex)];
+}
+
+export function getRandomIndex(exclude: number, arrayLength: number): number {
+  if (arrayLength <= 1) return 0;
+  let idx;
+  do { idx = Math.floor(Math.random() * arrayLength); } while (idx === exclude);
+  return idx;
+}
+
+
 // 再エクスポート
 export {
   doc,

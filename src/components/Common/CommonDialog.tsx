@@ -16,6 +16,7 @@ interface DialogOptions {
   confirmText?: string;
   cancelText?: string;
   isConfirm?: boolean; // キャンセルボタンを表示するか
+  showCancel?: boolean; // streak-navi互換
   type?: "info" | "success" | "warning" | "danger";
 }
 
@@ -32,7 +33,10 @@ export function showDialog(
       isConfirm: !isAlertOnly,
     };
   } else {
-    options = optionsOrMessage;
+    options = {
+      ...optionsOrMessage,
+      isConfirm: optionsOrMessage.isConfirm ?? optionsOrMessage.showCancel ?? false,
+    };
   }
 
   if (dialogHandler) {

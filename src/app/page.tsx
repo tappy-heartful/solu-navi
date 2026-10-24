@@ -3,9 +3,10 @@ import { getHomeAnnouncementsServer } from "@/features/home/api/home-server-acti
 import { getEventsServer } from "@/features/event/api/event-server-actions";
 import { getFeesServer } from "@/features/fee/api/fee-server-actions";
 import { getScoresServer } from "@/features/score/api/score-server-actions";
+import { getBlueNotesServer } from "@/features/blue-note/api/blue-note-server-actions";
 import { adminDb } from "@/lib/firebase-admin";
 import { toPlainObject } from "@/lib/firestore/utils";
-import { Vote, Call, Score } from "@/lib/firestore/types";
+import { Vote, Call, Score, BlueNote } from "@/lib/firestore/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,12 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [announcements, events, fees, scores, votesSnap, callsSnap] = await Promise.all([
+  const [announcements, events, fees, scores, blueNotes, votesSnap, callsSnap] = await Promise.all([
     getHomeAnnouncementsServer(),
     getEventsServer(),
     getFeesServer(),
     getScoresServer(),
+    getBlueNotesServer(),
     adminDb.collection("votes").orderBy("acceptStartDate", "desc").limit(20).get(),
     adminDb.collection("calls").orderBy("acceptStartDate", "desc").limit(20).get(),
   ]);
@@ -33,6 +35,7 @@ export default async function HomePage() {
       events={events}
       fees={fees}
       scores={scores}
+      blueNotes={blueNotes}
       votes={votes}
       calls={calls}
     />
