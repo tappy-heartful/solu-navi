@@ -31,6 +31,7 @@ export default async function MasterPage() {
       isEventAdjustStatusesFromDefault={data.isEventAdjustStatusesFromDefault}
       isGenresFromDefault={data.isGenresFromDefault}
       isScoreStatusesFromDefault={data.isScoreStatusesFromDefault}
+      isMunicipalitiesFromDefault={data.isMunicipalitiesFromDefault}
     />
   );
 }

@@ -42,6 +42,7 @@ export interface MasterPageData {
   isEventAdjustStatusesFromDefault: boolean;
   isGenresFromDefault: boolean;
   isScoreStatusesFromDefault: boolean;
+  isMunicipalitiesFromDefault: boolean;
 }
 
 
@@ -141,12 +142,18 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
   prefectures.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
   // 4. municipalities count
+  let isMunicipalitiesFromDefault = false;
   try {
     const munCountSnap = await adminDb.collection("municipalities").count().get();
     municipalitiesCount = munCountSnap.data().count;
+    if (municipalitiesCount === 0) {
+      municipalitiesCount = DEFAULT_MUNICIPALITIES.length;
+      isMunicipalitiesFromDefault = true;
+    }
   } catch (err) {
     console.error("Failed to fetch municipalities count:", err);
     municipalitiesCount = DEFAULT_MUNICIPALITIES.length;
+    isMunicipalitiesFromDefault = true;
   }
 
   // 5. attendanceStatuses
@@ -252,6 +259,7 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
     isEventAdjustStatusesFromDefault,
     isGenresFromDefault,
     isScoreStatusesFromDefault,
+    isMunicipalitiesFromDefault,
   };
 }
 

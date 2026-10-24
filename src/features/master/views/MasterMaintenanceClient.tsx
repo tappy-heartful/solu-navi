@@ -75,6 +75,8 @@ import {
   faCalendarDays,
   faMusic,
   faFileLines,
+  faTriangleExclamation,
+  faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MasterMaintenance.module.css";
 
@@ -97,6 +99,7 @@ type Props = {
   isEventAdjustStatusesFromDefault?: boolean;
   isGenresFromDefault?: boolean;
   isScoreStatusesFromDefault?: boolean;
+  isMunicipalitiesFromDefault?: boolean;
 };
 
 type TabType =
@@ -109,6 +112,23 @@ type TabType =
   | "scoreStatus"
   | "prefectures"
   | "municipalities";
+
+const TAB_CONFIG: Record<
+  TabType,
+  {
+    label: string;
+  }
+> = {
+  sections: { label: "パート" },
+  roles: { label: "役職" },
+  instruments: { label: "楽器" },
+  attendance: { label: "出欠ステータス" },
+  adjust: { label: "日程調整ステータス" },
+  genres: { label: "ジャンル" },
+  scoreStatus: { label: "譜面状況" },
+  prefectures: { label: "都道府県" },
+  municipalities: { label: "市区町村" },
+};
 
 export function MasterMaintenanceClient({
   initialSections,
@@ -129,6 +149,7 @@ export function MasterMaintenanceClient({
   isEventAdjustStatusesFromDefault,
   isGenresFromDefault,
   isScoreStatusesFromDefault,
+  isMunicipalitiesFromDefault,
 }: Props) {
   const router = useRouter();
   const { userData } = useAuth();
@@ -147,6 +168,19 @@ export function MasterMaintenanceClient({
   const [eventAdjustStatuses, setEventAdjustStatuses] = useState<EventAdjustStatus[]>(initialEventAdjustStatuses);
   const [genres, setGenres] = useState<Genre[]>(initialGenres);
   const [scoreStatuses, setScoreStatuses] = useState<ScoreStatus[]>(initialScoreStatuses);
+
+  // 未登録（初期JSONファイル表示中）フラグ管理
+  const [fromDefaultMap, setFromDefaultMap] = useState<Record<TabType, boolean>>({
+    sections: isSectionsFromDefault,
+    roles: !!isRolesFromDefault,
+    instruments: isInstrumentsFromDefault,
+    attendance: !!isAttendanceStatusesFromDefault,
+    adjust: !!isEventAdjustStatusesFromDefault,
+    genres: !!isGenresFromDefault,
+    scoreStatus: !!isScoreStatusesFromDefault,
+    prefectures: !!isPrefecturesFromDefault,
+    municipalities: !!isMunicipalitiesFromDefault,
+  });
 
   // 役職編集・作成モーダル用
   const [roleModalOpen, setRoleModalOpen] = useState(false);
@@ -1141,6 +1175,18 @@ export function MasterMaintenanceClient({
       setGenres(newGenres);
       setScoreStatuses(newScoreStatuses);
 
+      setFromDefaultMap({
+        sections: false,
+        roles: false,
+        instruments: false,
+        attendance: false,
+        adjust: false,
+        genres: false,
+        scoreStatus: false,
+        prefectures: false,
+        municipalities: false,
+      });
+
       if (selectedPrefectureCode) {
         const updatedMuns = await getClientMunicipalities(selectedPrefectureCode);
         setMunicipalities(updatedMuns);
@@ -1163,6 +1209,154 @@ export function MasterMaintenanceClient({
       });
       await showDialog("初期投入に失敗しました", true);
     }
+  };
+
+  // ---- 初期マスタシード投入 (マスタ個別) ----
+
+  const handleSeedSingle = async (tab: TabType) => {
+    if (!canEdit) return;
+    const config = TAB_CONFIG[tab];
+    const confirmed = await showDialog(
+      `「${config.label}マスタ」の初期データを Firestore に登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）`
+    );
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      const res = await seedMasterData({
+        includeSections: tab === "sections",
+        includeRoles: tab === "roles",
+        includeInstruments: tab === "instruments",
+        includeAttendanceStatuses: tab === "attendance",
+        includeEventAdjustStatuses: tab === "adjust",
+        includeGenres: tab === "genres",
+        includeScoreStatuses: tab === "scoreStatus",
+        includePrefectures: tab === "prefectures",
+        includeMunicipalities: tab === "municipalities",
+        onProgress: (msg) => console.log(msg),
+      });
+
+      await writeLog({
+        action: `マスタデータ個別初期投入: ${config.label}`,
+        dataId: `seed-${tab}`,
+      });
+
+      // 最新データ再取得
+      if (tab === "sections") {
+        const data = await getClientSections();
+        setSections(data);
+      } else if (tab === "roles") {
+        const data = await getClientRoles();
+        setRoles(data);
+      } else if (tab === "instruments") {
+        const data = await getClientInstruments();
+        setInstruments(data);
+      } else if (tab === "attendance") {
+        const data = await getClientAttendanceStatuses();
+        setAttendanceStatuses(data);
+      } else if (tab === "adjust") {
+        const data = await getClientEventAdjustStatuses();
+        setEventAdjustStatuses(data);
+      } else if (tab === "genres") {
+        const data = await getClientGenres();
+        setGenres(data);
+      } else if (tab === "scoreStatus") {
+        const data = await getClientScoreStatuses();
+        setScoreStatuses(data);
+      } else if (tab === "prefectures") {
+        const data = await getClientPrefectures();
+        setPrefectures(data);
+      } else if (tab === "municipalities") {
+        const count = await getClientMunicipalitiesTotalCount();
+        setMunicipalitiesCount(count);
+        if (selectedPrefectureCode) {
+          const updatedMuns = await getClientMunicipalities(selectedPrefectureCode);
+          setMunicipalities(updatedMuns);
+        }
+      }
+
+      setFromDefaultMap((prev) => ({
+        ...prev,
+        [tab]: false,
+      }));
+
+      hideSpinner();
+      await showDialog(`「${config.label}マスタ」の初期データを登録しました。`, true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error(`[MasterMaintenanceClient] ${config.label}初期投入エラー:`, err);
+      await writeLog({
+        action: `マスタデータ個別初期投入: ${config.label}`,
+        dataId: `seed-${tab}`,
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog(`${config.label}マスタの初期投入に失敗しました`, true);
+    }
+  };
+
+  // 各タブ共通のカードヘッダー & 未登録アラート描画
+  const renderMasterHeader = (tabKey: TabType, title: string) => {
+    const isDefault = fromDefaultMap[tabKey];
+    const config = TAB_CONFIG[tabKey];
+
+    return (
+      <>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardHeaderLeft}>
+            <h2 className={styles.cardTitle}>{title}</h2>
+            {isDefault ? (
+              <span className={styles.badgeUnregistered}>
+                <FontAwesomeIcon icon={faTriangleExclamation} /> マスタ未登録（初期JSONを表示中）
+              </span>
+            ) : (
+              <span className={styles.badgeRegistered}>
+                <FontAwesomeIcon icon={faCircleCheck} /> Firestore登録済み
+              </span>
+            )}
+          </div>
+          {canEdit && (
+            <div className={styles.cardHeaderActions}>
+              <button
+                type="button"
+                className={styles.btnSeedSingle}
+                onClick={() => handleSeedSingle(tabKey)}
+                title={`${config.label}マスタの初期データをFirestoreに投入します`}
+              >
+                <FontAwesomeIcon icon={faDatabase} /> {config.label}初期投入
+              </button>
+            </div>
+          )}
+        </div>
+
+        {isDefault && (
+          <div className={styles.unregisteredAlert}>
+            <div className={styles.unregisteredAlertIcon}>
+              <FontAwesomeIcon icon={faTriangleExclamation} />
+            </div>
+            <div className={styles.unregisteredAlertContent}>
+              <strong className={styles.unregisteredAlertTitle}>
+                {config.label}マスタは未登録です（初期設定JSONを表示中）
+              </strong>
+              <p className={styles.unregisteredAlertDesc}>
+                Firestoreにデータが存在しないため、定義ファイル（<code>src/data/master/*.json</code>）の内容を表示しています。
+                マスタデータをFirestoreに登録して編集・追加・削除できるようにするには、「{config.label}初期投入」ボタンを押してください。
+              </p>
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                className={styles.btnUnregisteredAlertAction}
+                onClick={() => handleSeedSingle(tabKey)}
+              >
+                <FontAwesomeIcon icon={faDatabase} /> {config.label}初期データを投入
+              </button>
+            )}
+          </div>
+        )}
+      </>
+    );
   };
 
   // セクションIDからパート名を取得する辞書
@@ -1215,7 +1409,15 @@ export function MasterMaintenanceClient({
                   onClick={handleSeed}
                   title="全マスタの初期データをFirestoreに一括投入します"
                 >
-                  <FontAwesomeIcon icon={faDatabase} /> 初期データ投入
+                  <FontAwesomeIcon icon={faDatabase} /> 全マスタ一括初期投入
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnSeedCurrentTab}
+                  onClick={() => handleSeedSingle(currentTab)}
+                  title={`${TAB_CONFIG[currentTab].label}マスタの初期データをFirestoreに投入します`}
+                >
+                  <FontAwesomeIcon icon={faDatabase} /> {TAB_CONFIG[currentTab].label}初期データ投入
                 </button>
                 {currentTab === "sections" && (
                   <button
@@ -1313,6 +1515,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faLayerGroup} />
             パート
             <span className={styles.tabBadge}>{sections.length}</span>
+            {fromDefaultMap.sections && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1322,6 +1527,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faUserGear} />
             役職
             <span className={styles.tabBadge}>{roles.length}</span>
+            {fromDefaultMap.roles && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1331,6 +1539,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faGuitar} />
             楽器
             <span className={styles.tabBadge}>{instruments.length}</span>
+            {fromDefaultMap.instruments && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1340,6 +1551,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faUserCheck} />
             出欠
             <span className={styles.tabBadge}>{attendanceStatuses.length}</span>
+            {fromDefaultMap.attendance && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1349,6 +1563,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faCalendarDays} />
             日程調整
             <span className={styles.tabBadge}>{eventAdjustStatuses.length}</span>
+            {fromDefaultMap.adjust && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1358,6 +1575,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faMusic} />
             ジャンル
             <span className={styles.tabBadge}>{genres.length}</span>
+            {fromDefaultMap.genres && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1367,6 +1587,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faFileLines} />
             譜面状況
             <span className={styles.tabBadge}>{scoreStatuses.length}</span>
+            {fromDefaultMap.scoreStatus && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1376,6 +1599,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faLocationDot} />
             都道府県
             <span className={styles.tabBadge}>{prefectures.length}</span>
+            {fromDefaultMap.prefectures && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
           <button
             type="button"
@@ -1385,6 +1611,9 @@ export function MasterMaintenanceClient({
             <FontAwesomeIcon icon={faBuilding} />
             市区町村
             <span className={styles.tabBadge}>{municipalitiesCount}</span>
+            {fromDefaultMap.municipalities && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
           </button>
         </div>
 
@@ -1392,9 +1621,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: パート一覧 */}
         {currentTab === "sections" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>パート一覧</h2>
-            </div>
+            {renderMasterHeader("sections", "パート一覧")}
             {sections.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1481,9 +1708,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 役職一覧 */}
         {currentTab === "roles" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>役職一覧</h2>
-            </div>
+            {renderMasterHeader("roles", "役職一覧")}
             {roles.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1556,9 +1781,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 楽器一覧 */}
         {currentTab === "instruments" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>楽器一覧</h2>
-            </div>
+            {renderMasterHeader("instruments", "楽器一覧")}
             {instruments.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1633,9 +1856,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 出欠ステータス一覧 */}
         {currentTab === "attendance" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>出欠ステータス一覧（全{attendanceStatuses.length}件）</h2>
-            </div>
+            {renderMasterHeader("attendance", `出欠ステータス一覧（全${attendanceStatuses.length}件）`)}
             {attendanceStatuses.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1704,9 +1925,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 日程調整ステータス一覧 */}
         {currentTab === "adjust" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>日程調整ステータス一覧（全{eventAdjustStatuses.length}件）</h2>
-            </div>
+            {renderMasterHeader("adjust", `日程調整ステータス一覧（全${eventAdjustStatuses.length}件）`)}
             {eventAdjustStatuses.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1779,9 +1998,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: ジャンル一覧 */}
         {currentTab === "genres" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>ジャンル一覧（全{genres.length}件）</h2>
-            </div>
+            {renderMasterHeader("genres", `ジャンル一覧（全${genres.length}件）`)}
             {genres.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1850,9 +2067,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 譜面状況一覧 */}
         {currentTab === "scoreStatus" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>譜面状況一覧（全{scoreStatuses.length}件）</h2>
-            </div>
+            {renderMasterHeader("scoreStatus", `譜面状況一覧（全${scoreStatuses.length}件）`)}
             {scoreStatuses.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1922,9 +2137,7 @@ export function MasterMaintenanceClient({
         {currentTab === "prefectures" && (
 
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>都道府県一覧（全{prefectures.length}件）</h2>
-            </div>
+            {renderMasterHeader("prefectures", `都道府県一覧（全${prefectures.length}件）`)}
             {prefectures.length === 0 ? (
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>
@@ -1993,11 +2206,7 @@ export function MasterMaintenanceClient({
         {/* タブコンテンツ: 市区町村一覧 */}
         {currentTab === "municipalities" && (
           <div className={styles.contentCard}>
-            <div className={styles.cardHeader}>
-              <h2 className={styles.cardTitle}>
-                市区町村一覧（マスタ総数: {municipalitiesCount}件）
-              </h2>
-            </div>
+            {renderMasterHeader("municipalities", `市区町村一覧（マスタ総数: ${municipalitiesCount}件）`)}
             {/* 検索・絞り込みフィルターバー */}
             <div className={styles.filterBar}>
               <select
