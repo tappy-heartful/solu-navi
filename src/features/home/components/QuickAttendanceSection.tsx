@@ -10,8 +10,8 @@ import {
   faCommentDots,
   faClock,
   faLocationDot,
-  faFloppyDisk,
   faCheckDouble,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { Event, AttendanceStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,8 +21,6 @@ import {
   getDayOfWeek,
   format,
   showDialog,
-  showSpinner,
-  hideSpinner,
   writeLog,
 } from "@/lib/functions";
 import { db } from "@/lib/firebase";
@@ -38,9 +36,9 @@ interface EventAnswerState {
   status: string; // status ID (e.g. "1" or "2")
   comment: string;
   isCommentOpen: boolean;
-  initialStatus: string;
-  initialComment: string;
 }
+
+type SaveStatus = "idle" | "saving" | "saved";
 
 export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
   events = [],
@@ -52,8 +50,9 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
 
   const [statuses, setStatuses] = useState<AttendanceStatus[]>(DEFAULT_ATTENDANCE_STATUSES);
   const [answersMap, setAnswersMap] = useState<Record<string, EventAnswerState>>({});
+  const [savingMap, setSavingMap] = useState<Record<string, SaveStatus>>({});
+  const [isAllSaving, setIsAllSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   // 今日以降の直近3件の出欠イベントを抽出
   const upcomingEvents = useMemo(() => {
@@ -103,16 +102,12 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                 status: st,
                 comment: cm,
                 isCommentOpen: !!cm,
-                initialStatus: st,
-                initialComment: cm,
               };
             } else {
               answers[ev.id] = {
                 status: "",
                 comment: "",
                 isCommentOpen: false,
-                initialStatus: "",
-                initialComment: "",
               };
             }
           } catch (e) {
@@ -121,8 +116,6 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
               status: "",
               comment: "",
               isCommentOpen: false,
-              initialStatus: "",
-              initialComment: "",
             };
           }
         })
@@ -140,26 +133,64 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
     loadData();
   }, [loadData]);
 
-  // 1件のステータス切り替え
-  const handleSelectStatus = (eventId: string, statusId: string) => {
-    setAnswersMap((prev) => {
-      const current = prev[eventId] || {
-        status: "",
-        comment: "",
-        isCommentOpen: false,
-        initialStatus: "",
-        initialComment: "",
-      };
-      // 同じステータスをもう一度タップした場合は選択解除（未選択）
-      const newStatus = current.status === statusId ? "" : statusId;
-      return {
+  // 1件のステータスを選択し、その場で即座に回答完了（保存）
+  const handleSelectStatus = async (eventId: string, statusId: string) => {
+    if (!uid) {
+      await showDialog("出欠を登録するにはログインしてください", true);
+      return;
+    }
+
+    if (savingMap[eventId] === "saving" || isAllSaving) return;
+
+    const current = answersMap[eventId] || {
+      status: "",
+      comment: "",
+      isCommentOpen: false,
+    };
+
+    // 楽観的UI更新
+    setAnswersMap((prev) => ({
+      ...prev,
+      [eventId]: {
+        ...current,
+        status: statusId,
+      },
+    }));
+
+    setSavingMap((prev) => ({ ...prev, [eventId]: "saving" }));
+
+    try {
+      await submitAttendanceAnswer(eventId, uid, statusId, current.comment);
+      await writeLog({
+        action: `クイック出欠回答: eventId=${eventId}, status=${statusId}`,
+      });
+
+      setSavingMap((prev) => ({ ...prev, [eventId]: "saved" }));
+      setTimeout(() => {
+        setSavingMap((prev) => {
+          const next = { ...prev };
+          if (next[eventId] === "saved") {
+            delete next[eventId];
+          }
+          return next;
+        });
+      }, 2000);
+
+      if (onUpdated) onUpdated();
+    } catch (err: any) {
+      console.error("[QuickAttendanceSection] Save error:", err);
+      // エラー時はロールバック
+      setAnswersMap((prev) => ({
         ...prev,
-        [eventId]: {
-          ...current,
-          status: newStatus,
-        },
-      };
-    });
+        [eventId]: current,
+      }));
+      setSavingMap((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+      await showDialog(`出欠の保存に失敗しました: ${err.message}`, true);
+    }
   };
 
   // コメント入力
@@ -169,8 +200,6 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
         status: "",
         comment: "",
         isCommentOpen: true,
-        initialStatus: "",
-        initialComment: "",
       };
       return {
         ...prev,
@@ -182,6 +211,36 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
     });
   };
 
+  // コメント入力欄からフォーカスが外れた際に自動保存
+  const handleCommentBlur = async (eventId: string) => {
+    if (!uid) return;
+    const current = answersMap[eventId];
+    if (!current || !current.status) return;
+
+    setSavingMap((prev) => ({ ...prev, [eventId]: "saving" }));
+    try {
+      await submitAttendanceAnswer(eventId, uid, current.status, current.comment);
+      setSavingMap((prev) => ({ ...prev, [eventId]: "saved" }));
+      setTimeout(() => {
+        setSavingMap((prev) => {
+          const next = { ...prev };
+          if (next[eventId] === "saved") {
+            delete next[eventId];
+          }
+          return next;
+        });
+      }, 2000);
+      if (onUpdated) onUpdated();
+    } catch (err: any) {
+      console.error("[QuickAttendanceSection] Comment save error:", err);
+      setSavingMap((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+    }
+  };
+
   // コメント入力欄のトグル
   const toggleCommentOpen = (eventId: string) => {
     setAnswersMap((prev) => {
@@ -189,8 +248,6 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
         status: "",
         comment: "",
         isCommentOpen: false,
-        initialStatus: "",
-        initialComment: "",
       };
       return {
         ...prev,
@@ -202,97 +259,54 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
     });
   };
 
-  // 一括出席 (全て「出ます！」にセット)
-  const handleSetAllStatus = (targetStatusId: string) => {
-    setAnswersMap((prev) => {
-      const next = { ...prev };
-      upcomingEvents.forEach((ev) => {
-        const cur = next[ev.id] || {
-          status: "",
-          comment: "",
-          isCommentOpen: false,
-          initialStatus: "",
-          initialComment: "",
-        };
-        next[ev.id] = {
-          ...cur,
-          status: targetStatusId,
-        };
-      });
-      return next;
+  // 一括ショートカット (表示中の全イベントを即座に回答完了)
+  const handleSetAllStatusAndSave = async (targetStatusId: string) => {
+    if (!uid || upcomingEvents.length === 0 || isAllSaving) return;
+
+    setIsAllSaving(true);
+    const nextSaving: Record<string, SaveStatus> = {};
+    const nextAnswers = { ...answersMap };
+
+    upcomingEvents.forEach((ev) => {
+      nextSaving[ev.id] = "saving";
+      nextAnswers[ev.id] = {
+        ...(nextAnswers[ev.id] || { comment: "", isCommentOpen: false }),
+        status: targetStatusId,
+      };
     });
-  };
 
-  // 変更があるかどうかの判定
-  const hasChanges = useMemo(() => {
-    return upcomingEvents.some((ev) => {
-      const state = answersMap[ev.id];
-      if (!state) return false;
-      return (
-        state.status !== state.initialStatus ||
-        state.comment.trim() !== state.initialComment.trim()
-      );
-    });
-  }, [upcomingEvents, answersMap]);
-
-  // 一括登録の実行
-  const handleSaveAll = async () => {
-    if (!uid) {
-      await showDialog("出欠を登録するにはログインしてください", true);
-      return;
-    }
-
-    // 1件もステータスが選択されていない場合は確認
-    const anySelected = upcomingEvents.some((ev) => answersMap[ev.id]?.status);
-    if (!anySelected) {
-      await showDialog("出欠ステータスを選択してください", true);
-      return;
-    }
-
-    setIsSaving(true);
-    showSpinner();
+    setAnswersMap(nextAnswers);
+    setSavingMap(nextSaving);
 
     try {
-      const promises = upcomingEvents.map(async (ev) => {
-        const state = answersMap[ev.id];
-        if (!state) return;
-        // ステータスが選択されているもの、または元々回答があったものは更新
-        if (state.status || state.initialStatus) {
-          await submitAttendanceAnswer(ev.id, uid, state.status, state.comment);
-        }
-      });
+      await Promise.all(
+        upcomingEvents.map((ev) => {
+          const cur = nextAnswers[ev.id];
+          return submitAttendanceAnswer(ev.id, uid, targetStatusId, cur?.comment);
+        })
+      );
 
-      await Promise.all(promises);
       await writeLog({
-        action: `出欠一括登録(${upcomingEvents.length}件)`,
+        action: `クイック出欠一括回答(${upcomingEvents.length}件): status=${targetStatusId}`,
       });
 
-      hideSpinner();
-      await showDialog(`直近${upcomingEvents.length}件の出欠を一括登録しました`, true);
-
-      // 初期値を更新して変更フラグを解消
-      setAnswersMap((prev) => {
-        const next = { ...prev };
-        upcomingEvents.forEach((ev) => {
-          if (next[ev.id]) {
-            next[ev.id] = {
-              ...next[ev.id],
-              initialStatus: next[ev.id].status,
-              initialComment: next[ev.id].comment,
-            };
-          }
-        });
-        return next;
+      const savedMap: Record<string, SaveStatus> = {};
+      upcomingEvents.forEach((ev) => {
+        savedMap[ev.id] = "saved";
       });
+      setSavingMap(savedMap);
+
+      setTimeout(() => {
+        setSavingMap({});
+      }, 2000);
 
       if (onUpdated) onUpdated();
-      router.refresh();
     } catch (err: any) {
-      hideSpinner();
-      console.error("[QuickAttendanceSection] Save error:", err);
-      await showDialog(`出欠の一括登録に失敗しました: ${err.message}`, true);
+      console.error("[QuickAttendanceSection] Set all error:", err);
+      setSavingMap({});
+      await showDialog(`出欠の一括保存に失敗しました: ${err.message}`, true);
     } finally {
-      setIsSaving(false);
+      setIsAllSaving(false);
     }
   };
 
@@ -316,10 +330,10 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
             </div>
             <div>
               <div className={styles.titleRow}>
-                <h3 className={styles.title}>出欠一括登録</h3>
+                <h3 className={styles.title}>出欠クイック登録</h3>
                 <span className={styles.countBadge}>直近{upcomingEvents.length}件</span>
               </div>
-              <p className={styles.subtitle}>先の練習・イベントの出欠をまとめて登録できます</p>
+              <p className={styles.subtitle}>ボタンをタップするとその場で即座に回答完了します</p>
             </div>
           </div>
 
@@ -328,18 +342,20 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
             <div className={styles.quickShortcuts}>
               <button
                 type="button"
+                disabled={isAllSaving}
                 className={`${styles.shortcutBtn} ${styles.shortcutAttend}`}
-                onClick={() => handleSetAllStatus(attendStatus.id)}
-                title="表示されているすべてのイベントを出席にします"
+                onClick={() => handleSetAllStatusAndSave(attendStatus.id)}
+                title="表示されているすべてのイベントを出席として即時登録します"
               >
                 <FontAwesomeIcon icon={faCheckDouble} /> すべて{attendStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "出席"}
               </button>
               {absentStatus && absentStatus.id !== attendStatus.id && (
                 <button
                   type="button"
+                  disabled={isAllSaving}
                   className={`${styles.shortcutBtn} ${styles.shortcutAbsent}`}
-                  onClick={() => handleSetAllStatus(absentStatus.id)}
-                  title="表示されているすべてのイベントを欠席にします"
+                  onClick={() => handleSetAllStatusAndSave(absentStatus.id)}
+                  title="表示されているすべてのイベントを欠席として即時登録します"
                 >
                   <FontAwesomeIcon icon={faXmark} /> すべて{absentStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "欠席"}
                 </button>
@@ -350,15 +366,13 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
 
         {/* イベント一覧（3件） */}
         <div className={styles.eventList}>
-          {upcomingEvents.map((ev, idx) => {
+          {upcomingEvents.map((ev) => {
             const dateStr = ev.date || ev.startDate || "";
             const dayOfWeek = dateStr ? getDayOfWeek(dateStr, true) : "";
             const currentAns = answersMap[ev.id] || {
               status: "",
               comment: "",
               isCommentOpen: false,
-              initialStatus: "",
-              initialComment: "",
             };
 
             const timeDisplay = ev.isAllDay
@@ -368,6 +382,9 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
               : ev.startTime
               ? `${ev.startTime}〜`
               : "時間未定";
+
+            const isEventSaving = savingMap[ev.id] === "saving";
+            const isEventSaved = savingMap[ev.id] === "saved";
 
             return (
               <div key={ev.id} className={styles.eventItem}>
@@ -386,6 +403,16 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                   <div className={styles.infoCol}>
                     <div className={styles.eventTitleRow}>
                       <span className={styles.eventTitle}>{ev.title}</span>
+                      {isEventSaved && (
+                        <span className={styles.savedBadge}>
+                          <FontAwesomeIcon icon={faCheck} /> 回答完了
+                        </span>
+                      )}
+                      {isEventSaving && (
+                        <span className={styles.savingBadge}>
+                          <FontAwesomeIcon icon={faSpinner} spin /> 保存中
+                        </span>
+                      )}
                     </div>
                     <div className={styles.metaRow}>
                       <span className={styles.timeMeta}>
@@ -407,11 +434,13 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                   <div className={styles.statusButtonGroup}>
                     {statuses.map((st) => {
                       const isSelected = currentAns.status === st.id;
+                      const isThisSaving = isEventSaving && isSelected;
 
                       return (
                         <button
                           key={st.id}
                           type="button"
+                          disabled={isEventSaving || isAllSaving}
                           className={`${styles.statusBtn} ${
                             isSelected
                               ? styles.statusBtnSelected
@@ -420,9 +449,11 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                           onClick={() => handleSelectStatus(ev.id, st.id)}
                         >
                           <span className={styles.statusBtnText}>{st.name}</span>
-                          {isSelected && (
+                          {isThisSaving ? (
+                            <FontAwesomeIcon icon={faSpinner} spin className={styles.checkIcon} />
+                          ) : isSelected ? (
                             <FontAwesomeIcon icon={faCheck} className={styles.checkIcon} />
-                          )}
+                          ) : null}
                         </button>
                       );
                     })}
@@ -451,31 +482,13 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                       placeholder="連絡事項・備考（例: 19時合流予定、パート練のみ参加）"
                       value={currentAns.comment}
                       onChange={(e) => handleCommentChange(ev.id, e.target.value)}
+                      onBlur={() => handleCommentBlur(ev.id)}
                     />
                   </div>
                 )}
               </div>
             );
           })}
-        </div>
-
-        {/* フッター: 一括保存ボタン */}
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={`${styles.saveButton} ${hasChanges ? styles.saveButtonActive : ""}`}
-            onClick={handleSaveAll}
-            disabled={isSaving}
-          >
-            <FontAwesomeIcon icon={faFloppyDisk} className={styles.saveIcon} />
-            <span>
-              {isSaving
-                ? "登録中..."
-                : hasChanges
-                ? `変更内容を一括登録する`
-                : `出欠を一括登録する`}
-            </span>
-          </button>
         </div>
       </div>
     </section>

@@ -187,6 +187,35 @@
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.savedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.savingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .eventTitle {
@@ -348,60 +377,4 @@
   box-shadow: 0 0 0 2px rgba(20, 96, 129, 0.12);
 }
 
-/* フッター: 一括登録ボタン */
-.footer {
-  padding: 0.875rem 1.125rem;
-  background: #ffffff;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: center;
-}
 
-.saveButton {
-  width: 100%;
-  max-width: 420px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  border: none;
-  background: #e2e8f0;
-  color: #64748b;
-  font-size: 0.95rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.saveButton:hover:not(:disabled) {
-  background: #cbd5e1;
-  color: #334155;
-}
-
-.saveButtonActive {
-  background: linear-gradient(135deg, #146081 0%, #0d9488 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(20, 96, 129, 0.35);
-  transform: translateY(-1px);
-}
-
-.saveButtonActive:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0f4c67 0%, #0f766e 100%);
-  box-shadow: 0 6px 18px rgba(20, 96, 129, 0.45);
-}
-
-.saveButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.saveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.saveIcon {
-  font-size: 1rem;
-}
