@@ -1,9 +1,52 @@
 [
-  { "id": "1", "name": "Swing", "order": 1 },
-  { "id": "2", "name": "Latin", "order": 2 },
-  { "id": "3", "name": "Funk / Fusion", "order": 3 },
-  { "id": "4", "name": "Ballad", "order": 4 },
-  { "id": "5", "name": "Modern / Contemporary", "order": 5 },
-  { "id": "6", "name": "Rock / Pop", "order": 6 },
-  { "id": "7", "name": "Shuffle / Groove", "order": 7 }
+  {
+    "id": "1",
+    "name": "Medium 4beat",
+    "order": 1
+  },
+  {
+    "id": "2",
+    "name": "Fast 4beat",
+    "order": 2
+  },
+  {
+    "id": "3",
+    "name": "Medium Fast 4beat",
+    "order": 3
+  },
+  {
+    "id": "4",
+    "name": "Slow 4beat",
+    "order": 4
+  },
+  {
+    "id": "5",
+    "name": "Feature",
+    "order": 5
+  },
+  {
+    "id": "6",
+    "name": "Latin",
+    "order": 6
+  },
+  {
+    "id": "7",
+    "name": "Vocal",
+    "order": 7
+  },
+  {
+    "id": "8",
+    "name": "Ballad",
+    "order": 8
+  },
+  {
+    "id": "9",
+    "name": "Waltz",
+    "order": 9
+  },
+  {
+    "id": "10",
+    "name": "8beat",
+    "order": 10
+  }
 ]
