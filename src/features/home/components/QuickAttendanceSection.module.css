@@ -344,6 +344,9 @@
 /* コメント入力欄 (アコーディオン展開) */
 .commentContainer {
   margin-top: -0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   animation: fadeIn 0.15s ease-out;
 }
 
@@ -359,8 +362,9 @@
 }
 
 .commentInput {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
   font-size: 0.8rem;
   border-radius: 8px;
   border: 1.5px solid #cbd5e1;
@@ -369,12 +373,46 @@
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s, background-color 0.15s;
+  min-height: 38px;
 }
 
 .commentInput:focus {
   border-color: #146081;
   background: #ffffff;
   box-shadow: 0 0 0 2px rgba(20, 96, 129, 0.12);
+}
+
+.commentSubmitBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  border: none;
+  background: #146081;
+  color: #ffffff;
+  font-size: 0.775rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  min-height: 38px;
+  flex-shrink: 0;
+}
+
+.commentSubmitBtn:hover:not(:disabled) {
+  background: #0f4a64;
+  transform: translateY(-1px);
+}
+
+.commentSubmitBtn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.commentSubmitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 

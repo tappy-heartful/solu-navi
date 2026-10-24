@@ -12,6 +12,7 @@ import {
   faLocationDot,
   faCheckDouble,
   faSpinner,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { Event, AttendanceStatus } from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -211,15 +212,29 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
     });
   };
 
-  // コメント入力欄からフォーカスが外れた際に自動保存
-  const handleCommentBlur = async (eventId: string) => {
-    if (!uid) return;
+  // メモ（連絡事項）の送信保存
+  const handleSaveComment = async (eventId: string) => {
+    if (!uid) {
+      await showDialog("メモを登録するにはログインしてください", true);
+      return;
+    }
     const current = answersMap[eventId];
-    if (!current || !current.status) return;
+    if (!current) return;
+
+    if (!current.status) {
+      await showDialog("出欠ステータス（出ます／おやすみ）を選択してからメモを送信してください", true);
+      return;
+    }
+
+    if (savingMap[eventId] === "saving" || isAllSaving) return;
 
     setSavingMap((prev) => ({ ...prev, [eventId]: "saving" }));
     try {
       await submitAttendanceAnswer(eventId, uid, current.status, current.comment);
+      await writeLog({
+        action: `出欠メモ送信: eventId=${eventId}, status=${current.status}, comment=${current.comment}`,
+      });
+
       setSavingMap((prev) => ({ ...prev, [eventId]: "saved" }));
       setTimeout(() => {
         setSavingMap((prev) => {
@@ -238,6 +253,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
         delete next[eventId];
         return next;
       });
+      await showDialog(`メモの送信に失敗しました: ${err.message}`, true);
     }
   };
 
@@ -482,8 +498,27 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
                       placeholder="連絡事項・備考（例: 19時合流予定、パート練のみ参加）"
                       value={currentAns.comment}
                       onChange={(e) => handleCommentChange(ev.id, e.target.value)}
-                      onBlur={() => handleCommentBlur(ev.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                          e.preventDefault();
+                          handleSaveComment(ev.id);
+                        }
+                      }}
                     />
+                    <button
+                      type="button"
+                      disabled={isEventSaving || isAllSaving}
+                      className={styles.commentSubmitBtn}
+                      onClick={() => handleSaveComment(ev.id)}
+                      title="メモを送信して登録"
+                    >
+                      {isEventSaving ? (
+                        <FontAwesomeIcon icon={faSpinner} spin />
+                      ) : (
+                        <FontAwesomeIcon icon={faPaperPlane} />
+                      )}
+                      <span>送信</span>
+                    </button>
                   </div>
                 )}
               </div>
