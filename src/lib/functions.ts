@@ -404,38 +404,111 @@ export function getCurrentAcademicYear(dateInput?: any): number {
   }
 }
 
+// --- 学年・回生判定共通関数 ---
+
 /**
- * 入学年度から現在の回生・学年を算出
- * 4月1日 00:00:00 (JST) に進級し、回生が自動的に切り替わる
- * 例 (2026年度 = 2026年4月1日〜2027年3月31日の場合):
- * 2026年入学 -> 1回生 (2026年3月31日までは「新入生」)
- * 2025年入学 -> 2回生 (2026年3月31日までは「1回生」)
- * 2024年入学 -> 3回生 (2026年3月31日までは「2回生」)
- * 2023年入学 -> 4回生 (2026年3月31日までは「3回生」)
- * 2022年以前 -> OB/OG
+ * 入学年度から現在の回生・学年を判定（サークル規約に完全準拠）
+ *
+ * 【回生判定ルール】
+ * - 1回生: 1年目 4/1 〜 2年目 3/31
+ * - 2回生: 2年目 4/1 〜 3年目 3/31
+ * - 3回生: 3年目 4/1 〜 12/31（※12月引退）
+ * - それ以降（4年目 1/1 以降）: OBOG
+ * - 1回生開始前（1年目 4/1 より前）: 新入生
+ *
+ * @param enrollmentYear 入学年度 (例: 2024)
+ * @param dateOrSettings 判定基準日 (Date / 文字列 / タイムスタンプ) または 任意の引数（後方互換）
  */
 export function getGradeFromEnrollmentYear(
   enrollmentYear?: number | string | null,
-  dateInput?: any
+  dateOrSettings?: any
 ): string {
   if (!enrollmentYear) return "未設定";
   const yearNum = typeof enrollmentYear === "string" ? parseInt(enrollmentYear, 10) : enrollmentYear;
   if (isNaN(yearNum) || yearNum <= 0) return "未設定";
 
-  const currentAcademicYear = getCurrentAcademicYear(dateInput);
-  const diff = currentAcademicYear - yearNum + 1;
+  // 判定基準日の JST 年月日を取得
+  const targetDateInput =
+    dateOrSettings && (dateOrSettings instanceof Date || typeof dateOrSettings === "string" || typeof dateOrSettings === "number")
+      ? new Date(dateOrSettings)
+      : new Date();
 
-  if (diff <= 0) {
+  let targetYear: number;
+  let targetMonth: number;
+  let targetDay: number;
+
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(targetDateInput);
+    const yStr = parts.find((p) => p.type === "year")?.value;
+    const mStr = parts.find((p) => p.type === "month")?.value;
+    const dStr = parts.find((p) => p.type === "day")?.value;
+    targetYear = yStr ? parseInt(yStr, 10) : targetDateInput.getFullYear();
+    targetMonth = mStr ? parseInt(mStr, 10) : targetDateInput.getMonth() + 1;
+    targetDay = dStr ? parseInt(dStr, 10) : targetDateInput.getDate();
+  } catch {
+    const jst = getJSTDate(targetDateInput);
+    targetYear = jst.getUTCFullYear();
+    targetMonth = jst.getUTCMonth() + 1;
+    targetDay = jst.getUTCDate();
+  }
+
+  // 判定基準日の数値表現 YYYYMMDD (例: 20261026)
+  const targetYMD = targetYear * 10000 + targetMonth * 100 + targetDay;
+
+  // 1回生: 入学年4/1 〜 翌年3/31
+  const g1Start = yearNum * 10000 + 401;
+  const g1End = (yearNum + 1) * 10000 + 331;
+
+  // 2回生: 入学2年目4/1 〜 3年目3/31
+  const g2Start = (yearNum + 1) * 10000 + 401;
+  const g2End = (yearNum + 2) * 10000 + 331;
+
+  // 3回生: 入学3年目4/1 〜 3年目12/31 (12月引退)
+  const g3Start = (yearNum + 2) * 10000 + 401;
+  const g3End = (yearNum + 2) * 10000 + 1231;
+
+  // 判定
+  if (targetYMD < g1Start) {
     return "新入生";
-  } else if (diff === 1) {
+  }
+  if (targetYMD >= g1Start && targetYMD <= g1End) {
     return "1回生";
-  } else if (diff === 2) {
+  }
+  if (targetYMD >= g2Start && targetYMD <= g2End) {
     return "2回生";
-  } else if (diff === 3) {
+  }
+  if (targetYMD >= g3Start && targetYMD <= g3End) {
     return "3回生";
-  } else {
+  }
+  if (targetYMD > g3End) {
     return "OBOG";
   }
+
+  // 期間の隙間がある場合の安全フォールバック
+  if (targetYMD < g2Start) {
+    return "1回生";
+  }
+  if (targetYMD < g3Start) {
+    return "2回生";
+  }
+  return "OBOG";
+}
+
+/**
+ * 特定の回生・学年かどうかを判定する共通述語関数
+ */
+export function isGrade(
+  enrollmentYear?: number | string | null,
+  targetGrade?: "1回生" | "2回生" | "3回生" | "OBOG" | "新入生",
+  dateOrSettings?: any
+): boolean {
+  if (!enrollmentYear || !targetGrade) return false;
+  return getGradeFromEnrollmentYear(enrollmentYear, dateOrSettings) === targetGrade;
 }
 
 /**
