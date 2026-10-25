@@ -1,0 +1,70 @@
+/* FeeEditClient.module.css */
+
+.targetSection {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.targetLabel {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+}
+
+.targetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.targetCountInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.targetBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.35rem 0.75rem;
+  background-color: #ccfbf1;
+  color: #0f766e;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  border: 1px solid #99f6e4;
+}
+
+.targetHint {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.openModalBtn {
+  background-color: #ffffff;
+  color: var(--primary, #146081);
+  border: 1.5px solid var(--primary, #146081);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.openModalBtn:hover {
+  background-color: #e8f4f8;
+  transform: translateY(-1px);
+}

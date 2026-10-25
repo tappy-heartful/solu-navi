@@ -33,6 +33,7 @@ export interface UserDoc {
   isLiveAdmin?: boolean;      // ライブ管理者
   isBoardAdmin?: boolean;     // 掲示板管理者
   isTicketAdmin?: boolean;    // チケット管理者
+  isSettingsAdmin?: boolean;  // 設定管理者 (LINEグループID、表示件数等の編集)
   createdAt?: number | Timestamp | FieldValue;
   updatedAt?: number | Timestamp | FieldValue;
   [key: string]: any;
@@ -189,6 +190,7 @@ export interface Fee {
   dueDate: string;        // 期日 "yyyy.MM.dd" または "yyyy-MM-dd"
   description?: string;   // 案内・備考
   targetGrades?: string[]; // 対象学年 (空なら全員)
+  targetUserIds?: string[]; // 集金対象部員のUID一覧 (空または未設定なら全員対象)
   createdAt?: number;
   updatedAt?: number;
   createdBy?: string;
@@ -368,5 +370,23 @@ export interface BlueNote {
   createdBy?: string;
   createdAt?: number;
   updatedAt?: number;
+}
+
+/**
+ * アプリ・システム設定
+ */
+export interface AppSettings {
+  id?: string;
+  generalLineGroupId?: string; // 全体LINEグループID
+  sectionLineGroupIds?: Record<string, string>; // パート別LINEグループID { [sectionId]: groupId }
+  homeAttendanceDays?: number; // ホーム画面の出欠表示日数（デフォルト: 7日分）
+  homeAttendanceCount?: number; // 旧互換用
+  homeScoreCount?: number; // ホーム画面の新着譜面表示件数（デフォルト: 6）
+  homeMediaCount?: number; // ホーム画面の録音・メディア表示件数（デフォルト: 4）
+  showCallInAnnouncement?: boolean; // 曲募集をお知らせに表示するか（デフォルト: true）
+  showVoteInAnnouncement?: boolean; // 曲投票をお知らせに表示するか（デフォルト: true）
+  showFeeInAnnouncement?: boolean;  // 未払い部費をお知らせに表示するか（デフォルト: true）
+  updatedAt?: number;
+  updatedBy?: string;
 }
 

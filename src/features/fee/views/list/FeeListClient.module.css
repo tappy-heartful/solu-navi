@@ -1,8 +1,66 @@
+.sectionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.sectionArea {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding-left: 10px;
+}
+
+.activeTitle {
+  border-left: 4px solid #0284c7;
+  color: #1e293b;
+}
+
+.completedTitle {
+  border-left: 4px solid #10b981;
+  color: #1e293b;
+}
+
+.countBadge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.sectionEmptyState {
+  text-align: center;
+  padding: 24px 16px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
 .cardList {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 24px;
 }
 
 .feeCard {

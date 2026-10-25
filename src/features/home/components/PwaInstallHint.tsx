@@ -22,7 +22,7 @@ export function PwaInstallHint({ isInsideAnnouncement = false }: PwaInstallHintP
   const [isMounted, setIsMounted] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
   const [deviceType, setDeviceType] = useState<"ios" | "android">("ios");
-  const [isExpanded, setIsExpanded] = useState(!isInsideAnnouncement);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);

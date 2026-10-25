@@ -106,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (pathname.startsWith("/fee") && userData.isFeeAdmin) isAdmin = true;
     if (pathname.startsWith("/notice") && userData.isNoticeAdmin) isAdmin = true;
     if (pathname.startsWith("/live") && userData.isLiveAdmin) isAdmin = true;
+    if (pathname.startsWith("/settings") && (userData.isSettingsAdmin || userData.isMasterAdmin)) isAdmin = true;
   }
 
   return (

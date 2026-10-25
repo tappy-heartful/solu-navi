@@ -57,6 +57,11 @@ service cloud.firestore {
       return isSystemAdmin() || (isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlueNoteAdmin == true);
     }
+
+    function isSettingsAdmin() {
+      return isSystemAdmin() || isMasterAdmin() || (isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSettingsAdmin == true);
+    }
     
     // ユーザー自身かどうかの判定
     function isOwner(uid) {
@@ -126,6 +131,12 @@ service cloud.firestore {
     match /scoreStatus/{id} {
       allow read: if isAuthenticated();
       allow write: if isMasterAdmin() || isCallAdmin();
+    }
+
+    // サークル・システム設定
+    match /settings/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isSettingsAdmin();
     }
 
 
@@ -231,6 +242,12 @@ service cloud.firestore {
     match /archives/{archiveId} {
       allow create: if isAuthenticated();
       allow read, update, delete: if isSystemAdmin();
+    }
+
+    // アプリ設定 (システム管理者のみ書き込み可能)
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isSystemAdmin();
     }
 
     // 監査ログ

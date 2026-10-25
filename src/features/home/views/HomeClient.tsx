@@ -20,13 +20,26 @@ import {
   faCoins,
   faRecordVinyl,
   faRightLeft,
+  faGear,
 } from "@fortawesome/free-solid-svg-icons";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
 import { HomeAnnouncementSection } from "../components/HomeAnnouncementSection";
 import { QuickAttendanceSection } from "../components/QuickAttendanceSection";
 import { HomeAnnouncement } from "../types";
 import { CalendarView } from "@/features/calendar/components/CalendarView";
-import { Event, Vote, Call, Fee, Score, BlueNote, Media } from "@/lib/firestore/types";
+import {
+  Event,
+  Vote,
+  Call,
+  Fee,
+  FeePayment,
+  Score,
+  BlueNote,
+  Media,
+  AppSettings,
+} from "@/lib/firestore/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/firestore/constants";
@@ -108,6 +121,7 @@ interface HomeClientProps {
   scores?: Score[];
   blueNotes?: BlueNote[];
   medias?: Media[];
+  settings?: AppSettings;
 }
 
 export function HomeClient({
@@ -119,6 +133,7 @@ export function HomeClient({
   scores = [],
   blueNotes = [],
   medias = [],
+  settings,
 }: HomeClientProps) {
   const { userData } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
@@ -172,8 +187,10 @@ export function HomeClient({
     }
   }, [scores, blueNotes]);
 
-  const quickScores = (scores || []).slice(0, 6);
-  const recentMedias = (medias || []).slice(0, 4);
+  const scoreLimit = settings?.homeScoreCount ?? 6;
+  const mediaLimit = settings?.homeMediaCount ?? 4;
+  const quickScores = (scores || []).slice(0, scoreLimit);
+  const recentMedias = (medias || []).slice(0, mediaLimit);
   const scorePlaylistIds = (scores || [])
     .map((s) => s.youtubeId)
     .filter(Boolean)
@@ -182,6 +199,103 @@ export function HomeClient({
     () => getWatchVideosOrder(currentBNIdx, blueNotes)?.join(","),
     [currentBNIdx, blueNotes]
   );
+
+  // ログインユーザーの部費支払状況の取得
+  const [myPayments, setMyPayments] = React.useState<FeePayment[]>([]);
+  const [loadingPayments, setLoadingPayments] = React.useState(true);
+
+  useEffect(() => {
+    if (!userData?.uid) {
+      setLoadingPayments(false);
+      return;
+    }
+
+    const fetchMyPayments = async () => {
+      try {
+        const q = query(
+          collection(db, "feePayments"),
+          where("uid", "==", userData.uid)
+        );
+        const snap = await getDocs(q);
+        const list: FeePayment[] = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })) as FeePayment[];
+        setMyPayments(list);
+      } catch (err) {
+        console.error("fetchMyPayments error:", err);
+      } finally {
+        setLoadingPayments(false);
+      }
+    };
+
+    fetchMyPayments();
+  }, [userData?.uid]);
+
+  // 未払い部費の抽出（集金対象かつ未払い）
+  const myUnpaidFees = React.useMemo(() => {
+    if (!userData?.uid || loadingPayments) return [];
+    return (fees || []).filter((fee) => {
+      // 自分が対象部員かどうか（未設定または空なら全員対象）
+      const isTarget =
+        !fee.targetUserIds ||
+        fee.targetUserIds.length === 0 ||
+        fee.targetUserIds.includes(userData.uid);
+      if (!isTarget) return false;
+
+      // 自分の支払状況（paid または exempt でなければ未納）
+      const p = myPayments.find((item) => item.feeId === fee.id);
+      const isPaid = p?.status === "paid" || p?.status === "exempt";
+      return !isPaid;
+    });
+  }, [fees, userData?.uid, myPayments, loadingPayments]);
+
+  // 設定に応じたお知らせ一覧の合成とフィルタリング
+  const announcements = React.useMemo(() => {
+    const showCall = settings?.showCallInAnnouncement !== false;
+    const showVote = settings?.showVoteInAnnouncement !== false;
+    const showFee = settings?.showFeeInAnnouncement !== false;
+
+    const list: HomeAnnouncement[] = [];
+
+    // 1. 未払いの部費（設定がONで、未払いがある場合）
+    if (showFee && myUnpaidFees.length > 0) {
+      list.push({
+        type: "pending",
+        message: `未納の部費・集金が ${myUnpaidFees.length}件 あります！`,
+      });
+      myUnpaidFees.forEach((fee) => {
+        list.push({
+          type: "item",
+          label: `${fee.title}（${fee.amount ? `¥${fee.amount.toLocaleString()}` : "集金"}）`,
+          link: `/fee/confirm?feeId=${fee.id}`,
+          category: "fee",
+        });
+      });
+    }
+
+    // 2. 曲投票（設定がONで、受付中の曲投票がある場合）
+    const voteItems = initialAnnouncements.filter((a) => a.category === "vote");
+    if (showVote && voteItems.length > 0) {
+      list.push({ type: "pending", message: "曲投票、受付中です！" });
+      list.push(...voteItems);
+    }
+
+    // 3. 曲募集（設定がONで、募集中の曲がある場合）
+    const callItems = initialAnnouncements.filter((a) => a.category === "call");
+    if (showCall && callItems.length > 0) {
+      list.push({ type: "pending", message: "候補曲、募集中です！" });
+      list.push(...callItems);
+    }
+
+    // 4. その他の通知があればそのまま保持
+    const otherItems = initialAnnouncements.filter(
+      (a) => a.type === "item" && a.category !== "vote" && a.category !== "call"
+    );
+    list.push(...otherItems);
+
+    return list;
+  }, [settings, initialAnnouncements, myUnpaidFees]);
 
   return (
     <BaseLayout showBreadcrumbs={false} stickyHeader={true}>
@@ -208,11 +322,14 @@ export function HomeClient({
           </Link>
         )}
 
-        {/* 1. 受付中のお知らせ (曲募集・曲投票・リマインド等) */}
-        <HomeAnnouncementSection announcements={initialAnnouncements} />
+        {/* 1. 受付中のお知らせ (曲募集・曲投票・未払い部費・リマインド等) */}
+        <HomeAnnouncementSection announcements={announcements} />
 
-        {/* 2. 出欠クイック登録 (今後1週間の出欠登録カード) */}
-        <QuickAttendanceSection events={events} />
+        {/* 2. 出欠クイック登録 (設定日数分の出欠登録カード) */}
+        <QuickAttendanceSection
+          events={events}
+          displayDays={settings?.homeAttendanceDays ?? 7}
+        />
 
         {/* 3. サークルカレンダー */}
         <div className={styles.sectionTitleRow}>
@@ -606,6 +723,21 @@ export function HomeClient({
               <span className={styles.quickLabel}>引継ぎ</span>
             </div>
             <FontAwesomeIcon icon={faRightLeft} className={styles.watermarkIcon} />
+          </Link>
+
+          <Link
+            href="/settings"
+            prefetch={false}
+            className={`${styles.quickCard} ${styles.cardSlate}`}
+            onClick={() => showSpinner()}
+          >
+            <div className={`${styles.quickIcon} ${styles.iconSlateBg}`}>
+              <FontAwesomeIcon icon={faGear} />
+            </div>
+            <div className={styles.quickInfo}>
+              <span className={styles.quickLabel}>アプリ設定</span>
+            </div>
+            <FontAwesomeIcon icon={faGear} className={styles.watermarkIcon} />
           </Link>
         </div>
 

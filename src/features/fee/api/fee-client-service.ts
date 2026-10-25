@@ -14,6 +14,7 @@ export type FeeFormData = {
   amount: number;
   dueDate: string;
   description: string;
+  targetUserIds?: string[];
 };
 
 /**
@@ -29,6 +30,7 @@ export const saveFee = async (
     ...data,
     amount: Number(data.amount) || 0,
     dueDate: data.dueDate.replace(/-/g, "."),
+    targetUserIds: Array.isArray(data.targetUserIds) ? data.targetUserIds : [],
     updatedAt: serverTimestamp(),
   };
 
@@ -72,4 +74,15 @@ export async function updateFeePaymentStatus(
     },
     { merge: true }
   );
+}
+
+/**
+ * 部費の集金対象者リストのみを更新（確認画面・管理者用）
+ */
+export async function updateFeeTargetUsers(feeId: string, targetUserIds: string[]) {
+  const feeRef = doc(db, "fees", feeId);
+  await updateDoc(feeRef, {
+    targetUserIds,
+    updatedAt: serverTimestamp(),
+  });
 }

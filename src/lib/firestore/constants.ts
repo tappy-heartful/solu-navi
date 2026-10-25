@@ -8,6 +8,7 @@ import {
   EventAdjustStatus,
   Genre,
   ScoreStatus,
+  AppSettings,
 } from "./types";
 import defaultSectionsData from "@/data/master/sections.json";
 import defaultRolesData from "@/data/master/roles.json";
@@ -39,4 +40,16 @@ export const DEFAULT_EVENT_ADJUST_STATUSES: EventAdjustStatus[] = defaultEventAd
 export const DEFAULT_GENRES: Genre[] = defaultGenresData as Genre[];
 
 export const DEFAULT_SCORE_STATUSES: ScoreStatus[] = defaultScoreStatusesData as ScoreStatus[];
+
+export const DEFAULT_APP_SETTINGS: AppSettings = {
+  generalLineGroupId: "",
+  sectionLineGroupIds: {},
+  homeAttendanceDays: 7,
+  homeAttendanceCount: 5,
+  homeScoreCount: 6,
+  homeMediaCount: 4,
+  showCallInAnnouncement: true,
+  showVoteInAnnouncement: true,
+  showFeeInAnnouncement: true,
+};
 

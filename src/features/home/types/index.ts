@@ -3,5 +3,5 @@ export type HomeAnnouncement = {
   message?: string;
   label?: string;
   link?: string;
-  category?: "call" | "vote";
+  category?: "call" | "vote" | "fee";
 };

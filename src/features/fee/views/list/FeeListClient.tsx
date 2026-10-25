@@ -50,6 +50,124 @@ export function FeeListClient({ initialFees, totalUserCount }: FeeListClientProp
     fetchAllPayments();
   }, []);
 
+  // 集金中・集金済みの分類
+  const { activeFees, completedFees } = React.useMemo(() => {
+    const active: Fee[] = [];
+    const completed: Fee[] = [];
+
+    initialFees.forEach((fee) => {
+      const payments = paymentsMap[fee.id] || [];
+      const targetCount =
+        fee.targetUserIds && fee.targetUserIds.length > 0
+          ? fee.targetUserIds.length
+          : totalUserCount;
+
+      const paidCount = payments.filter((p) => {
+        if (fee.targetUserIds && fee.targetUserIds.length > 0) {
+          return (
+            fee.targetUserIds.includes(p.uid) &&
+            (p.status === "paid" || p.status === "exempt")
+          );
+        }
+        return p.status === "paid" || p.status === "exempt";
+      }).length;
+
+      const isCompleted = targetCount > 0 && paidCount >= targetCount;
+      if (isCompleted) {
+        completed.push(fee);
+      } else {
+        active.push(fee);
+      }
+    });
+
+    return { activeFees: active, completedFees: completed };
+  }, [initialFees, paymentsMap, totalUserCount]);
+
+  const renderFeeCard = (fee: Fee) => {
+    const payments = paymentsMap[fee.id] || [];
+    const isTargetUser =
+      fee.targetUserIds && fee.targetUserIds.length > 0
+        ? fee.targetUserIds.includes(uid || "")
+        : true;
+
+    const targetCount =
+      fee.targetUserIds && fee.targetUserIds.length > 0
+        ? fee.targetUserIds.length
+        : totalUserCount;
+
+    const paidCount = payments.filter((p) => {
+      if (fee.targetUserIds && fee.targetUserIds.length > 0) {
+        return (
+          fee.targetUserIds.includes(p.uid) &&
+          (p.status === "paid" || p.status === "exempt")
+        );
+      }
+      return p.status === "paid" || p.status === "exempt";
+    }).length;
+
+    const percent = targetCount > 0 ? Math.round((paidCount / targetCount) * 100) : 0;
+
+    const myPayment = payments.find((p) => p.uid === uid);
+    const isPaid = myPayment?.status === "paid";
+    const isExempt = myPayment?.status === "exempt";
+
+    return (
+      <Link
+        key={fee.id}
+        href={`/fee/confirm?feeId=${fee.id}`}
+        prefetch={false}
+        className={styles.feeCard}
+      >
+        <div className={styles.cardHeader}>
+          <div className={styles.titleGroup}>
+            <h3 className={styles.feeTitle}>{fee.title}</h3>
+            <div className={styles.dueDate}>
+              <i className="fa-regular fa-calendar-check" />
+              支払期日: {fee.dueDate}
+            </div>
+          </div>
+          <div className={styles.amountBadge}>¥{fee.amount.toLocaleString()}</div>
+        </div>
+
+        <div className={styles.myStatusRow}>
+          <span style={{ fontSize: "0.85rem", color: "#64748b" }}>あなたの納入状況:</span>
+          {!isTargetUser ? (
+            <span style={{ color: "#64748b", fontWeight: 600, fontSize: "0.85rem" }}>
+              ➖ 対象外
+            </span>
+          ) : isPaid ? (
+            <span className={styles.statusPaid}>
+              <i className="fa-solid fa-circle-check" /> 納入済み
+            </span>
+          ) : isExempt ? (
+            <span className={styles.statusExempt}>
+              <i className="fa-solid fa-circle-minus" /> 免除
+            </span>
+          ) : (
+            <span className={styles.statusUnpaid}>
+              <i className="fa-solid fa-triangle-exclamation" /> 未納
+            </span>
+          )}
+        </div>
+
+        <div className={styles.progressContainer}>
+          <div className={styles.progressLabelRow}>
+            <span>全体の納入進捗</span>
+            <span>
+              {paidCount} / {targetCount} 人 ({percent}%)
+            </span>
+          </div>
+          <div className={styles.progressBarBg}>
+            <div
+              className={styles.progressBarFill}
+              style={{ width: `${Math.min(percent, 100)}%` }}
+            />
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <BaseLayout>
       <div className="page-header">
@@ -94,70 +212,48 @@ export function FeeListClient({ initialFees, totalUserCount }: FeeListClientProp
             現在募集中の部費・集金はありません🍀
           </div>
         ) : (
-          <div className={styles.cardList}>
-            {initialFees.map((fee) => {
-              const payments = paymentsMap[fee.id] || [];
-              const paidCount = payments.filter(
-                (p) => p.status === "paid" || p.status === "exempt"
-              ).length;
-              const percent = totalUserCount > 0 ? Math.round((paidCount / totalUserCount) * 100) : 0;
+          <div className={styles.sectionsContainer}>
+            {/* 1. 集金中エリア */}
+            <section className={styles.sectionArea}>
+              <div className={styles.sectionHeader}>
+                <h2 className={`${styles.sectionTitle} ${styles.activeTitle}`}>
+                  <i className="fa-solid fa-hourglass-half" style={{ color: "#0284c7" }} />
+                  集金中
+                  <span className={styles.countBadge}>{activeFees.length}</span>
+                </h2>
+              </div>
 
-              const myPayment = payments.find((p) => p.uid === uid);
-              const isPaid = myPayment?.status === "paid";
-              const isExempt = myPayment?.status === "exempt";
+              {activeFees.length === 0 ? (
+                <div className={styles.sectionEmptyState}>
+                  現在集金中の部費・集金はありません🍀
+                </div>
+              ) : (
+                <div className={styles.cardList}>
+                  {activeFees.map((fee) => renderFeeCard(fee))}
+                </div>
+              )}
+            </section>
 
-              return (
-                <Link
-                  key={fee.id}
-                  href={`/fee/confirm?feeId=${fee.id}`}
-                  prefetch={false}
-                  className={styles.feeCard}
-                >
-                  <div className={styles.cardHeader}>
-                    <div className={styles.titleGroup}>
-                      <h3 className={styles.feeTitle}>{fee.title}</h3>
-                      <div className={styles.dueDate}>
-                        <i className="fa-regular fa-calendar-check" />
-                        支払期日: {fee.dueDate}
-                      </div>
-                    </div>
-                    <div className={styles.amountBadge}>¥{fee.amount.toLocaleString()}</div>
-                  </div>
+            {/* 2. 集金済みエリア */}
+            <section className={styles.sectionArea}>
+              <div className={styles.sectionHeader}>
+                <h2 className={`${styles.sectionTitle} ${styles.completedTitle}`}>
+                  <i className="fa-solid fa-circle-check" style={{ color: "#10b981" }} />
+                  集金済み
+                  <span className={styles.countBadge}>{completedFees.length}</span>
+                </h2>
+              </div>
 
-                  <div className={styles.myStatusRow}>
-                    <span style={{ fontSize: "0.85rem", color: "#64748b" }}>あなたの納入状況:</span>
-                    {isPaid ? (
-                      <span className={styles.statusPaid}>
-                        <i className="fa-solid fa-circle-check" /> 納入済み
-                      </span>
-                    ) : isExempt ? (
-                      <span className={styles.statusExempt}>
-                        <i className="fa-solid fa-circle-minus" /> 免除
-                      </span>
-                    ) : (
-                      <span className={styles.statusUnpaid}>
-                        <i className="fa-solid fa-triangle-exclamation" /> 未納
-                      </span>
-                    )}
-                  </div>
-
-                  <div className={styles.progressContainer}>
-                    <div className={styles.progressLabelRow}>
-                      <span>全体の納入進捗</span>
-                      <span>
-                        {paidCount} / {totalUserCount} 人 ({percent}%)
-                      </span>
-                    </div>
-                    <div className={styles.progressBarBg}>
-                      <div
-                        className={styles.progressBarFill}
-                        style={{ width: `${Math.min(percent, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
+              {completedFees.length === 0 ? (
+                <div className={styles.sectionEmptyState}>
+                  集金済みの履歴はありません
+                </div>
+              ) : (
+                <div className={styles.cardList}>
+                  {completedFees.map((fee) => renderFeeCard(fee))}
+                </div>
+              )}
+            </section>
           </div>
         )}
 

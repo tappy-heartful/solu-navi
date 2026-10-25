@@ -14,7 +14,7 @@ export type ScoreFormData = {
   instrumentConfig?: Record<string, InstrumentPart[]>;
   abbreviation: string;
   note: string;
-  isDispTop: boolean;
+  isDispTop?: boolean;
 };
 
 /**

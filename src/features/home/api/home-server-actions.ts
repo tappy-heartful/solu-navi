@@ -53,11 +53,9 @@ export async function getHomeAnnouncementsServer(): Promise<HomeAnnouncement[]> 
       }
     });
 
-    return items.length
-      ? items
-      : [{ type: "empty", message: "お知らせはありません🍀" }];
+    return items;
   } catch (err) {
     console.error("Failed to fetch home announcements:", err);
-    return [{ type: "empty", message: "お知らせはありません🍀" }];
+    return [];
   }
 }

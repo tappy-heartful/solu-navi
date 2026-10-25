@@ -1,0 +1,421 @@
+.container {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.headerIcon {
+  color: #0284c7;
+  font-size: 1.4rem;
+}
+
+.description {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.adminWarning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.warningIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 1.25rem;
+}
+
+.cardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+}
+
+.lineIconBg {
+  background-color: #06c755;
+  color: #ffffff;
+}
+
+.displayIconBg {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+
+.announcementIconBg {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.cardSubtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+.helpText {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  border-color: #0284c7;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.input:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* パート別グループIDリスト */
+.sectionList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.sectionRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.sectionRow:focus-within {
+  border-color: #0284c7;
+  background-color: #ffffff;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.sectionName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* 表示件数グリッド */
+.countsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.countCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.countLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.25rem;
+}
+
+.countIcon {
+  font-size: 1rem;
+}
+
+.countSub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.numberInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.numberInput {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+}
+
+.numberInput:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.unitText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* お知らせ設定チェックボックスリスト */
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.checkboxOptionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkboxOptionRow:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.checkboxTextGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.checkboxTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.inlineOptionIcon {
+  font-size: 1rem;
+}
+
+.checkboxDesc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.checkboxInput {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #0284c7;
+  flex-shrink: 0;
+}
+
+/* アクションボタンバー */
+.actionsBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.resetBtn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resetBtn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  color: #334155;
+}
+
+.saveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  transition: all 0.2s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+  transform: translateY(-1px);
+}
+
+.saveBtn:disabled,
+.resetBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnIcon {
+  font-size: 0.95rem;
+}
+
+.helpWrapper {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0.75rem 0.75rem 2.5rem;
+  }
+
+  .card {
+    padding: 1.125rem;
+    border-radius: 14px;
+  }
+
+  .actionsBar {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .saveBtn,
+  .resetBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem;
+  }
+}

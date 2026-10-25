@@ -1883,7 +1883,7 @@ export function EventDetailModal({
                       })()}
                     </div>
 
-                    {/* パートごとの出欠一覧 */}
+                    {/* 出欠一覧: 出欠ステータスごとにまず表示し、その中でパートごとに表示 (streak-navi準拠) */}
                     {(() => {
                       const answerMap: Record<string, (typeof data.attendanceAnswers)[0]> = {};
                       (data.attendanceAnswers || []).forEach((a) => {
@@ -1910,196 +1910,185 @@ export function EventDetailModal({
                       });
                       sections.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-                      // パートごとに部員を分類
-                      const sectionUsersMap: Record<
-                        string,
-                        { user: User; answer?: (typeof data.attendanceAnswers)[0] }[]
-                      > = {};
-                      sections.forEach((sec) => {
-                        sectionUsersMap[sec.id] = [];
-                      });
-                      sectionUsersMap["unknown"] = [];
+                      const getSectionEmoji = (name: string) => {
+                        if (name.includes("サックス") || name.includes("Sax")) return "🎷";
+                        if (name.includes("トロンボーン") || name.includes("Trombone") || name.includes("Tb")) return "🎺";
+                        if (name.includes("トランペット") || name.includes("Trumpet") || name.includes("Tp")) return "🎺";
+                        if (name.includes("リズム") || name.includes("Rhythm")) return "🎹";
+                        return "🎵";
+                      };
 
-                      (data.allUserUids || []).forEach((uid) => {
-                        const user = data.usersMap[uid] || {
-                          id: uid,
-                          displayName: "退会済みユーザ",
-                          pictureUrl: "",
-                        };
-                        const secId =
-                          user.sectionId && sectionUsersMap[user.sectionId]
-                            ? user.sectionId
-                            : "unknown";
-                        const ans = answerMap[uid];
+                      // 表示対象ステータスリストの定義
+                      type StatusGroupItem = {
+                        id: string;
+                        name: string;
+                        isUnanswered?: boolean;
+                      };
 
-                        // フィルター判定
-                        let match = true;
-                        if (selectedStatusId === "all") {
-                          match = true;
-                        } else if (selectedStatusId === "unanswered") {
-                          match = !ans;
-                        } else if (selectedStatusId) {
-                          match = ans?.status === selectedStatusId;
+                      const statusList: StatusGroupItem[] = [];
+                      if (selectedStatusId === "all") {
+                        (data.attendanceStatuses || []).forEach((st) => {
+                          statusList.push({ id: st.id, name: st.name });
+                        });
+                        statusList.push({ id: "unanswered", name: "未回答", isUnanswered: true });
+                      } else if (selectedStatusId === "unanswered") {
+                        statusList.push({ id: "unanswered", name: "未回答", isUnanswered: true });
+                      } else if (selectedStatusId) {
+                        const targetSt = (data.attendanceStatuses || []).find((st) => st.id === selectedStatusId);
+                        if (targetSt) {
+                          statusList.push({ id: targetSt.id, name: targetSt.name });
+                        }
+                      }
+
+                      // 各ステータスについて、部員を抽出・パート別に分類
+                      const renderedBlocks = statusList.map((statusItem) => {
+                        // このステータスに該当する部員一覧
+                        const matchedUsers: { user: User; answer?: (typeof data.attendanceAnswers)[0] }[] = [];
+
+                        (data.allUserUids || []).forEach((uid) => {
+                          const user = data.usersMap[uid] || {
+                            id: uid,
+                            displayName: "退会済みユーザ",
+                            pictureUrl: "",
+                          };
+                          const ans = answerMap[uid];
+
+                          if (statusItem.isUnanswered) {
+                            if (!ans) {
+                              matchedUsers.push({ user, answer: undefined });
+                            }
+                          } else {
+                            if (ans?.status === statusItem.id) {
+                              matchedUsers.push({ user, answer: ans });
+                            }
+                          }
+                        });
+
+                        // 該当者が0名の場合、カードを出さない
+                        if (matchedUsers.length === 0) {
+                          return null;
                         }
 
-                        if (match) {
-                          sectionUsersMap[secId].push({ user, answer: ans });
-                        }
-                      });
+                        // パートごとに分類
+                        const sectionMap: Record<string, { user: User; answer?: (typeof data.attendanceAnswers)[0] }[]> = {};
+                        sections.forEach((sec) => {
+                          sectionMap[sec.id] = [];
+                        });
+                        sectionMap["unknown"] = [];
 
-                      const availableSections = sections.filter(
-                        (sec) => (sectionUsersMap[sec.id] || []).length > 0
-                      );
-                      const hasUnknown = (sectionUsersMap["unknown"] || []).length > 0;
+                        matchedUsers.forEach((item) => {
+                          const secId =
+                            item.user.sectionId && sectionMap[item.user.sectionId]
+                              ? item.user.sectionId
+                              : "unknown";
+                          sectionMap[secId].push(item);
+                        });
 
-                      if (availableSections.length === 0 && !hasUnknown) {
+                        const activeSections = sections.filter((sec) => (sectionMap[sec.id] || []).length > 0);
+                        const hasUnknown = (sectionMap["unknown"] || []).length > 0;
+
                         return (
-                          <div style={{ fontSize: "12px", color: "#64748b", padding: "12px 0", textAlign: "center" }}>
+                          <div key={statusItem.id} className={styles.attendanceStatusCard}>
+                            <h4 className={styles.attendanceStatusCardHeader}>
+                              <i className="fa-solid fa-users" style={{ marginRight: "0.5rem" }} />
+                              <span>
+                                {statusItem.name} ({matchedUsers.length}人)
+                              </span>
+                            </h4>
+
+                            <div className={styles.attendanceStatusCardBody}>
+                              {activeSections.map((sec) => {
+                                const members = sectionMap[sec.id] || [];
+                                return (
+                                  <div key={sec.id} className={styles.attendanceSectionBlock}>
+                                    <div className={styles.attendanceSectionHeading}>
+                                      <span>
+                                        {getSectionEmoji(sec.name)} {sec.name} ({members.length}人)
+                                      </span>
+                                    </div>
+
+                                    <div className={styles.attendanceAvatarGrid}>
+                                      {members.map(({ user, answer }, idx) => (
+                                        <div key={user.id || idx} className={styles.attendanceAvatarItem}>
+                                          <div className={styles.attendanceAvatarWrapper}>
+                                            <img
+                                              src={user.pictureUrl || globalLineDefaultImage}
+                                              alt={user.displayName || ""}
+                                              className={styles.attendanceAvatarImg}
+                                              onError={(e) => {
+                                                e.currentTarget.src = globalLineDefaultImage;
+                                              }}
+                                            />
+                                            {answer?.comment && (
+                                              <span
+                                                className={styles.attendanceCommentBadge}
+                                                title={answer.comment}
+                                              >
+                                                💬
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className={styles.attendanceAvatarName}>
+                                            {user.displayName || "名前未設定"}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {hasUnknown && (
+                                <div key="unknown" className={styles.attendanceSectionBlock}>
+                                  <div className={styles.attendanceSectionHeading}>
+                                    <span>❓ パート未設定 ({sectionMap["unknown"].length}人)</span>
+                                  </div>
+
+                                  <div className={styles.attendanceAvatarGrid}>
+                                    {sectionMap["unknown"].map(({ user, answer }, idx) => (
+                                      <div key={user.id || idx} className={styles.attendanceAvatarItem}>
+                                        <div className={styles.attendanceAvatarWrapper}>
+                                          <img
+                                            src={user.pictureUrl || globalLineDefaultImage}
+                                            alt={user.displayName || ""}
+                                            className={styles.attendanceAvatarImg}
+                                            onError={(e) => {
+                                              e.currentTarget.src = globalLineDefaultImage;
+                                            }}
+                                          />
+                                          {answer?.comment && (
+                                            <span
+                                              className={styles.attendanceCommentBadge}
+                                              title={answer.comment}
+                                            >
+                                              💬
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className={styles.attendanceAvatarName}>
+                                          {user.displayName || "名前未設定"}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }).filter(Boolean);
+
+                      if (renderedBlocks.length === 0) {
+                        return (
+                          <div style={{ fontSize: "13px", color: "#64748b", padding: "20px 0", textAlign: "center" }}>
                             該当する部員はいません🍀
                           </div>
                         );
                       }
 
                       return (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-                          {availableSections.map((sec) => {
-                            const members = sectionUsersMap[sec.id] || [];
-                            const attendCount = members.filter((m) => {
-                              const st = m.answer ? statusMap[m.answer.status] : null;
-                              return st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
-                            }).length;
-
-                            return (
-                              <div key={sec.id} className={styles.sectionGroup}>
-                                <div className={styles.sectionGroupTitle}>
-                                  <span
-                                    style={{
-                                      width: "9px",
-                                      height: "9px",
-                                      borderRadius: "50%",
-                                      backgroundColor: sec.color || "#146081",
-                                      display: "inline-block",
-                                    }}
-                                  />
-                                  <span>
-                                    {sec.name}パート ({members.length}名{selectedStatusId === "all" ? `・出席${attendCount}名` : ""})
-                                  </span>
-                                </div>
-
-                                <div className={styles.userGrid}>
-                                  {members.map(({ user, answer }, idx) => {
-                                    const st = answer ? statusMap[answer.status] : null;
-                                    const isAttending =
-                                      st && (st.name.includes("出ます") || st.name.includes("出席") || st.order === 1);
-                                    const isAbsent =
-                                      st && (st.name.includes("おやすみ") || st.name.includes("欠席") || st.name.includes("不参加"));
-
-                                    let badgeBg = "#f1f5f9";
-                                    let badgeColor = "#94a3b8";
-                                    let badgeLabel = "未回答";
-                                    if (st) {
-                                      badgeLabel = st.name;
-                                      if (isAttending) {
-                                        badgeBg = "#dcfce7";
-                                        badgeColor = "#15803d";
-                                      } else if (isAbsent) {
-                                        badgeBg = "#fee2e2";
-                                        badgeColor = "#dc2626";
-                                      } else {
-                                        badgeBg = "#fef3c7";
-                                        badgeColor = "#b45309";
-                                      }
-                                    }
-
-                                    return (
-                                      <div key={user.id || idx} className={styles.userChip}>
-                                        <img
-                                          src={user.pictureUrl || globalLineDefaultImage}
-                                          alt={user.displayName || ""}
-                                          className={styles.userAvatar}
-                                          onError={(e) => {
-                                            e.currentTarget.src = globalLineDefaultImage;
-                                          }}
-                                        />
-                                        <span className={styles.userName}>{user.displayName || "名前未設定"}</span>
-                                        <span
-                                          style={{
-                                            fontSize: "10px",
-                                            fontWeight: 700,
-                                            padding: "1px 5px",
-                                            borderRadius: "4px",
-                                            backgroundColor: badgeBg,
-                                            color: badgeColor,
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
-                                          {badgeLabel}
-                                        </span>
-                                        {answer?.comment && (
-                                          <span className={styles.userCommentBubble} title={answer.comment}>
-                                            💬
-                                          </span>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {/* パート未設定 */}
-                          {hasUnknown && (
-                            <div key="unknown" className={styles.sectionGroup}>
-                              <div className={styles.sectionGroupTitle}>
-                                <span
-                                  style={{
-                                    width: "9px",
-                                    height: "9px",
-                                    borderRadius: "50%",
-                                    backgroundColor: "#94a3b8",
-                                    display: "inline-block",
-                                  }}
-                                />
-                                <span>❓ パート未設定 ({sectionUsersMap["unknown"].length}名)</span>
-                              </div>
-                              <div className={styles.userGrid}>
-                                {sectionUsersMap["unknown"].map(({ user, answer }, idx) => {
-                                  const st = answer ? statusMap[answer.status] : null;
-                                  return (
-                                    <div key={user.id || idx} className={styles.userChip}>
-                                      <img
-                                        src={user.pictureUrl || globalLineDefaultImage}
-                                        alt={user.displayName || ""}
-                                        className={styles.userAvatar}
-                                        onError={(e) => {
-                                          e.currentTarget.src = globalLineDefaultImage;
-                                        }}
-                                      />
-                                      <span className={styles.userName}>{user.displayName || "名前未設定"}</span>
-                                      <span
-                                        style={{
-                                          fontSize: "10px",
-                                          fontWeight: 700,
-                                          padding: "1px 5px",
-                                          borderRadius: "4px",
-                                          backgroundColor: st ? "#dcfce7" : "#f1f5f9",
-                                          color: st ? "#15803d" : "#94a3b8",
-                                        }}
-                                      >
-                                        {st?.name || "未回答"}
-                                      </span>
-                                      {answer?.comment && (
-                                        <span className={styles.userCommentBubble} title={answer.comment}>
-                                          💬
-                                        </span>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "4px" }}>
+                          {renderedBlocks}
                         </div>
                       );
                     })()}

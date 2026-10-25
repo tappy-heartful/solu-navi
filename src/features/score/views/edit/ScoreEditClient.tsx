@@ -55,7 +55,6 @@ export function ScoreEditClient({
       genres: (initialScore?.genres as string[]) || [""],
       abbreviation: initialScore?.abbreviation || "",
       note: initialScore?.note || "",
-      isDispTop: mode === "new" ? true : (initialScore?.isDispTop ?? false),
     },
     {
       title: [rules.required],
@@ -371,12 +370,6 @@ export function ScoreEditClient({
         type="textarea"
         placeholder="保管状態、欠譜情報、演奏上の注意点など"
         {...inputProps("note")}
-      />
-
-      <AppInput
-        label="ホームに表示"
-        type="checkbox"
-        {...inputProps("isDispTop")}
       />
     </EditFormLayout>
   );

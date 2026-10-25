@@ -32,9 +32,16 @@ export async function sendFeeRemindAction(feeId: string): Promise<{
       }
     });
 
-    // 未払いの部員を特定
+    // 集金対象部員（未設定なら全員）
+    const targetUids =
+      fee.targetUserIds && Array.isArray(fee.targetUserIds) && fee.targetUserIds.length > 0
+        ? new Set(fee.targetUserIds)
+        : null;
+
+    // 未払いの対象部員を特定
     const unpaidUids: string[] = [];
     usersSnap.docs.forEach((d) => {
+      if (targetUids && !targetUids.has(d.id)) return; // 対象外はスキップ
       if (!paidUids.has(d.id)) {
         unpaidUids.push(d.id);
       }

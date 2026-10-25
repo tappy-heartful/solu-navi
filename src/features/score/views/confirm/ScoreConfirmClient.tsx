@@ -288,10 +288,6 @@ export function ScoreConfirmClient({
           <DisplayField label="備考" preWrap>
             {scoreData.note || "特になし"}
           </DisplayField>
-
-          <DisplayField label="ホームに表示">
-            {scoreData.isDispTop ? "表示する" : "表示しない"}
-          </DisplayField>
         </div>
 
         <div className="page-footer" style={{ textAlign: "center", margin: "2rem 0" }}>

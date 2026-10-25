@@ -1,4 +1,5 @@
 import { getFeeDetailServer } from "@/features/fee/api/fee-server-actions";
+import { getUsersServer } from "@/features/user/api/user-server-actions";
 import { FeeEditClient } from "@/features/fee/views/edit/FeeEditClient";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -30,8 +31,12 @@ export default async function FeeEditPage({ searchParams }: Props) {
   const validModes = ["new", "edit", "copy"];
   if (!mode || !validModes.includes(mode)) notFound();
 
-  const data = feeId ? await getFeeDetailServer(feeId) : null;
+  const [data, allUsers] = await Promise.all([
+    feeId ? getFeeDetailServer(feeId) : null,
+    getUsersServer(),
+  ]);
   const initialFee = data?.fee || null;
+  const users = data?.users && data.users.length > 0 ? data.users : allUsers;
 
   if ((mode === "edit" || mode === "copy") && !initialFee) {
     notFound();
@@ -42,6 +47,7 @@ export default async function FeeEditPage({ searchParams }: Props) {
       mode={mode as "new" | "edit" | "copy"}
       feeId={feeId}
       initialFee={initialFee}
+      users={users}
     />
   );
 }

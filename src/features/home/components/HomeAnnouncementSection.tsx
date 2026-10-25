@@ -8,6 +8,7 @@ import {
   faCircleExclamation,
   faCheckToSlot,
   faMusic,
+  faCoins,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { showSpinner } from "@/components/Common/Spinner";
@@ -22,10 +23,10 @@ interface HomeAnnouncementSectionProps {
 export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
   announcements,
 }: HomeAnnouncementSectionProps) {
-  const items =
-    announcements && announcements.length > 0
-      ? announcements
-      : [{ type: "empty" as const, message: "お知らせはありません🍀" }];
+  // 実質的なお知らせ（曲投票・曲募集・重要通知など）のみを抽出
+  const activeItems = (announcements || []).filter(
+    (a) => a.type === "item" || a.type === "pending"
+  );
 
   return (
     <section className={styles.announcementContainer}>
@@ -35,16 +36,14 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
         </h3>
       </div>
       <ul className={styles.notificationList}>
-        {items.map((a, i) => {
-          if (a.type === "empty") {
-            return (
-              <li key={`empty-${i}`} className={styles.emptyItem}>
-                <div className={styles.emptyMessage}>
-                  {a.message || "お知らせはありません🍀"}
-                </div>
-              </li>
-            );
-          }
+        {activeItems.length === 0 ? (
+          <li className={styles.emptyItem}>
+            <div className={styles.emptyMessage}>
+              <span>お知らせはありません🍀</span>
+            </div>
+          </li>
+        ) : (
+          activeItems.map((a, i) => {
 
           if (a.type === "pending") {
             return (
@@ -60,9 +59,15 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
             );
           }
 
-          const isVote = a.category === "vote";
-          const icon = isVote ? faCheckToSlot : faMusic;
-          const iconBgClass = isVote ? styles.voteIconBg : styles.callIconBg;
+          let icon = faMusic;
+          let iconBgClass = styles.callIconBg;
+          if (a.category === "vote") {
+            icon = faCheckToSlot;
+            iconBgClass = styles.voteIconBg;
+          } else if (a.category === "fee") {
+            icon = faCoins;
+            iconBgClass = styles.feeIconBg;
+          }
 
           return (
             <li key={`item-${i}`} className={styles.linkItem}>
@@ -80,7 +85,7 @@ export const HomeAnnouncementSection = memo(function HomeAnnouncementSection({
               </Link>
             </li>
           );
-        })}
+        }))}
         {/* PWA ホーム画面追加ヒント (お知らせ最下位優先度) */}
         <li className={styles.pwaHintItem}>
           <PwaInstallHint isInsideAnnouncement={true} />

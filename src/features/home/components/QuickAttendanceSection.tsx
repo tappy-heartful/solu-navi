@@ -32,6 +32,7 @@ import styles from "./QuickAttendanceSection.module.css";
 
 interface QuickAttendanceSectionProps {
   events: Event[];
+  displayDays?: number;
   onUpdated?: () => void;
 }
 
@@ -45,6 +46,7 @@ type SaveStatus = "idle" | "saving" | "saved";
 
 export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
   events = [],
+  displayDays = 7,
   onUpdated,
 }) => {
   const router = useRouter();
@@ -58,12 +60,14 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  // 今日から今後1週間（今日〜7日後）の出欠イベントを件数制限なく全件抽出
+  const effectiveDays = displayDays && displayDays > 0 ? displayDays : 7;
+
+  // 今日から設定日数分（今日〜N日後）の出欠イベントを抽出
   const upcomingEvents = useMemo(() => {
     const now = new Date();
     const today = format(now, "yyyy.MM.dd");
-    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const maxDate = format(nextWeek, "yyyy.MM.dd");
+    const nextLimit = new Date(now.getTime() + effectiveDays * 24 * 60 * 60 * 1000);
+    const maxDate = format(nextLimit, "yyyy.MM.dd");
 
     return events
       .filter((e) => {
@@ -76,7 +80,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
         const dbDate = b.date || b.startDate || "";
         return da.localeCompare(dbDate);
       });
-  }, [events]);
+  }, [events, effectiveDays]);
 
   // ステータスマスタおよび回答データの取得
   const loadData = useCallback(async () => {
@@ -353,7 +357,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
             <div>
               <div className={styles.titleRow}>
                 <h3 className={styles.title}>出欠クイック登録</h3>
-                <span className={styles.countBadge}>今後1週間（{upcomingEvents.length}件）</span>
+                <span className={styles.countBadge}>今後{effectiveDays}日間（{upcomingEvents.length}件）</span>
               </div>
               <p className={styles.subtitle}>ボタンをタップするとその場で即座に回答完了します</p>
             </div>
