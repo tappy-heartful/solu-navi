@@ -17,7 +17,6 @@ import {
   faSquarePollVertical,
   faSliders,
   faIdCard,
-  faUserPen,
   faPhotoFilm,
   faCoins,
   faRecordVinyl,
@@ -221,10 +220,6 @@ export function Header() {
                 <Link href="/user/detail" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faIdCard} className={styles.subIcon} />
                   <span className={styles.subLabel}>マイプロフ</span>
-                </Link>
-                <Link href="/user/edit" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
-                  <FontAwesomeIcon icon={faUserPen} className={styles.subIcon} />
-                  <span className={styles.subLabel}>情報変更</span>
                 </Link>
                 <Link href="/agreement" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faFileShield} className={styles.subIcon} />

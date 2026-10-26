@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCalendarCheck,
   faCheck,
   faXmark,
   faCommentDots,
@@ -347,47 +346,48 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
 
   return (
     <section className={styles.container}>
-      <div className={styles.card}>
-        {/* ヘッダー */}
-        <div className={styles.header}>
-          <div className={styles.headerTitleGroup}>
-            <div className={styles.headerIconWrapper}>
-              <FontAwesomeIcon icon={faCalendarCheck} className={styles.headerIcon} />
-            </div>
-            <div>
-              <div className={styles.titleRow}>
-                <h3 className={styles.title}>出欠クイック登録</h3>
-                <span className={styles.countBadge}>今後{effectiveDays}日間（{upcomingEvents.length}件）</span>
-              </div>
-              <p className={styles.subtitle}>ボタンをタップするとその場で即座に回答完了します</p>
-            </div>
-          </div>
+      {/* お知らせやサークルカレンダーと同じ見出しデザイン */}
+      <div className={styles.sectionHeader}>
+        <div className={styles.titleRow}>
+          <h3 className={styles.sectionTitle}>
+            <span className={styles.titleIcon}>📝</span> 出欠クイック登録
+          </h3>
+          <span className={styles.countBadge}>
+            今後{effectiveDays}日間（{upcomingEvents.length}件）
+          </span>
+        </div>
 
-          {/* 一括ショートカットボタン */}
-          {attendStatus && (
-            <div className={styles.quickShortcuts}>
+        {/* 一括ショートカットボタン */}
+        {attendStatus && (
+          <div className={styles.quickShortcuts}>
+            <button
+              type="button"
+              disabled={isAllSaving}
+              className={`${styles.shortcutBtn} ${styles.shortcutAttend}`}
+              onClick={() => handleSetAllStatusAndSave(attendStatus.id)}
+              title="表示されているすべてのイベントを出席として即時登録します"
+            >
+              <FontAwesomeIcon icon={faCheckDouble} /> すべて{attendStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "出席"}
+            </button>
+            {absentStatus && absentStatus.id !== attendStatus.id && (
               <button
                 type="button"
                 disabled={isAllSaving}
-                className={`${styles.shortcutBtn} ${styles.shortcutAttend}`}
-                onClick={() => handleSetAllStatusAndSave(attendStatus.id)}
-                title="表示されているすべてのイベントを出席として即時登録します"
+                className={`${styles.shortcutBtn} ${styles.shortcutAbsent}`}
+                onClick={() => handleSetAllStatusAndSave(absentStatus.id)}
+                title="表示されているすべてのイベントを欠席として即時登録します"
               >
-                <FontAwesomeIcon icon={faCheckDouble} /> すべて{attendStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "出席"}
+                <FontAwesomeIcon icon={faXmark} /> すべて{absentStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "欠席"}
               </button>
-              {absentStatus && absentStatus.id !== attendStatus.id && (
-                <button
-                  type="button"
-                  disabled={isAllSaving}
-                  className={`${styles.shortcutBtn} ${styles.shortcutAbsent}`}
-                  onClick={() => handleSetAllStatusAndSave(absentStatus.id)}
-                  title="表示されているすべてのイベントを欠席として即時登録します"
-                >
-                  <FontAwesomeIcon icon={faXmark} /> すべて{absentStatus.name.replace(/^[^\w\s\u3000-\u9fff]+/u, "") || "欠席"}
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.card}>
+        {/* 操作案内バー */}
+        <div className={styles.cardHintBar}>
+          <p className={styles.subtitle}>ボタンをタップするとその場で即座に回答完了します</p>
         </div>
 
         {/* イベント一覧（今後1週間） */}
