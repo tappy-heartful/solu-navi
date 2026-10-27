@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { adminDb } from "@/lib/firebase-admin";
-import { getLineAccessTokenForTarget } from "@/lib/line";
+import { getLineAccessTokenForTarget, formatConciergeMessage } from "@/lib/line";
 
 export const dynamic = "force-dynamic";
 
@@ -271,7 +271,11 @@ export async function POST(req: NextRequest) {
             { merge: true }
           );
 
-          replyText = `Sound Solution Orchestra【${targetLabel}】公式LINEです🍀\n\nグループ『${finalGroupName}』を【${targetLabel}】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n今後このグループ宛てにパート連絡やリマインドをお届けします✨`;
+          replyText = formatConciergeMessage(
+            `グループ『${finalGroupName}』を【${targetLabel}】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n\n今後このグループ宛てにパート連絡やリマインドをお届けします✨`,
+            "section",
+            sectionId
+          );
         } else {
           // 全体LINE
           await settingsRef.set(
@@ -285,7 +289,10 @@ export async function POST(req: NextRequest) {
             { merge: true }
           );
 
-          replyText = `Sound Solution Orchestra【全体】公式LINEです🍀\n\nグループ『${finalGroupName}』を【全体LINE】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n今後このグループ宛てに出欠・活動連絡や重要なお知らせをお届けします✨`;
+          replyText = formatConciergeMessage(
+            `グループ『${finalGroupName}』を【全体LINE】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n\n今後このグループ宛てに出欠・活動連絡や重要なお知らせをお届けします✨`,
+            "general"
+          );
         }
 
         // グループ宛てに自動返信メッセージ送信

@@ -1,7 +1,7 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { sendLineMulticastMessage } from "@/lib/line";
+import { sendLineMulticastMessage, formatConciergeMessage } from "@/lib/line";
 
 /**
  * 出欠未回答者へのLINEリマインド自動通知
@@ -55,7 +55,10 @@ export async function sendAttendanceRemindAction(eventId: string): Promise<{
       };
     }
 
-    const text = `【出欠回答のお願い】\nイベント「${event.title}」(${event.date || "日程未定"})の出欠が未回答です。\n\nメンバー・パートリーダー双方が円滑に進行できるよう、お早めにSolu Naviから回答をお願いします！\n\n▼ 回答はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.web.app"}/event/confirm?eventId=${eventId}`;
+    const text = formatConciergeMessage(
+      `【出欠回答のお願い】\nイベント「${event.title}」(${event.date || "日程未定"})の出欠が未回答です。\n\nメンバー・パートリーダー双方が円滑に進行できるよう、お早めにSolu Naviから回答をお願いします！\n\n▼ 回答はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.vercel.app"}/event/confirm?eventId=${eventId}`,
+      "general"
+    );
 
     const res = await sendLineMulticastMessage(lineUids, [{ type: "text", text }]);
     return {
@@ -118,7 +121,10 @@ export async function sendAdjustRemindAction(eventId: string): Promise<{
       };
     }
 
-    const text = `【日程調整回答のお願い】\n「${event.title}」の日程調整が未回答です。\n\n部員のみなさんの参加可能日を集約しています。お早めにSolu Naviから回答をお願いします！\n\n▼ 回答はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.web.app"}/event/confirm?eventId=${eventId}`;
+    const text = formatConciergeMessage(
+      `【日程調整回答のお願い】\n「${event.title}」の日程調整が未回答です。\n\n部員のみなさんの参加可能日を集約しています。お早めにSolu Naviから回答をお願いします！\n\n▼ 回答はこちら\n${process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.vercel.app"}/event/confirm?eventId=${eventId}`,
+      "general"
+    );
 
     const res = await sendLineMulticastMessage(lineUids, [{ type: "text", text }]);
     return {

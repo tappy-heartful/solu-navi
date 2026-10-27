@@ -186,6 +186,78 @@ export async function checkLineFriendship(accessToken: string): Promise<boolean>
 }
 
 /**
+ * Solu Navi ホーム画面URL定数
+ */
+export const SOLU_NAVI_HOME_URL = "https://solu-navi.vercel.app/";
+
+/**
+ * ターゲット（全体 or パート）に応じたコンシェルジュ人格名を取得
+ */
+export function getConciergeName(
+  targetType: "general" | "section" = "general",
+  sectionId?: string
+): string {
+  if (targetType === "section" && sectionId) {
+    switch (sectionId) {
+      case "1":
+        return "Solu Naviコンシェルジュ（サックスパート用）🎷";
+      case "2":
+        return "Solu Naviコンシェルジュ（トランペットパート用）🎺";
+      case "3":
+        return "Solu Naviコンシェルジュ（トロンボーンパート用）🎶";
+      case "4":
+        return "Solu Naviコンシェルジュ（リズムパート用）🥁";
+      default:
+        return `Solu Naviコンシェルジュ（パート${sectionId}用）🍀`;
+    }
+  }
+  return "Solu Naviコンシェルジュ（全体用）🍀";
+}
+
+/**
+ * LINE送信メッセージを「Solu Naviコンシェルジュ 全体用(各パート用)」の人格と
+ * ホーム画面URL案内を付与した形式にフォーマット
+ */
+export function formatConciergeMessage(
+  bodyText: string,
+  targetType: "general" | "section" = "general",
+  sectionId?: string
+): string {
+  const concierge = getConciergeName(targetType, sectionId);
+  let message = bodyText.trim();
+
+  // 冒頭の人格名（既に含まれていない場合に付与）
+  if (!message.includes("Solu Naviコンシェルジュ") && !message.includes("Solu Navi コンシェルジュ")) {
+    message = `お疲れ様です！${concierge}です。\n\n${message}`;
+  }
+
+  // 末尾のSolu Naviホーム画面案内（既に含まれていない場合に付与）
+  if (!message.includes("https://solu-navi.vercel.app/")) {
+    message = `${message}\n\n▼ Solu Navi ホーム画面はこちら\n${SOLU_NAVI_HOME_URL}`;
+  }
+
+  return message;
+}
+
+/**
+ * メッセージ配列内のテキストにSolu NaviホームURL案内を自動補完
+ */
+function enrichMessagesWithFooter(
+  messages: Array<{ type: string; text?: string; [key: string]: any }>
+): Array<{ type: string; text?: string; [key: string]: any }> {
+  return messages.map((m) => {
+    if (m.type === "text" && typeof m.text === "string") {
+      let text = m.text;
+      if (!text.includes("https://solu-navi.vercel.app/")) {
+        text = `${text}\n\n▼ Solu Navi ホーム画面はこちら\n${SOLU_NAVI_HOME_URL}`;
+      }
+      return { ...m, text };
+    }
+    return m;
+  });
+}
+
+/**
  * LINE Messaging API: 単一ユーザーへのプッシュメッセージ送信
  */
 export async function sendLinePushMessage(
@@ -203,6 +275,8 @@ export async function sendLinePushMessage(
     return;
   }
 
+  const enrichedMessages = enrichMessagesWithFooter(messages);
+
   try {
     const res = await fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
@@ -210,7 +284,7 @@ export async function sendLinePushMessage(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ to, messages }),
+      body: JSON.stringify({ to, messages: enrichedMessages }),
     });
 
     if (!res.ok) {
@@ -240,6 +314,8 @@ export async function sendLineMulticastMessage(
     return { successCount: 0, failCount: toUids.length };
   }
 
+  const enrichedMessages = enrichMessagesWithFooter(messages);
+
   // 500件ごとにchunk分割
   const chunkSize = 500;
   let successCount = 0;
@@ -254,7 +330,7 @@ export async function sendLineMulticastMessage(
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ to: chunk, messages }),
+        body: JSON.stringify({ to: chunk, messages: enrichedMessages }),
       });
 
       if (!res.ok) {
@@ -272,4 +348,5 @@ export async function sendLineMulticastMessage(
 
   return { successCount, failCount };
 }
+
 

@@ -51,6 +51,10 @@
     - 画面サイズがスマートフォンサイズ（`@media (max-width: 768px)`）、またはPWAスタンドアロンモード（`@media (display-mode: standalone)` / PWA起動時）において、ネイティブアプリ同様のボトムナビゲーションバー（`BottomNav`）を画面最下部に固定表示すること。
     - 項目は**「ホーム（`/`）」およびスライドメニューの活動主要4項目（「イベント（`/event`）」「譜面（`/score`）」「メディア（`/media`）」「部費（`/fee`）」）の計5項目**とし、現在閲覧中のページをティール色のアクセントと太字でアクティブハイライト表示すること。
     - ボトムバー表示時は、iPhone等のホームバー（`env(safe-area-inset-bottom)`）対応を徹底し、コンテンツ最下部が隠れないよう十分なパディング（`padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px))`）を確保すること。
+20. **LINE通知メッセージの「Solu Naviコンシェルジュ」人格およびホームURL案内規約 (`formatConciergeMessage`)**:
+    - LINE Messaging API経由で送信されるすべてのメッセージ（グループ自動登録の自動返信、リマインド通知、プッシュ通知、マルチキャスト通知等）は、**「Solu Naviコンシェルジュ 全体用（各パート用）」の人格**としてメッセージを送信すること。
+    - ターゲットが全体の場合は「Solu Naviコンシェルジュ（全体用）」、パート別の場合は各パート名に応じた人格（例: 「Solu Naviコンシェルジュ（サックスパート用）」等）とする。
+    - また、すべてのLINEテキストメッセージの末尾には、必ず Solu Navi のホーム画面案内（`▼ Solu Navi ホーム画面はこちら\nhttps://solu-navi.vercel.app/`）を付与すること。この処理は共通フォーマッター `formatConciergeMessage` または `sendLinePushMessage` / `sendLineMulticastMessage` で自動補完される。
 
 ---
 
