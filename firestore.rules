@@ -252,10 +252,10 @@ service cloud.firestore {
       allow read, update, delete: if isSystemAdmin();
     }
 
-    // アプリ設定 (システム管理者、またはバンマス・パートリーダーが書き込み可能)
+    // アプリ設定 (システム管理者のみ書き込み可能)
     match /settings/{settingId} {
       allow read: if isAuthenticated();
-      allow write: if isSystemAdmin() || isSettingsAdmin() || isBandmasterOrPartLeader();
+      allow write: if isSystemAdmin() || isSettingsAdmin();
     }
 
     // 監査ログ

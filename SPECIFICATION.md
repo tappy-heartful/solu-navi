@@ -599,14 +599,29 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - 未払いの部費があればお知らせに表示（`showFeeInAnnouncement`）: 自分に未払いの部費・集金がある場合のお知らせ表示制御（デフォルト: 有効 `true`）。
   - **ホーム画面お知らせカードの常時表示仕様**:
     - 受付中の曲投票や曲募集などのお知らせ事項が存在しない場合も、カード枠（📢 お知らせ）を常に表示し、内部に「お知らせはありません🍀」およびPWA案内をスマートに提示。
-  - **権限管理と画面上での権限明記仕様 (システム管理者 / バンドマスター / パートリーダー)**:
+  - **権限管理と画面上での権限明記仕様 (システム管理者のみ編集可能)**:
     - **各カードヘッダーでの権限と操作可否の常時明記**:
-      - 設定カードごとに「編集権限: 👑 バンマス / ✨ パートリーダー / システム管理者」（または「編集権限: システム管理者のみ」）タグをタイトル下に常時表示。
-      - 閲覧中ユーザー自身の実行権限バッジ（`✓ 編集可能` / `🔒 閲覧のみ・変更不可`）をタイトル右側にスマートに配置。
+      - 全設定カード（ホーム画面表示設定、ホームお知らせ表示設定、LINEグループID設定）に「編集権限: システム管理者のみ」タグを常時表示。
+      - 閲覧中ユーザー自身の実行権限バッジ（`✓ 編集可能` / `🔒 閲覧のみ`）をタイトル右側にスマートに配置。
     - **権限範囲**:
-      - **システム管理者（`isSystemAdmin`）**: 全設定（LINEグループID、ホーム表示件数・日数、お知らせ表示制御）の編集・保存、および「初期値に戻す」が可能。
-      - **バンドマスター（`roleId === "1"`） / パートリーダー（`roleId === "3"`）**: 全体LINEグループIDおよび各パート別LINEグループIDの編集・保存が可能（ホーム表示・お知らせ設定は既存値を自動保護）。
-      - **一般メンバー**: 閲覧のみ許可（フォーム入力無効化）。
+      - **システム管理者（`isSystemAdmin`）**: 全設定（ホーム表示件数・日数、お知らせ表示制御、LINEグループID・グループ名・招待日時）の編集・保存、および「初期値に戻す」が可能。
+      - **一般メンバー（バンマス・パートリーダー含む）**: 閲覧のみ許可（フォーム入力欄および保存ボタンを無効化・非表示）。
+    - **5つの公式LINEアカウント分散連携仕様 (月間200通無料制限回避 & 環境変数管理)**:
+      - 月間無料メッセージ数制限（無料プラン200通/月）を回避するため、全体用＋各パート（サックス/トランペット/トロンボーン/リズム）の**計5つの公式LINEアカウントを独立して連携・分散**。
+      - 各アカウントのアクセストークン（長期）は、セキュリティのため画面入力ではなく**環境変数（`.env.local` / Vercel環境変数）から安全に読み込み**：
+        - 全体公式LINE: `LINE_CHANNEL_ACCESS_TOKEN_GENERAL`（または `LINE_CHANNEL_ACCESS_TOKEN` / `LINE_INDIV_ACCESS_TOKEN`）
+        - サックス公式LINE: `LINE_CHANNEL_ACCESS_TOKEN_SAX`（または `LINE_CHANNEL_ACCESS_TOKEN_SECTION_1`）
+        - トランペット公式LINE: `LINE_CHANNEL_ACCESS_TOKEN_TP`（または `LINE_CHANNEL_ACCESS_TOKEN_SECTION_2`）
+        - トロンボーン公式LINE: `LINE_CHANNEL_ACCESS_TOKEN_TB`（または `LINE_CHANNEL_ACCESS_TOKEN_SECTION_3`）
+        - リズム公式LINE: `LINE_CHANNEL_ACCESS_TOKEN_RHYTHM`（または `LINE_CHANNEL_ACCESS_TOKEN_SECTION_4`）
+      - アプリ設定画面（`/settings`）最下部でグループID・グループ名・招待登録日時を一元管理。
+      - 各アカウント専用のWebhook URL（`/api/line/webhook?target=general`、`/api/line/webhook?sectionId=1` 等）を提供し、ワンクリックでコピー可能。
+    - **LINE公式アカウント追加時の自動登録Webhook機構 (`/api/line/webhook`)**:
+      - 全体LINEや各パートのLINEグループに該当の公式LINEアカウントが招待（追加）された際、LINE Webhook (`join` イベント) を受信。
+      - URLクエリパラメータ（`?sectionId=1` 等）から対象アカウントを確実に特定し、環境変数からアクセストークンを即座に取得。
+      - LINE Messaging API のグループサマリーAPI (`/v2/bot/group/{groupId}/summary`) を自動呼び出ししてグループ名を取得。
+      - Firestore `settings/general` にグループID・グループ名・招待登録日時を自動上書き登録。
+      - 招待されたグループへ公式LINEから自動で「Solu Naviに登録しました！」と完了通知を返信。
 
 ---
 
@@ -614,7 +629,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 
 | コレクション名 | ドキュメントID | 主なフィールド | 読み取り | 書き込み/編集 |
 | :--- | :--- | :--- | :--- | :--- |
-| `settings` | `general` | `generalLineGroupId`, `sectionLineGroupIds`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / バンマス / パートリーダー |
+| `settings` | `general` | `generalLineGroupId`, `generalLineGroupName`, `generalLineGroupJoinedAt`, `sectionLineGroupIds`, `sectionLineGroupNames`, `sectionLineGroupJoinedAt`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / `isSettingsAdmin` |
 | `users` | `uid` | `displayName`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `enrollmentYear`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |

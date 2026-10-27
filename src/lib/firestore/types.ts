@@ -378,7 +378,13 @@ export interface BlueNote {
 export interface AppSettings {
   id?: string;
   generalLineGroupId?: string; // 全体LINEグループID
+  generalLineGroupName?: string; // 全体LINEグループ名
+  generalLineGroupJoinedAt?: number; // 全体LINEグループ招待・登録日時
+  generalChannelAccessToken?: string; // 全体公式LINEのチャンネルアクセストークン
   sectionLineGroupIds?: Record<string, string>; // パート別LINEグループID { [sectionId]: groupId }
+  sectionLineGroupNames?: Record<string, string>; // パート別LINEグループ名 { [sectionId]: groupName }
+  sectionLineGroupJoinedAt?: Record<string, number>; // パート別LINEグループ招待・登録日時 { [sectionId]: timestamp }
+  sectionChannelAccessTokens?: Record<string, string>; // パート別公式LINEのアクセストークン { [sectionId]: token }
   homeAttendanceDays?: number; // ホーム画面の出欠表示日数（デフォルト: 7日分）
   homeAttendanceCount?: number; // 旧互換用
   homeScoreCount?: number; // ホーム画面の新着譜面表示件数（デフォルト: 6）
@@ -388,5 +394,6 @@ export interface AppSettings {
   showFeeInAnnouncement?: boolean;  // 未払い部費をお知らせに表示するか（デフォルト: true）
   updatedAt?: number;
   updatedBy?: string;
+  lastSavedAt?: any;
 }
 

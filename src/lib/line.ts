@@ -15,6 +15,74 @@ function getClientSecret(): string {
 }
 
 /**
+ * 5つの公式アカウントに対応したチャンネルアクセストークン取得（環境変数から読み取り）
+ * @param targetType "general" | "section"
+ * @param sectionId "1"(サックス), "2"(トランペット), "3"(トロンボーン), "4"(リズム)
+ */
+export function getLineAccessTokenForTarget(
+  targetType: "general" | "section" = "general",
+  sectionId?: string
+): string {
+  if (targetType === "section" && sectionId) {
+    if (sectionId === "1") {
+      // サックス
+      return (
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_SAX ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_SECTION_1 ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_GENERAL ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+        process.env.LINE_INDIV_ACCESS_TOKEN ||
+        ""
+      );
+    }
+    if (sectionId === "2") {
+      // トランペット
+      return (
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_TP ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_TRUMPET ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_SECTION_2 ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_GENERAL ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+        process.env.LINE_INDIV_ACCESS_TOKEN ||
+        ""
+      );
+    }
+    if (sectionId === "3") {
+      // トロンボーン
+      return (
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_TB ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_TROMBONE ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_SECTION_3 ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_GENERAL ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+        process.env.LINE_INDIV_ACCESS_TOKEN ||
+        ""
+      );
+    }
+    if (sectionId === "4") {
+      // リズム
+      return (
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_RHYTHM ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_SECTION_4 ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN_GENERAL ||
+        process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+        process.env.LINE_INDIV_ACCESS_TOKEN ||
+        ""
+      );
+    }
+  }
+
+  // 全体公式LINE
+  return (
+    process.env.LINE_CHANNEL_ACCESS_TOKEN_GENERAL ||
+    process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+    process.env.LINE_INDIV_ACCESS_TOKEN ||
+    process.env.LINE_ACCESS_TOKEN ||
+    ""
+  );
+}
+
+/**
  * LINE生UIDをソルト+ペッパーでSHA-256ハッシュ化し、安全なFirebase UIDを生成
  */
 export function hashLineUid(rawLineUid: string): string {
@@ -122,9 +190,11 @@ export async function checkLineFriendship(accessToken: string): Promise<boolean>
  */
 export async function sendLinePushMessage(
   to: string,
-  messages: Array<{ type: string; text?: string; [key: string]: any }>
+  messages: Array<{ type: string; text?: string; [key: string]: any }>,
+  customToken?: string
 ) {
   const token =
+    customToken ||
     process.env.LINE_CHANNEL_ACCESS_TOKEN ||
     process.env.LINE_INDIV_ACCESS_TOKEN ||
     process.env.LINE_ACCESS_TOKEN;
@@ -157,9 +227,11 @@ export async function sendLinePushMessage(
  */
 export async function sendLineMulticastMessage(
   toUids: string[],
-  messages: Array<{ type: string; text?: string; [key: string]: any }>
+  messages: Array<{ type: string; text?: string; [key: string]: any }>,
+  customToken?: string
 ): Promise<{ successCount: number; failCount: number }> {
   const token =
+    customToken ||
     process.env.LINE_CHANNEL_ACCESS_TOKEN ||
     process.env.LINE_INDIV_ACCESS_TOKEN ||
     process.env.LINE_ACCESS_TOKEN;

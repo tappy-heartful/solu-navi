@@ -43,7 +43,12 @@ export const DEFAULT_SCORE_STATUSES: ScoreStatus[] = defaultScoreStatusesData as
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   generalLineGroupId: "",
+  generalLineGroupName: "",
+  generalChannelAccessToken: "",
   sectionLineGroupIds: {},
+  sectionLineGroupNames: {},
+  sectionLineGroupJoinedAt: {},
+  sectionChannelAccessTokens: {},
   homeAttendanceDays: 7,
   homeAttendanceCount: 5,
   homeScoreCount: 6,

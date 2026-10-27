@@ -8,8 +8,7 @@ import {
   faSliders,
   faFloppyDisk,
   faRotateLeft,
-  faCircleExclamation,
-  faCircleInfo,
+  faCircleQuestion,
   faCalendarCheck,
   faMusic,
   faPhotoFilm,
@@ -18,6 +17,8 @@ import {
   faCoins,
   faCircleCheck,
   faLock,
+  faClock,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { faLine } from "@fortawesome/free-brands-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
@@ -28,6 +29,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
 import { saveAppSettings } from "../api/settings-client-service";
 import { SettingsFormData } from "../types";
+import { LineIntegrationModal } from "../components/LineIntegrationModal";
 import styles from "./SettingsEditClient.module.css";
 
 interface SettingsEditClientProps {
@@ -43,18 +45,8 @@ export function SettingsEditClient({
   const { userData, isSystemAdmin } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
 
-  // システム管理者判定: すべての設定項目を編集可能
-  const canEditGeneral = Boolean(isSystemAdmin || userData?.isSystemAdmin);
-
-  // バンドマスター (roleId === "1") または パートリーダー (roleId === "3") 判定
-  const isBandmaster = userData?.roleId === "1";
-  const isPartLeader = userData?.roleId === "3";
-
-  // LINEグループID設定の編集権限: システム管理者、バンマス、パートリーダー
-  const canEditLine = Boolean(canEditGeneral || isBandmaster || isPartLeader);
-
-  // いずれかの設定を変更・保存可能か
-  const canSave = canEditLine || canEditGeneral;
+  // システム管理者判定: アプリ設定はシステム管理者のみ編集可能
+  const canEdit = Boolean(isSystemAdmin || userData?.isSystemAdmin);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -65,7 +57,11 @@ export function SettingsEditClient({
 
   const [formData, setFormData] = useState<SettingsFormData>({
     generalLineGroupId: initialSettings.generalLineGroupId || "",
+    generalLineGroupName: initialSettings.generalLineGroupName || "",
+    generalLineGroupJoinedAt: initialSettings.generalLineGroupJoinedAt,
     sectionLineGroupIds: initialSettings.sectionLineGroupIds || {},
+    sectionLineGroupNames: initialSettings.sectionLineGroupNames || {},
+    sectionLineGroupJoinedAt: initialSettings.sectionLineGroupJoinedAt || {},
     homeAttendanceDays:
       initialSettings.homeAttendanceDays ?? DEFAULT_APP_SETTINGS.homeAttendanceDays ?? 7,
     homeScoreCount:
@@ -81,6 +77,26 @@ export function SettingsEditClient({
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [origin, setOrigin] = useState("");
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
+  // 日時フォーマット関数
+  const formatJoinedAt = (ts?: number) => {
+    if (!ts) return null;
+    const d = new Date(ts);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${yyyy}/${mm}/${dd} ${hh}:${mi}`;
+  };
 
   // パート別LINEグループIDの更新
   const handleSectionLineGroupChange = (sectionId: string, value: string) => {
@@ -95,12 +111,12 @@ export function SettingsEditClient({
 
   // 初期値にリセット (システム管理者のみ実行可能)
   const handleResetToDefault = async () => {
-    if (!canEditGeneral) {
+    if (!canEdit) {
       await showDialog("表示設定の初期化にはシステム管理者権限が必要です。", true);
       return;
     }
     const ok = await showDialog(
-      "ホーム表示設定などを初期設定に戻しますか？\n（入力中のLINEグループIDは保持されます）"
+      "ホーム表示設定などを初期設定に戻しますか？\n（入力中のLINEグループ情報は保持されます）"
     );
     if (!ok) return;
 
@@ -118,8 +134,8 @@ export function SettingsEditClient({
   // 保存処理
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!canSave) {
-      await showDialog("設定の変更権限がありません。", true);
+    if (!canEdit) {
+      await showDialog("設定の変更権限がありません（システム管理者のみ編集可能）。", true);
       return;
     }
 
@@ -130,26 +146,7 @@ export function SettingsEditClient({
     showSpinner();
 
     try {
-      // システム管理者でない場合（バンマス・パートリーダー）は、LINEグループIDのみ更新し、他の設定は既存値を維持
-      const dataToSave: SettingsFormData = canEditGeneral
-        ? formData
-        : {
-            ...formData,
-            homeAttendanceDays:
-              initialSettings.homeAttendanceDays ?? DEFAULT_APP_SETTINGS.homeAttendanceDays ?? 7,
-            homeScoreCount:
-              initialSettings.homeScoreCount ?? DEFAULT_APP_SETTINGS.homeScoreCount ?? 6,
-            homeMediaCount:
-              initialSettings.homeMediaCount ?? DEFAULT_APP_SETTINGS.homeMediaCount ?? 4,
-            showCallInAnnouncement:
-              initialSettings.showCallInAnnouncement ?? DEFAULT_APP_SETTINGS.showCallInAnnouncement ?? true,
-            showVoteInAnnouncement:
-              initialSettings.showVoteInAnnouncement ?? DEFAULT_APP_SETTINGS.showVoteInAnnouncement ?? true,
-            showFeeInAnnouncement:
-              initialSettings.showFeeInAnnouncement ?? DEFAULT_APP_SETTINGS.showFeeInAnnouncement ?? true,
-          };
-
-      await saveAppSettings(dataToSave, userData?.id || userData?.uid);
+      await saveAppSettings(formData, userData?.id || userData?.uid);
       await writeLog({
         dataId: "settings_general",
         action: "アプリ設定更新",
@@ -181,100 +178,12 @@ export function SettingsEditClient({
             <span>アプリ設定</span>
           </h1>
           <p className={styles.description}>
-            全体およびパート別のLINEグループID、ホーム画面の各コンテンツ表示設定を一元管理します。
+            ホーム画面の表示件数・お知らせ設定、および全体・パート別のLINEグループIDを一元管理します。
           </p>
         </div>
 
         <form onSubmit={handleSave}>
-          {/* 1. LINEグループ設定 */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>
-                <FontAwesomeIcon icon={faLine} />
-              </div>
-              <div className={styles.cardHeaderInfo}>
-                <div className={styles.cardTitleRow}>
-                  <h2 className={styles.cardTitle}>LINEグループID設定</h2>
-                  {canEditLine ? (
-                    <span className={styles.userStatusBadgeCan}>
-                      <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
-                    </span>
-                  ) : (
-                    <span className={styles.userStatusBadgeCannot}>
-                      <FontAwesomeIcon icon={faLock} /> 閲覧のみ
-                    </span>
-                  )}
-                </div>
-                <div className={styles.cardEligibleRoles}>
-                  <span className={styles.eligibleLabel}>編集権限:</span>
-                  <span className={styles.eligibleRoleTag}>👑 バンマス</span>
-                  <span className={styles.eligibleRoleTag}>✨ パートリーダー</span>
-                  <span className={styles.eligibleRoleTag}>システム管理者</span>
-                </div>
-              </div>
-            </div>
-            <p className={styles.cardSubtitle}>
-              サークル公式LINE BOTからの連絡・出欠リマインド・通知の宛先となるグループIDを設定します。
-            </p>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="generalLineGroupId" className={styles.label}>
-                全体LINEグループID
-              </label>
-              <span className={styles.helpText}>
-                部員全体のLINEグループID（例: Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx）
-              </span>
-              <input
-                id="generalLineGroupId"
-                type="text"
-                className={styles.input}
-                placeholder="C..."
-                value={formData.generalLineGroupId}
-                disabled={!canEditLine || isSaving}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    generalLineGroupId: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <span className={styles.label}>パート別LINEグループID</span>
-              <span className={styles.helpText}>
-                パート連絡用の各LINEグループID。パート個別のお知らせやリマインドに使用されます。
-              </span>
-
-              <div className={styles.sectionList}>
-                {sections.map((sec) => (
-                  <div key={sec.id} className={styles.sectionRow}>
-                    <div className={styles.sectionHeader}>
-                      <span
-                        className={styles.sectionBadge}
-                        style={{ backgroundColor: sec.color || "#0284c7" }}
-                      >
-                        {sec.shortName || sec.name}
-                      </span>
-                      <span className={styles.sectionName}>{sec.name}</span>
-                    </div>
-                    <input
-                      type="text"
-                      className={styles.input}
-                      placeholder={`${sec.name}のグループID (C...)`}
-                      value={formData.sectionLineGroupIds[sec.id] || ""}
-                      disabled={!canEditLine || isSaving}
-                      onChange={(e) =>
-                        handleSectionLineGroupChange(sec.id, e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 2. ホーム画面表示件数設定 */}
+          {/* 1. ホーム画面表示件数設定 */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={`${styles.cardIcon} ${styles.displayIconBg}`}>
@@ -283,13 +192,13 @@ export function SettingsEditClient({
               <div className={styles.cardHeaderInfo}>
                 <div className={styles.cardTitleRow}>
                   <h2 className={styles.cardTitle}>ホーム画面表示設定</h2>
-                  {canEditGeneral ? (
+                  {canEdit ? (
                     <span className={styles.userStatusBadgeCan}>
                       <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
                     </span>
                   ) : (
                     <span className={styles.userStatusBadgeCannot}>
-                      <FontAwesomeIcon icon={faLock} /> 変更不可
+                      <FontAwesomeIcon icon={faLock} /> 閲覧のみ
                     </span>
                   )}
                 </div>
@@ -326,7 +235,7 @@ export function SettingsEditClient({
                     max={60}
                     className={styles.numberInput}
                     value={formData.homeAttendanceDays}
-                    disabled={!canEditGeneral || isSaving}
+                    disabled={!canEdit || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -360,7 +269,7 @@ export function SettingsEditClient({
                     max={30}
                     className={styles.numberInput}
                     value={formData.homeScoreCount}
-                    disabled={!canEditGeneral || isSaving}
+                    disabled={!canEdit || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -394,7 +303,7 @@ export function SettingsEditClient({
                     max={30}
                     className={styles.numberInput}
                     value={formData.homeMediaCount}
-                    disabled={!canEditGeneral || isSaving}
+                    disabled={!canEdit || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -408,7 +317,7 @@ export function SettingsEditClient({
             </div>
           </div>
 
-          {/* 3. ホームお知らせ表示設定 */}
+          {/* 2. ホームお知らせ表示設定 */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={`${styles.cardIcon} ${styles.announcementIconBg}`}>
@@ -417,13 +326,13 @@ export function SettingsEditClient({
               <div className={styles.cardHeaderInfo}>
                 <div className={styles.cardTitleRow}>
                   <h2 className={styles.cardTitle}>ホームお知らせ表示設定</h2>
-                  {canEditGeneral ? (
+                  {canEdit ? (
                     <span className={styles.userStatusBadgeCan}>
                       <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
                     </span>
                   ) : (
                     <span className={styles.userStatusBadgeCannot}>
-                      <FontAwesomeIcon icon={faLock} /> 変更不可
+                      <FontAwesomeIcon icon={faLock} /> 閲覧のみ
                     </span>
                   )}
                 </div>
@@ -457,7 +366,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showCallInAnnouncement}
-                  disabled={!canEditGeneral || isSaving}
+                  disabled={!canEdit || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -486,7 +395,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showVoteInAnnouncement}
-                  disabled={!canEditGeneral || isSaving}
+                  disabled={!canEdit || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -515,7 +424,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showFeeInAnnouncement}
-                  disabled={!canEditGeneral || isSaving}
+                  disabled={!canEdit || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -527,20 +436,160 @@ export function SettingsEditClient({
             </div>
           </div>
 
-          {/* アクションボタンバー */}
-          {canSave && (
+          {/* 3. LINEグループ設定 (一番下に配置 / グループID表示・編集に特化) */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>
+                <FontAwesomeIcon icon={faLine} />
+              </div>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>LINEグループID設定</h2>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      className={styles.guideModalTriggerBtn}
+                      onClick={() => setIsGuideModalOpen(true)}
+                      title="Webhook URLや環境変数などの連携手順を確認"
+                    >
+                      <FontAwesomeIcon icon={faCircleQuestion} /> 連携手順・Webhook
+                    </button>
+                    {canEdit ? (
+                      <span className={styles.userStatusBadgeCan}>
+                        <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
+                      </span>
+                    ) : (
+                      <span className={styles.userStatusBadgeCannot}>
+                        <FontAwesomeIcon icon={faLock} /> 閲覧のみ
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.cardEligibleRoles}>
+                  <span className={styles.eligibleLabel}>編集権限:</span>
+                  <span className={styles.eligibleAdminTag}>システム管理者のみ</span>
+                </div>
+              </div>
+            </div>
+            <p className={styles.cardSubtitle}>
+              各LINEグループのIDを表示・管理します。公式LINEをグループに招待すると自動で上書き登録されます。
+            </p>
+
+            {/* ① 全体LINEグループ */}
+            <div className={styles.formGroup} style={{ marginBottom: "1.5rem" }}>
+              <label htmlFor="generalLineGroupId" className={styles.label}>
+                全体LINEグループ
+              </label>
+
+              <div className={styles.groupMetaRow}>
+                {formData.generalLineGroupName && (
+                  <span className={styles.groupNameBadge}>
+                    <FontAwesomeIcon icon={faUsers} />
+                    <span>{formData.generalLineGroupName}</span>
+                  </span>
+                )}
+                <span className={styles.joinedAtBadge}>
+                  <FontAwesomeIcon icon={faClock} />
+                  <span>
+                    招待・登録日時:{" "}
+                    {formatJoinedAt(formData.generalLineGroupJoinedAt) || (
+                      <span className={styles.joinedAtEmpty}>未登録（招待待ち）</span>
+                    )}
+                  </span>
+                </span>
+              </div>
+
+              <div style={{ marginTop: "0.5rem" }}>
+                <input
+                  id="generalLineGroupId"
+                  type="text"
+                  className={styles.input}
+                  placeholder="公式LINE招待時に自動入力されます（手動入力も可）"
+                  value={formData.generalLineGroupId}
+                  disabled={!canEdit || isSaving}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      generalLineGroupId: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* ② パート別LINEグループ */}
+            <div className={styles.formGroup}>
+              <span className={styles.label}>パート別LINEグループ</span>
+              <span className={styles.helpText}>
+                各パートのLINEグループIDです。公式LINEを招待するとグループ名・招待日時とともに自動入力されます。
+              </span>
+
+              <div className={styles.sectionList}>
+                {sections.map((sec) => {
+                  const groupName = formData.sectionLineGroupNames?.[sec.id];
+                  const joinedAt = formData.sectionLineGroupJoinedAt?.[sec.id];
+
+                  return (
+                    <div key={sec.id} className={styles.sectionRow}>
+                      <div className={styles.sectionHeader}>
+                        <span
+                          className={styles.sectionBadge}
+                          style={{ backgroundColor: sec.color || "#0284c7" }}
+                        >
+                          {sec.shortName || sec.name}
+                        </span>
+                        <span className={styles.sectionName}>{sec.name}</span>
+                      </div>
+
+                      <div className={styles.groupMetaRow}>
+                        {groupName && (
+                          <span className={styles.groupNameBadge}>
+                            <FontAwesomeIcon icon={faUsers} />
+                            <span>{groupName}</span>
+                          </span>
+                        )}
+                        <span className={styles.joinedAtBadge}>
+                          <FontAwesomeIcon icon={faClock} />
+                          <span>
+                            招待・登録日時:{" "}
+                            {formatJoinedAt(joinedAt) || (
+                              <span className={styles.joinedAtEmpty}>未登録（招待待ち）</span>
+                            )}
+                          </span>
+                        </span>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          className={styles.input}
+                          placeholder={`${sec.name}グループに招待すると自動入力されます`}
+                          value={formData.sectionLineGroupIds[sec.id] || ""}
+                          disabled={!canEdit || isSaving}
+                          onChange={(e) =>
+                            handleSectionLineGroupChange(sec.id, e.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* アクションボタンバー (システム管理者のみ表示) */}
+          {canEdit && (
             <div className={styles.actionsBar}>
-              {canEditGeneral && (
-                <button
-                  type="button"
-                  className={styles.resetBtn}
-                  onClick={handleResetToDefault}
-                  disabled={isSaving}
-                >
-                  <FontAwesomeIcon icon={faRotateLeft} className={styles.btnIcon} />{" "}
-                  初期値に戻す
-                </button>
-              )}
+              <button
+                type="button"
+                className={styles.resetBtn}
+                onClick={handleResetToDefault}
+                disabled={isSaving}
+              >
+                <FontAwesomeIcon icon={faRotateLeft} className={styles.btnIcon} />{" "}
+                初期値に戻す
+              </button>
               <button
                 type="submit"
                 className={styles.saveBtn}
@@ -552,6 +601,14 @@ export function SettingsEditClient({
             </div>
           )}
         </form>
+
+        {/* 詳しい連携手順・専用Webhook URL・環境変数案内モーダル */}
+        <LineIntegrationModal
+          isOpen={isGuideModalOpen}
+          onClose={() => setIsGuideModalOpen(false)}
+          sections={sections}
+          origin={origin}
+        />
       </div>
     </BaseLayout>
   );

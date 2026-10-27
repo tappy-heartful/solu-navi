@@ -19,7 +19,14 @@ export async function getAppSettingsClient(): Promise<AppSettings> {
       ...DEFAULT_APP_SETTINGS,
       ...data,
       id: "general",
+      generalLineGroupId: data.generalLineGroupId || "",
+      generalLineGroupName: data.generalLineGroupName || "",
+      generalLineGroupJoinedAt: typeof data.generalLineGroupJoinedAt === "number" ? data.generalLineGroupJoinedAt : undefined,
+      generalChannelAccessToken: data.generalChannelAccessToken || "",
       sectionLineGroupIds: data.sectionLineGroupIds || {},
+      sectionLineGroupNames: data.sectionLineGroupNames || {},
+      sectionLineGroupJoinedAt: data.sectionLineGroupJoinedAt || {},
+      sectionChannelAccessTokens: data.sectionChannelAccessTokens || {},
     };
   } catch (err) {
     console.error("[getAppSettingsClient] Error:", err);
@@ -37,15 +44,41 @@ export async function saveAppSettings(
   const docRef = doc(db, "settings", "general");
 
   const cleanSectionLineGroupIds: Record<string, string> = {};
+  const cleanSectionLineGroupNames: Record<string, string> = { ...(formData.sectionLineGroupNames || {}) };
+  const cleanSectionLineGroupJoinedAt: Record<string, number> = { ...(formData.sectionLineGroupJoinedAt || {}) };
+  const cleanSectionChannelAccessTokens: Record<string, string> = {};
+
   if (formData.sectionLineGroupIds) {
     Object.entries(formData.sectionLineGroupIds).forEach(([secId, grpId]) => {
-      cleanSectionLineGroupIds[secId] = (grpId || "").trim();
+      const trimmedId = (grpId || "").trim();
+      cleanSectionLineGroupIds[secId] = trimmedId;
+      if (trimmedId && !cleanSectionLineGroupJoinedAt[secId]) {
+        cleanSectionLineGroupJoinedAt[secId] = Date.now();
+      }
     });
   }
 
+  if (formData.sectionChannelAccessTokens) {
+    Object.entries(formData.sectionChannelAccessTokens).forEach(([secId, token]) => {
+      cleanSectionChannelAccessTokens[secId] = (token || "").trim();
+    });
+  }
+
+  const generalGroupId = (formData.generalLineGroupId || "").trim();
+  let generalJoinedAt = formData.generalLineGroupJoinedAt;
+  if (generalGroupId && !generalJoinedAt) {
+    generalJoinedAt = Date.now();
+  }
+
   const payload: Partial<AppSettings> = {
-    generalLineGroupId: (formData.generalLineGroupId || "").trim(),
+    generalLineGroupId: generalGroupId,
+    generalLineGroupName: formData.generalLineGroupName || "",
+    generalLineGroupJoinedAt: generalJoinedAt,
+    generalChannelAccessToken: (formData.generalChannelAccessToken || "").trim(),
     sectionLineGroupIds: cleanSectionLineGroupIds,
+    sectionLineGroupNames: cleanSectionLineGroupNames,
+    sectionLineGroupJoinedAt: cleanSectionLineGroupJoinedAt,
+    sectionChannelAccessTokens: cleanSectionChannelAccessTokens,
     homeAttendanceDays: Number(formData.homeAttendanceDays) || DEFAULT_APP_SETTINGS.homeAttendanceDays || 7,
     homeAttendanceCount: Number(formData.homeAttendanceDays) || DEFAULT_APP_SETTINGS.homeAttendanceCount || 5, // 旧互換
     homeScoreCount: Number(formData.homeScoreCount) || DEFAULT_APP_SETTINGS.homeScoreCount || 6,
