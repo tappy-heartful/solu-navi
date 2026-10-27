@@ -18,7 +18,6 @@ import { saveUserDoc } from "@/lib/firestore";
 import { showSpinner, hideSpinner } from "@/components/Common/Spinner";
 import { showDialog } from "@/components/Common/CommonDialog";
 import { format, writeLog } from "@/lib/functions";
-import { PageHelpButton } from "@/components/Help/PageHelpModal";
 import styles from "./agreement.module.css";
 
 export default function AgreementPage() {
@@ -265,8 +264,6 @@ export default function AgreementPage() {
             </button>
           </form>
         )}
-
-        <PageHelpButton />
       </div>
     </div>
   );

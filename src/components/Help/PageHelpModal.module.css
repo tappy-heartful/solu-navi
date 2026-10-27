@@ -42,6 +42,76 @@
   color: #146081;
 }
 
+/* ヘッダー用アイコンボタントリガー */
+.iconButtonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.triggerIconBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #146081;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.triggerIconBtn:hover {
+  background: #e2e8f0;
+  color: #0f4a64;
+}
+
+.triggerIconBtn:active {
+  transform: scale(0.95);
+}
+
+.triggerIconBtn .triggerIcon {
+  font-size: 1.35rem;
+  color: #146081;
+}
+
+/* パンくずアクションバー用ボタン (再読み込み・共有と同一サイズ) */
+.triggerActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: #ffffff;
+  background-color: #d97706;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.triggerActionBtn:hover {
+  background-color: #b45309;
+  transform: translateY(-1px);
+}
+
+.triggerActionBtn:active {
+  transform: translateY(1px);
+}
+
+.triggerActionBtn .actionIcon {
+  font-size: 0.875rem;
+  color: #ffffff;
+}
+
 /* モーダルオーバーレイ */
 .overlay {
   position: fixed;

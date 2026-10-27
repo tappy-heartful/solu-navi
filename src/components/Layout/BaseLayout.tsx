@@ -6,7 +6,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRotateRight, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { Header } from "./Header";
-import { PageHelpButton } from "@/components/Help/PageHelpModal";
+import { BottomNav } from "./BottomNav";
+import { PageHelpButton } from "../Help/PageHelpModal";
 import { useBreadcrumb } from "../../contexts/BreadcrumbContext";
 import { showSpinner, hideSpinner } from "../Common/Spinner";
 import { showDialog } from "../Common/CommonDialog";
@@ -96,6 +97,7 @@ export function BaseLayout({
 
               {showActions && (
                 <div className={styles.breadcrumbActions}>
+                  {showHelpButton && <PageHelpButton variant="action" />}
                   <button
                     type="button"
                     className={styles.refreshButton}
@@ -124,8 +126,9 @@ export function BaseLayout({
       <main className={styles.main}>
         {title && <h1 className={styles.pageTitle}>{title}</h1>}
         <div className={styles.content}>{children}</div>
-        {showHelpButton && <PageHelpButton />}
       </main>
+
+      <BottomNav />
     </div>
   );
 }

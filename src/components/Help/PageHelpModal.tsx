@@ -15,11 +15,13 @@ import styles from "./PageHelpModal.module.css";
 interface PageHelpButtonProps {
   className?: string;
   label?: string;
+  variant?: "button" | "icon" | "action";
 }
 
 export const PageHelpButton: React.FC<PageHelpButtonProps> = ({
   className = "",
   label = "このページの使い方",
+  variant = "button",
 }) => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -146,18 +148,44 @@ export const PageHelpButton: React.FC<PageHelpButtonProps> = ({
 
   return (
     <>
-      <div className={`${styles.buttonContainer} ${className}`}>
+      {variant === "action" ? (
         <button
           type="button"
-          className={styles.triggerBtn}
+          className={`${styles.triggerActionBtn} ${className}`}
           onClick={() => setIsOpen(true)}
-          title="この画面の使い方や操作方法を確認"
+          title="このページの使い方・操作方法を確認"
+          aria-label="このページの使い方・操作方法を確認"
           aria-haspopup="dialog"
         >
-          <FontAwesomeIcon icon={faCircleQuestion} className={styles.triggerIcon} />
-          <span>{label}</span>
+          <FontAwesomeIcon icon={faCircleQuestion} className={styles.actionIcon} />
         </button>
-      </div>
+      ) : variant === "icon" ? (
+        <div className={`${styles.iconButtonContainer} ${className}`}>
+          <button
+            type="button"
+            className={styles.triggerIconBtn}
+            onClick={() => setIsOpen(true)}
+            title="このページの使い方・操作方法を確認"
+            aria-label="このページの使い方・操作方法を確認"
+            aria-haspopup="dialog"
+          >
+            <FontAwesomeIcon icon={faCircleQuestion} className={styles.triggerIcon} />
+          </button>
+        </div>
+      ) : (
+        <div className={`${styles.buttonContainer} ${className}`}>
+          <button
+            type="button"
+            className={styles.triggerBtn}
+            onClick={() => setIsOpen(true)}
+            title="この画面の使い方や操作方法を確認"
+            aria-haspopup="dialog"
+          >
+            <FontAwesomeIcon icon={faCircleQuestion} className={styles.triggerIcon} />
+            <span>{label}</span>
+          </button>
+        </div>
+      )}
 
       {mounted && typeof document !== "undefined" && createPortal(modalContent, document.body)}
     </>
