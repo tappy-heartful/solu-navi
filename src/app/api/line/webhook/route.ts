@@ -158,6 +158,25 @@ const SECTION_NAMES: Record<string, string> = {
 };
 
 /**
+ * 各パート公式LINEの招待案内メッセージ
+ */
+const SECTION_LINE_INVITE_NOTICE = `━━━━━━━━━━━━━━━
+【各パートLINEへの招待案内】
+各パートの連絡やリマインドを届けるため、各パートのLINEグループにも以下の公式アカウントを招待してください👇
+
+サックス
+https://lin.ee/VOAa4DV
+
+トロンボーン
+https://lin.ee/UNnAzbu
+
+トランペット
+https://lin.ee/NWcjFQF
+
+りずむ
+https://lin.ee/825M38g`;
+
+/**
  * POST /api/line/webhook
  * 5つの公式アカウント（全体 + 4パート）に対応したWebhook
  * クエリ例:
@@ -363,7 +382,7 @@ export async function POST(req: NextRequest) {
           );
 
           replyText = formatConciergeMessage(
-            `グループ『${finalGroupName}』を【全体LINE】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n\n今後このグループ宛てに出欠・活動連絡や重要なお知らせをお届けします✨`,
+            `グループ『${finalGroupName}』を【全体LINE】としてSolu Naviに自動登録しました！\n（グループID: ${groupId}）\n\n今後このグループ宛てに出欠・活動連絡や重要なお知らせをお届けします✨\n\n${SECTION_LINE_INVITE_NOTICE}`,
             "general"
           );
         }
