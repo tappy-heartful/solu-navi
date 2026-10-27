@@ -9,12 +9,15 @@ import {
   faFloppyDisk,
   faRotateLeft,
   faCircleExclamation,
+  faCircleInfo,
   faCalendarCheck,
   faMusic,
   faPhotoFilm,
   faBullhorn,
   faSquarePollVertical,
   faCoins,
+  faCircleCheck,
+  faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import { faLine } from "@fortawesome/free-brands-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
@@ -40,8 +43,18 @@ export function SettingsEditClient({
   const { userData, isSystemAdmin } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
 
-  // 管理者判定: システム管理者のみ操作可能
-  const canEdit = Boolean(isSystemAdmin || userData?.isSystemAdmin);
+  // システム管理者判定: すべての設定項目を編集可能
+  const canEditGeneral = Boolean(isSystemAdmin || userData?.isSystemAdmin);
+
+  // バンドマスター (roleId === "1") または パートリーダー (roleId === "3") 判定
+  const isBandmaster = userData?.roleId === "1";
+  const isPartLeader = userData?.roleId === "3";
+
+  // LINEグループID設定の編集権限: システム管理者、バンマス、パートリーダー
+  const canEditLine = Boolean(canEditGeneral || isBandmaster || isPartLeader);
+
+  // いずれかの設定を変更・保存可能か
+  const canSave = canEditLine || canEditGeneral;
 
   useEffect(() => {
     setBreadcrumbs([
@@ -80,9 +93,12 @@ export function SettingsEditClient({
     }));
   };
 
-  // 初期値にリセット
+  // 初期値にリセット (システム管理者のみ実行可能)
   const handleResetToDefault = async () => {
-    if (!canEdit) return;
+    if (!canEditGeneral) {
+      await showDialog("表示設定の初期化にはシステム管理者権限が必要です。", true);
+      return;
+    }
     const ok = await showDialog(
       "ホーム表示設定などを初期設定に戻しますか？\n（入力中のLINEグループIDは保持されます）"
     );
@@ -102,8 +118,8 @@ export function SettingsEditClient({
   // 保存処理
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!canEdit) {
-      await showDialog("設定の変更にはシステム管理者権限が必要です。", true);
+    if (!canSave) {
+      await showDialog("設定の変更権限がありません。", true);
       return;
     }
 
@@ -114,7 +130,26 @@ export function SettingsEditClient({
     showSpinner();
 
     try {
-      await saveAppSettings(formData, userData?.id || userData?.uid);
+      // システム管理者でない場合（バンマス・パートリーダー）は、LINEグループIDのみ更新し、他の設定は既存値を維持
+      const dataToSave: SettingsFormData = canEditGeneral
+        ? formData
+        : {
+            ...formData,
+            homeAttendanceDays:
+              initialSettings.homeAttendanceDays ?? DEFAULT_APP_SETTINGS.homeAttendanceDays ?? 7,
+            homeScoreCount:
+              initialSettings.homeScoreCount ?? DEFAULT_APP_SETTINGS.homeScoreCount ?? 6,
+            homeMediaCount:
+              initialSettings.homeMediaCount ?? DEFAULT_APP_SETTINGS.homeMediaCount ?? 4,
+            showCallInAnnouncement:
+              initialSettings.showCallInAnnouncement ?? DEFAULT_APP_SETTINGS.showCallInAnnouncement ?? true,
+            showVoteInAnnouncement:
+              initialSettings.showVoteInAnnouncement ?? DEFAULT_APP_SETTINGS.showVoteInAnnouncement ?? true,
+            showFeeInAnnouncement:
+              initialSettings.showFeeInAnnouncement ?? DEFAULT_APP_SETTINGS.showFeeInAnnouncement ?? true,
+          };
+
+      await saveAppSettings(dataToSave, userData?.id || userData?.uid);
       await writeLog({
         dataId: "settings_general",
         action: "アプリ設定更新",
@@ -150,15 +185,6 @@ export function SettingsEditClient({
           </p>
         </div>
 
-        {!canEdit && (
-          <div className={styles.adminWarning}>
-            <FontAwesomeIcon icon={faCircleExclamation} className={styles.warningIcon} />
-            <div>
-              設定の変更にはシステム管理者権限が必要です。現在は閲覧のみ可能です。
-            </div>
-          </div>
-        )}
-
         <form onSubmit={handleSave}>
           {/* 1. LINEグループ設定 */}
           <div className={styles.card}>
@@ -166,7 +192,26 @@ export function SettingsEditClient({
               <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>
                 <FontAwesomeIcon icon={faLine} />
               </div>
-              <h2 className={styles.cardTitle}>LINEグループID設定</h2>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>LINEグループID設定</h2>
+                  {canEditLine ? (
+                    <span className={styles.userStatusBadgeCan}>
+                      <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
+                    </span>
+                  ) : (
+                    <span className={styles.userStatusBadgeCannot}>
+                      <FontAwesomeIcon icon={faLock} /> 閲覧のみ
+                    </span>
+                  )}
+                </div>
+                <div className={styles.cardEligibleRoles}>
+                  <span className={styles.eligibleLabel}>編集権限:</span>
+                  <span className={styles.eligibleRoleTag}>👑 バンマス</span>
+                  <span className={styles.eligibleRoleTag}>✨ パートリーダー</span>
+                  <span className={styles.eligibleRoleTag}>システム管理者</span>
+                </div>
+              </div>
             </div>
             <p className={styles.cardSubtitle}>
               サークル公式LINE BOTからの連絡・出欠リマインド・通知の宛先となるグループIDを設定します。
@@ -185,7 +230,7 @@ export function SettingsEditClient({
                 className={styles.input}
                 placeholder="C..."
                 value={formData.generalLineGroupId}
-                disabled={!canEdit || isSaving}
+                disabled={!canEditLine || isSaving}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -218,7 +263,7 @@ export function SettingsEditClient({
                       className={styles.input}
                       placeholder={`${sec.name}のグループID (C...)`}
                       value={formData.sectionLineGroupIds[sec.id] || ""}
-                      disabled={!canEdit || isSaving}
+                      disabled={!canEditLine || isSaving}
                       onChange={(e) =>
                         handleSectionLineGroupChange(sec.id, e.target.value)
                       }
@@ -235,7 +280,24 @@ export function SettingsEditClient({
               <div className={`${styles.cardIcon} ${styles.displayIconBg}`}>
                 <FontAwesomeIcon icon={faSliders} />
               </div>
-              <h2 className={styles.cardTitle}>ホーム画面表示設定</h2>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>ホーム画面表示設定</h2>
+                  {canEditGeneral ? (
+                    <span className={styles.userStatusBadgeCan}>
+                      <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
+                    </span>
+                  ) : (
+                    <span className={styles.userStatusBadgeCannot}>
+                      <FontAwesomeIcon icon={faLock} /> 変更不可
+                    </span>
+                  )}
+                </div>
+                <div className={styles.cardEligibleRoles}>
+                  <span className={styles.eligibleLabel}>編集権限:</span>
+                  <span className={styles.eligibleAdminTag}>システム管理者のみ</span>
+                </div>
+              </div>
             </div>
             <p className={styles.cardSubtitle}>
               ホーム画面に一度に表示する各コンテンツの表示日数・最大件数を調整できます。
@@ -264,7 +326,7 @@ export function SettingsEditClient({
                     max={60}
                     className={styles.numberInput}
                     value={formData.homeAttendanceDays}
-                    disabled={!canEdit || isSaving}
+                    disabled={!canEditGeneral || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -298,7 +360,7 @@ export function SettingsEditClient({
                     max={30}
                     className={styles.numberInput}
                     value={formData.homeScoreCount}
-                    disabled={!canEdit || isSaving}
+                    disabled={!canEditGeneral || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -332,7 +394,7 @@ export function SettingsEditClient({
                     max={30}
                     className={styles.numberInput}
                     value={formData.homeMediaCount}
-                    disabled={!canEdit || isSaving}
+                    disabled={!canEditGeneral || isSaving}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -352,7 +414,24 @@ export function SettingsEditClient({
               <div className={`${styles.cardIcon} ${styles.announcementIconBg}`}>
                 <FontAwesomeIcon icon={faBullhorn} />
               </div>
-              <h2 className={styles.cardTitle}>ホームお知らせ表示設定</h2>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>ホームお知らせ表示設定</h2>
+                  {canEditGeneral ? (
+                    <span className={styles.userStatusBadgeCan}>
+                      <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
+                    </span>
+                  ) : (
+                    <span className={styles.userStatusBadgeCannot}>
+                      <FontAwesomeIcon icon={faLock} /> 変更不可
+                    </span>
+                  )}
+                </div>
+                <div className={styles.cardEligibleRoles}>
+                  <span className={styles.eligibleLabel}>編集権限:</span>
+                  <span className={styles.eligibleAdminTag}>システム管理者のみ</span>
+                </div>
+              </div>
             </div>
             <p className={styles.cardSubtitle}>
               ホーム上部のお知らせ枠（重要なお知らせ）に掲載する項目を制御します。
@@ -378,7 +457,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showCallInAnnouncement}
-                  disabled={!canEdit || isSaving}
+                  disabled={!canEditGeneral || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -407,7 +486,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showVoteInAnnouncement}
-                  disabled={!canEdit || isSaving}
+                  disabled={!canEditGeneral || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -436,7 +515,7 @@ export function SettingsEditClient({
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={formData.showFeeInAnnouncement}
-                  disabled={!canEdit || isSaving}
+                  disabled={!canEditGeneral || isSaving}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -449,17 +528,19 @@ export function SettingsEditClient({
           </div>
 
           {/* アクションボタンバー */}
-          {canEdit && (
+          {canSave && (
             <div className={styles.actionsBar}>
-              <button
-                type="button"
-                className={styles.resetBtn}
-                onClick={handleResetToDefault}
-                disabled={isSaving}
-              >
-                <FontAwesomeIcon icon={faRotateLeft} className={styles.btnIcon} />{" "}
-                初期値に戻す
-              </button>
+              {canEditGeneral && (
+                <button
+                  type="button"
+                  className={styles.resetBtn}
+                  onClick={handleResetToDefault}
+                  disabled={isSaving}
+                >
+                  <FontAwesomeIcon icon={faRotateLeft} className={styles.btnIcon} />{" "}
+                  初期値に戻す
+                </button>
+              )}
               <button
                 type="submit"
                 className={styles.saveBtn}

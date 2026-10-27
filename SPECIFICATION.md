@@ -592,9 +592,14 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - 未払いの部費があればお知らせに表示（`showFeeInAnnouncement`）: 自分に未払いの部費・集金がある場合のお知らせ表示制御（デフォルト: 有効 `true`）。
   - **ホーム画面お知らせカードの常時表示仕様**:
     - 受付中の曲投票や曲募集などのお知らせ事項が存在しない場合も、カード枠（📢 お知らせ）を常に表示し、内部に「お知らせはありません🍀」およびPWA案内をスマートに提示。
-  - **権限管理 (システム管理者のみ操作可能)**:
-    - 設定の変更・保存は**システム管理者（`isSystemAdmin`）のみに限定**。非システム管理者がアクセスした際は警告バナー（「設定の変更にはシステム管理者権限が必要です。現在は閲覧のみ可能です。」）を表示し、フォーム要素を無効化して閲覧のみ許可。
-    - 「初期値に戻す」ボタンにより、標準設定へ瞬時にリセット可能。
+  - **権限管理と画面上での権限明記仕様 (システム管理者 / バンドマスター / パートリーダー)**:
+    - **各カードヘッダーでの権限と操作可否の常時明記**:
+      - 設定カードごとに「編集権限: 👑 バンマス / ✨ パートリーダー / システム管理者」（または「編集権限: システム管理者のみ」）タグをタイトル下に常時表示。
+      - 閲覧中ユーザー自身の実行権限バッジ（`✓ 編集可能` / `🔒 閲覧のみ・変更不可`）をタイトル右側にスマートに配置。
+    - **権限範囲**:
+      - **システム管理者（`isSystemAdmin`）**: 全設定（LINEグループID、ホーム表示件数・日数、お知らせ表示制御）の編集・保存、および「初期値に戻す」が可能。
+      - **バンドマスター（`roleId === "1"`） / パートリーダー（`roleId === "3"`）**: 全体LINEグループIDおよび各パート別LINEグループIDの編集・保存が可能（ホーム表示・お知らせ設定は既存値を自動保護）。
+      - **一般メンバー**: 閲覧のみ許可（フォーム入力無効化）。
 
 ---
 
@@ -602,7 +607,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 
 | コレクション名 | ドキュメントID | 主なフィールド | 読み取り | 書き込み/編集 |
 | :--- | :--- | :--- | :--- | :--- |
-| `settings` | `general` | `generalLineGroupId`, `sectionLineGroupIds`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` |
+| `settings` | `general` | `generalLineGroupId`, `sectionLineGroupIds`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / バンマス / パートリーダー |
 | `users` | `uid` | `displayName`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `enrollmentYear`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |

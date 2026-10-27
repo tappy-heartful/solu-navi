@@ -62,6 +62,14 @@ service cloud.firestore {
       return isSystemAdmin() || isMasterAdmin() || (isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSettingsAdmin == true);
     }
+
+    // バンドマスター (roleId == "1") または パートリーダー (roleId == "3") 判定
+    function isBandmasterOrPartLeader() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleId == "1" ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roleId == "3"
+      );
+    }
     
     // ユーザー自身かどうかの判定
     function isOwner(uid) {
@@ -244,10 +252,10 @@ service cloud.firestore {
       allow read, update, delete: if isSystemAdmin();
     }
 
-    // アプリ設定 (システム管理者のみ書き込み可能)
+    // アプリ設定 (システム管理者、またはバンマス・パートリーダーが書き込み可能)
     match /settings/{settingId} {
       allow read: if isAuthenticated();
-      allow write: if isSystemAdmin();
+      allow write: if isSystemAdmin() || isSettingsAdmin() || isBandmasterOrPartLeader();
     }
 
     // 監査ログ
