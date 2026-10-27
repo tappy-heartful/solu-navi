@@ -201,7 +201,80 @@ export async function POST(req: NextRequest) {
     for (const event of events) {
       const isJoin = event.type === "join";
       const isMemberJoined = event.type === "memberJoined";
+      const isLeave = event.type === "leave";
 
+      // --- グループ退出 (leave) イベント: グループ登録を自動抹消 ---
+      if (isLeave && (event.source?.type === "group" || event.source?.groupId)) {
+        const groupId = event.source.groupId;
+        if (!groupId) continue;
+
+        // 該当のパートまたは全体を特定
+        let targetType: "general" | "section" = "general";
+        let targetSectionId: string | undefined = undefined;
+        let targetLabel = "全体LINE";
+
+        if (querySectionId) {
+          targetType = "section";
+          targetSectionId = querySectionId;
+          targetLabel = SECTION_NAMES[querySectionId] || `パート${querySectionId}`;
+        } else if (queryTarget === "general") {
+          targetType = "general";
+          targetLabel = "全体LINE";
+        } else {
+          // クエリパラメータがない場合は、Firestore上の既存登録と groupId を照合
+          if (settings.generalLineGroupId === groupId) {
+            targetType = "general";
+            targetLabel = "全体LINE";
+          } else if (settings.sectionLineGroupIds) {
+            for (const [secId, gId] of Object.entries(settings.sectionLineGroupIds)) {
+              if (gId === groupId) {
+                targetType = "section";
+                targetSectionId = secId;
+                targetLabel = SECTION_NAMES[secId] || `パート${secId}`;
+                break;
+              }
+            }
+          }
+        }
+
+        // Firestore から登録を抹消
+        if (targetType === "section" && targetSectionId) {
+          const sectionLineGroupIds = { ...(settings.sectionLineGroupIds || {}) };
+          delete sectionLineGroupIds[targetSectionId];
+          const sectionLineGroupNames = { ...(settings.sectionLineGroupNames || {}) };
+          delete sectionLineGroupNames[targetSectionId];
+          const sectionLineGroupJoinedAt = { ...(settings.sectionLineGroupJoinedAt || {}) };
+          delete sectionLineGroupJoinedAt[targetSectionId];
+
+          await settingsRef.set(
+            {
+              sectionLineGroupIds,
+              sectionLineGroupNames,
+              sectionLineGroupJoinedAt,
+              updatedAt: Date.now(),
+              updatedBy: `LINE Webhook (${targetLabel}退出・登録抹消)`,
+            },
+            { merge: true }
+          );
+        } else {
+          // 全体LINE
+          await settingsRef.set(
+            {
+              generalLineGroupId: "",
+              generalLineGroupName: "",
+              generalLineGroupJoinedAt: null,
+              updatedAt: Date.now(),
+              updatedBy: "LINE Webhook (全体LINE退出・登録抹消)",
+            },
+            { merge: true }
+          );
+        }
+
+        console.log(`[LINE Webhook] Cleared group registration for ${groupId} (${targetLabel}) on leave event`);
+        continue;
+      }
+
+      // --- グループ参加 (join / memberJoined) イベント: グループ登録を自動上書き ---
       if ((isJoin || isMemberJoined) && event.source?.type === "group") {
         const groupId = event.source.groupId;
         const joinedAt = typeof event.timestamp === "number" ? event.timestamp : Date.now();

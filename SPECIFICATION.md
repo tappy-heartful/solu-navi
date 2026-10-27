@@ -621,7 +621,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
       - URLクエリパラメータ（`?sectionId=1` 等）から対象アカウントを確実に特定し、環境変数からアクセストークンを即座に取得。
       - LINE Messaging API のグループサマリーAPI (`/v2/bot/group/{groupId}/summary`) を自動呼び出ししてグループ名を取得。
       - Firestore `settings/general` にグループID・グループ名・招待登録日時を自動上書き登録。
-      - 招待されたグループへ公式LINEから「Solu Naviコンシェルジュ 全体用（各パート用）」の人格で自動返信を送信。
+      - **グループ退出時の自動抹消 (`leave` イベント)**: 公式LINEがグループから退出（メンバーによるキックまたは手動退会）した際、LINE Webhook (`leave` イベント) を受信し、Firestore `settings/general` から該当グループのID・グループ名・参加日時を自動で抹消（未登録状態へクリア）。
       - **メッセージ人格 & ホームURL案内統一規約**: すべてのLINEメッセージ（グループ自動登録時の返信、出欠・日程調整リマインド、プッシュ・マルチキャスト通知）は、「Solu Naviコンシェルジュ 全体用（各パート用）」の人格として送信され、メッセージ末尾に必ず Solu Navi ホーム画面案内（`https://solu-navi.vercel.app/`）が付与される。
 
 ---
