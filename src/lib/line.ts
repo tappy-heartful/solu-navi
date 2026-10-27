@@ -7,11 +7,11 @@ const LINE_PROFILE_URL = "https://api.line.me/v2/profile";
 const LINE_FRIENDSHIP_URL = "https://api.line.me/friendship/v1/status";
 
 function getClientId(): string {
-  return process.env.LINE_CLIENT_ID || process.env.LINE_CLIENT_ID_NAVI || "";
+  return process.env.LINE_CLIENT_ID_NAVI || process.env.LINE_CLIENT_ID || "";
 }
 
 function getClientSecret(): string {
-  return process.env.LINE_CLIENT_SECRET || process.env.LINE_CLIENT_SECRET_NAVI || "";
+  return process.env.LINE_CLIENT_SECRET_NAVI || process.env.LINE_CLIENT_SECRET || "";
 }
 
 /**
