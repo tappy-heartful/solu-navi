@@ -406,7 +406,13 @@ PEPPER="your_secure_random_pepper_string_here_32chars"
 GROQ_API_KEY="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # =============================================================
-# 5. アプリケーション基底URL (ローカル環境)
+# 5. 定期実行Cron (GAS) 認証用シークレット
+# =============================================================
+# GASからAPI (/api/cron/event-notice) を叩く際の認証トークン (任意の安全なランダム英数字)
+CRON_SECRET="your_secure_cron_secret_string_here_32chars"
+
+# =============================================================
+# 6. アプリケーション基底URL (ローカル環境)
 # =============================================================
 NEXT_PUBLIC_BASE_URL="http://localhost:3003"
 ```
@@ -439,16 +445,12 @@ AWS や VPS などの常時起動サーバーを契約すると月額費用が�
 2. 左上「+ 新規」→「その他」→ **「Google Apps Script」** をクリック。
 3. プロジェクト名を `Solu Navi Bot` に変更。
 4. **スクリプトの貼り付け**:
-   本プロジェクトの `gas/` フォルダにある各ファイルの内容を用途に合わせて配置します：
-   - [SoluNavi_EventNotice_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/SoluNavi_EventNotice_Bot.js): **【推奨・単一ファイル構成】全体LINE宛てのイベント予告＆出欠催促通知Bot（1日1回動かす関数: `execDailyNotification`）**
-     - アプリ設定画面（`/settings`）で設定した「指定曜日（N曜日）」および「向こうM日分」のイベントを抽出し、全体LINEへ出欠回答・予定案内を自動送信します。
-     - Solu Navi API呼び出し方式（`MODE = "API"`）を採用しており、外部ライブラリ導入不要で安全かつ確実に稼働します。
-   - [【Navi_01】AutoNotice_LINE_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_01】AutoNotice_LINE_Bot.js): 出欠・日程調整・選曲・投票の個別締切通知（※Firestore直接接続方式）
-   - [【Navi_02】Accounting_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_02】Accounting_Bot.js): バランス会計の四半期シーズン作成＆送金リマインド
-   - [【Navi_03】Todo_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_03】Todo_Bot.js): 親子TODOの期日リマインド
-5. `SoluNavi_EventNotice_Bot.js` を利用する場合の設定：
-   - スクリプト冒頭の `BASE_URL` に本番サイトのURL（例: `https://solu-navi.vercel.app`）を設定します。
-   - アプリ側でCRON用シークレットキーを設定している場合は `CRON_SECRET` に同一の文字列を指定します。
+   - [SoluNavi_EventNotice_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/SoluNavi_EventNotice_Bot.js) の全内容をコピーして貼り付けます。
+   - ※外部ライブラリの追加は一切不要です（GAS標準機能のみで動作します）。
+5. **スクリプトプロパティの設定**:
+   GAS画面左メニューの歯車アイコン **「プロジェクトの設定」** を開き、最下部の **「スクリプト プロパティ」** に以下を登録します：
+   - **`BASE_URL`**: 本番サイトのURL（例: `https://solu-navi.vercel.app`）
+   - **`CRON_SECRET`**: APIを保護するための認証シークレットキー（Vercelの環境変数 `CRON_SECRET` と同じ文字列を設定）
 
 ### 8.3. トリガー（定期実行）の設定
 1. GAS 画面左側の時計アイコン **「トリガー」** をクリック。

@@ -601,7 +601,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - **定期イベント予告通知の有効化 (`enableEventNotice`)**: 全体LINEグループへの定期イベント予告配信の有効/無効制御（デフォルト: 有効 `true`）。
     - **送信曜日設定 (`eventNoticeDaysOfWeek`)**: 通知を送信する曜日を 0(日)〜6(土) の配列で複数指定可能（デフォルト: `[1]` = 毎週月曜日）。
     - **対象期間設定 (`eventNoticeTargetDays`)**: 送信当日から向こう何日後までのイベントを予告・通知するか（デフォルト: 7日分、1〜60日で設定可能）。
-    - **GAS (Google Apps Script) 連携**: 毎朝8時〜9時に1日1回実行されるスクリプト `gas/SoluNavi_EventNotice_Bot.js` が Firestore から送信曜日・対象日数を直接読み込み、条件に合致した日だけ全体LINEグループへイベント一覧および出欠・日程調整の回答導線を一括送信。
+    - **GAS (Google Apps Script) 連携**: 毎朝8時〜9時に1日1回実行されるスクリプト `gas/SoluNavi_EventNotice_Bot.js`（1ファイル・1日1回動かす関数: `execDailyNotification` のみ）が、Solu Navi API（`/api/cron/event-notice`）を呼び出し、指定曜日・対象日数を自動判定して全体LINEグループへイベント一覧および出欠・日程調整の回答導線を一括送信。外部ライブラリの追加や秘密鍵のGAS管理が不要な軽量・セキュア設計とし、URL等の設定値は GAS の `PropertiesService.getScriptProperties()` で管理。
     - **画面上からのテスト送信**: システム管理者はアプリ設定画面から「全体LINEへ今すぐテスト通知を送信」ボタンにより、送信曜日に関わらず即座に動作テストが可能。
   - **イベント種別の拡張（予定のみ・回答不要対応）**:
     - イベントの回答種別（`attendanceType`）に従来の「出欠確認 (`attendance`)」「日程調整 (`schedule`)」に加え、**「予定のみ（出欠・日程調整なし） (`none`)」** を追加。
