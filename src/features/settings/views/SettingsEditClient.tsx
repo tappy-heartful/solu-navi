@@ -19,6 +19,9 @@ import {
   faLock,
   faClock,
   faUsers,
+  faBell,
+  faCalendarDays,
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import { faLine } from "@fortawesome/free-brands-svg-icons";
 import { BaseLayout } from "@/components/Layout/BaseLayout";
@@ -27,6 +30,7 @@ import { DEFAULT_APP_SETTINGS } from "@/lib/firestore/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
+import { sendUpcomingEventsNoticeToGeneralLine } from "@/features/event/api/event-notification-server-actions";
 import { saveAppSettings } from "../api/settings-client-service";
 import { SettingsFormData } from "../types";
 import { LineIntegrationModal } from "../components/LineIntegrationModal";
@@ -36,6 +40,16 @@ interface SettingsEditClientProps {
   initialSettings: AppSettings;
   sections: SectionDoc[];
 }
+
+const WEEKDAYS = [
+  { value: 0, label: "日" },
+  { value: 1, label: "月" },
+  { value: 2, label: "火" },
+  { value: 3, label: "水" },
+  { value: 4, label: "木" },
+  { value: 5, label: "金" },
+  { value: 6, label: "土" },
+];
 
 export function SettingsEditClient({
   initialSettings,
@@ -74,6 +88,12 @@ export function SettingsEditClient({
       initialSettings.showVoteInAnnouncement ?? DEFAULT_APP_SETTINGS.showVoteInAnnouncement ?? true,
     showFeeInAnnouncement:
       initialSettings.showFeeInAnnouncement ?? DEFAULT_APP_SETTINGS.showFeeInAnnouncement ?? true,
+    enableEventNotice:
+      initialSettings.enableEventNotice ?? DEFAULT_APP_SETTINGS.enableEventNotice ?? true,
+    eventNoticeDaysOfWeek:
+      initialSettings.eventNoticeDaysOfWeek ?? DEFAULT_APP_SETTINGS.eventNoticeDaysOfWeek ?? [1],
+    eventNoticeTargetDays:
+      initialSettings.eventNoticeTargetDays ?? DEFAULT_APP_SETTINGS.eventNoticeTargetDays ?? 7,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -107,6 +127,42 @@ export function SettingsEditClient({
         [sectionId]: value,
       },
     }));
+  };
+
+  // イベント予告通知の曜日トグル (0: 日 〜 6: 土)
+  const toggleDayOfWeek = (day: number) => {
+    if (!canEdit || isSaving) return;
+    setFormData((prev) => {
+      const current = prev.eventNoticeDaysOfWeek || [];
+      const next = current.includes(day)
+        ? current.filter((d) => d !== day)
+        : [...current, day].sort();
+      return { ...prev, eventNoticeDaysOfWeek: next };
+    });
+  };
+
+  // イベント予告通知のテスト送信 (曜日条件をバイパスして即座に全体LINEへ送信)
+  const handleTestSendNotice = async () => {
+    if (!canEdit) return;
+    const ok = await showDialog(
+      "全体LINEグループへ、現在の設定に基づいたイベント予告のテスト通知を送信しますか？\n（※送信曜日に関わらず今すぐ全体LINEへ送信されます）"
+    );
+    if (!ok) return;
+
+    showSpinner();
+    try {
+      const res = await sendUpcomingEventsNoticeToGeneralLine(true);
+      hideSpinner();
+      if (res.success && res.sent) {
+        await showDialog(`送信成功🍀\n${res.message}`, true);
+      } else {
+        await showDialog(res.message, true);
+      }
+    } catch (err: any) {
+      hideSpinner();
+      console.error("[handleTestSendNotice] error:", err);
+      await showDialog(`送信に失敗しました: ${err.message}`, true);
+    }
   };
 
   // 初期値にリセット (システム管理者のみ実行可能)
@@ -436,7 +492,149 @@ export function SettingsEditClient({
             </div>
           </div>
 
-          {/* 3. LINEグループ設定 (一番下に配置 / グループID表示・編集に特化) */}
+          {/* 3. イベント予告・出欠催促通知設定 (全体LINE・GAS連携) */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={`${styles.cardIcon} ${styles.noticeIconBg}`}>
+                <FontAwesomeIcon icon={faBell} />
+              </div>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>イベント予告・出欠催促通知（全体LINE）</h2>
+                  {canEdit ? (
+                    <span className={styles.userStatusBadgeCan}>
+                      <FontAwesomeIcon icon={faCircleCheck} /> 編集可能
+                    </span>
+                  ) : (
+                    <span className={styles.userStatusBadgeCannot}>
+                      <FontAwesomeIcon icon={faLock} /> 閲覧のみ
+                    </span>
+                  )}
+                </div>
+                <div className={styles.cardEligibleRoles}>
+                  <span className={styles.eligibleLabel}>編集権限:</span>
+                  <span className={styles.eligibleAdminTag}>システム管理者のみ</span>
+                </div>
+              </div>
+            </div>
+            <p className={styles.cardSubtitle}>
+              Google Apps Script（GAS）から1日1回実行され、指定した曜日に対象期間内のイベント予告と出欠回答を促すメッセージを全体LINEグループへ自動送信します。
+            </p>
+
+            <div className={styles.checkboxList}>
+              {/* 定期送信の有効/無効 */}
+              <label className={styles.checkboxOptionRow}>
+                <div className={styles.checkboxTextGroup}>
+                  <div className={styles.checkboxTitle}>
+                    <FontAwesomeIcon
+                      icon={faBell}
+                      className={styles.inlineOptionIcon}
+                      style={{ color: "#0284c7" }}
+                    />
+                    <span>定期イベント予告通知を有効にする</span>
+                  </div>
+                  <div className={styles.checkboxDesc}>
+                    有効にすると、指定曜日に全体LINEグループ宛てに向こうの予定と回答案内が送信されます。
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  className={styles.checkboxInput}
+                  checked={formData.enableEventNotice}
+                  disabled={!canEdit || isSaving}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      enableEventNotice: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            {/* 送信曜日設定 (N曜日) */}
+            <div style={{ marginTop: "1.25rem" }}>
+              <label className={styles.label}>
+                <FontAwesomeIcon icon={faCalendarDays} style={{ marginRight: "6px", color: "#0284c7" }} />
+                通知を送信する曜日（複数選択可）
+              </label>
+              <p className={styles.countSub} style={{ marginBottom: "0.5rem" }}>
+                タップして送信したい曜日を選択してください（青色＝選択中）。
+              </p>
+              <div className={styles.daysGrid}>
+                {WEEKDAYS.map((wd) => {
+                  const isSelected = (formData.eventNoticeDaysOfWeek || []).includes(wd.value);
+                  return (
+                    <button
+                      key={wd.value}
+                      type="button"
+                      className={`${styles.dayChip} ${isSelected ? styles.dayChipActive : ""}`}
+                      onClick={() => toggleDayOfWeek(wd.value)}
+                      disabled={!canEdit || isSaving || !formData.enableEventNotice}
+                    >
+                      {wd.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 対象日数設定 (向こうM日分) */}
+            <div style={{ marginTop: "1.25rem" }}>
+              <div className={styles.countCard}>
+                <div>
+                  <div className={styles.countLabel}>
+                    <FontAwesomeIcon
+                      icon={faClock}
+                      className={styles.countIcon}
+                      style={{ color: "#0284c7" }}
+                    />
+                    <span>イベント予告の対象期間</span>
+                  </div>
+                  <div className={styles.countSub}>
+                    送信当日から向こう何日後までのイベントを予告・通知するか（推奨: 7〜14日分）
+                  </div>
+                </div>
+                <div className={styles.numberInputWrapper}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    className={styles.numberInput}
+                    value={formData.eventNoticeTargetDays}
+                    disabled={!canEdit || isSaving || !formData.enableEventNotice}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        eventNoticeTargetDays: Math.max(1, parseInt(e.target.value) || 1),
+                      }))
+                    }
+                  />
+                  <span className={styles.unitText}>日分</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.noticeInfoBox}>
+              💡 <strong>GASとの連携について</strong>:
+              Google Apps Script（GAS）のトリガーで日次タイマー（例: 毎朝8:00〜9:00）を1日1回実行するよう設定してください。GAS側が上記の「送信曜日」と「対象日数」をFirestoreから直接読み込み、合致した曜日に対象イベントを一括通知します。
+            </div>
+
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.testSendBtn}
+                onClick={handleTestSendNotice}
+                disabled={!canEdit || isSaving}
+                title="全体LINEグループへ今すぐテスト通知を送信します"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} />
+                <span>全体LINEへ今すぐテスト通知を送信</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4. LINEグループ設定 (一番下に配置 / グループID表示・編集に特化) */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>

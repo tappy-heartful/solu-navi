@@ -136,6 +136,12 @@
   color: #64748b;
 }
 
+.noneBadge {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
 .statusSubText {
   font-size: 0.75rem;
   color: #334155;

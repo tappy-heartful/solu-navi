@@ -56,5 +56,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   showCallInAnnouncement: true,
   showVoteInAnnouncement: true,
   showFeeInAnnouncement: true,
+  enableEventNotice: true,
+  eventNoticeDaysOfWeek: [1], // 月曜日
+  eventNoticeTargetDays: 7,   // 向こう7日分
 };
 

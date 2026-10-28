@@ -438,29 +438,28 @@ AWS や VPS などの常時起動サーバーを契約すると月額費用が�
 1. [Google ドライブ](https://drive.google.com/) を開く。
 2. 左上「+ 新規」→「その他」→ **「Google Apps Script」** をクリック。
 3. プロジェクト名を `Solu Navi Bot` に変更。
-4. **Firestore ライブラリの導入**:
-   - 左側メニューの「ライブラリ +」をクリック。
-   - スクリプトID欄に以下を入力して「検索」：
-     ```text
-     1VUSl4b1r1eoNcRWotZM3e87ygkxvXStO7DAJwaPZdsXX
-     ```
-   - 最新バージョン（Version 34等）を選択して「追加」。
-5. **スクリプトの貼り付け**:
-   本プロジェクトの `gas/` フォルダにある各ファイルの内容を貼り付けます：
-   - [【Navi_01】AutoNotice_LINE_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_01】AutoNotice_LINE_Bot.js): 出欠・日程調整・選曲・投票の締切通知
+4. **スクリプトの貼り付け**:
+   本プロジェクトの `gas/` フォルダにある各ファイルの内容を用途に合わせて配置します：
+   - [SoluNavi_EventNotice_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/SoluNavi_EventNotice_Bot.js): **【推奨・単一ファイル構成】全体LINE宛てのイベント予告＆出欠催促通知Bot（1日1回動かす関数: `execDailyNotification`）**
+     - アプリ設定画面（`/settings`）で設定した「指定曜日（N曜日）」および「向こうM日分」のイベントを抽出し、全体LINEへ出欠回答・予定案内を自動送信します。
+     - Solu Navi API呼び出し方式（`MODE = "API"`）を採用しており、外部ライブラリ導入不要で安全かつ確実に稼働します。
+   - [【Navi_01】AutoNotice_LINE_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_01】AutoNotice_LINE_Bot.js): 出欠・日程調整・選曲・投票の個別締切通知（※Firestore直接接続方式）
    - [【Navi_02】Accounting_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_02】Accounting_Bot.js): バランス会計の四半期シーズン作成＆送金リマインド
    - [【Navi_03】Todo_Bot.js](file:///c:/Users/tappy/Documents/repos/solu-navi/gas/【Navi_03】Todo_Bot.js): 親子TODOの期日リマインド
-6. スクリプト先頭の接続定数（Firebase のメール、秘密鍵、プロジェクトID、LINEアクセストークン等）を `.env.local` の値に合わせて書き換えます。
+5. `SoluNavi_EventNotice_Bot.js` を利用する場合の設定：
+   - スクリプト冒頭の `BASE_URL` に本番サイトのURL（例: `https://solu-navi.vercel.app`）を設定します。
+   - アプリ側でCRON用シークレットキーを設定している場合は `CRON_SECRET` に同一の文字列を指定します。
 
 ### 8.3. トリガー（定期実行）の設定
 1. GAS 画面左側の時計アイコン **「トリガー」** をクリック。
 2. 右下「トリガーを追加」をクリック：
-   - 実行する関数: `execAutoNotification`
-   - イベントのソース: **「時間主導型」**
-   - タイプ: **「日ベースのタイマー」**
-   - 時間: **「午前 9 時〜10 時」**
-3. 保存をクリック（Google アカウントの承認画面が出たら許可します）。
-これで毎朝自動的に締切チェックが行われ、対象者にLINE通知が届きます。
+   - **イベント予告＆出欠催促（SoluNavi_EventNotice_Bot.js）の場合**:
+     - 実行する関数: **`execDailyNotification`**（※1日1回動かす関数はこれ1つのみ）
+     - イベントのソース: **「時間主導型」**
+     - タイプ: **「日ベースのタイマー」**
+     - 時間: **「午前 8 時〜9 時」** または **「午前 9 時〜10 時」**
+   - 保存をクリック（初回実行時にGoogleアカウントの承認画面が出た場合は許可します）。
+3. これで毎日決まった時間に自動でチェックが走り、アプリ設定画面で指定した曜日（例: 毎週月曜日）であれば自動で全体LINEへ向こうM日分のイベント予告・出欠回答依頼が届きます。曜日・日数の変更はアプリの「設定」画面からいつでも自由に変更できます。
 
 ---
 

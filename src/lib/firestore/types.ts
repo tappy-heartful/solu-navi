@@ -281,7 +281,7 @@ export interface EventRentTimeRange {
 export interface Event {
   id: string;
   title: string;
-  attendanceType: "schedule" | "attendance";
+  attendanceType: "schedule" | "attendance" | "none";
   date?: string;              // "yyyy.MM.dd" (出欠タイプ)
   startDate?: string;         // "yyyy.MM.dd" または "yyyy-MM-dd"
   endDate?: string;           // "yyyy.MM.dd" または "yyyy-MM-dd"
@@ -392,6 +392,9 @@ export interface AppSettings {
   showCallInAnnouncement?: boolean; // 曲募集をお知らせに表示するか（デフォルト: true）
   showVoteInAnnouncement?: boolean; // 曲投票をお知らせに表示するか（デフォルト: true）
   showFeeInAnnouncement?: boolean;  // 未払い部費をお知らせに表示するか（デフォルト: true）
+  enableEventNotice?: boolean;       // イベント予告LINE通知を送信するか (デフォルト: true)
+  eventNoticeDaysOfWeek?: number[];  // 送信する曜日 [0(日), 1(月), ..., 6(土)] (デフォルト: [1] ※月曜)
+  eventNoticeTargetDays?: number;    // 向こう何日分のイベントを対象にするか (デフォルト: 7)
   updatedAt?: number;
   updatedBy?: string;
   lastSavedAt?: any;

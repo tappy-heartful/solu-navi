@@ -70,7 +70,7 @@ export const QuickAttendanceSection: React.FC<QuickAttendanceSectionProps> = ({
 
     return events
       .filter((e) => {
-        const isAttendance = e.attendanceType === "attendance" || !e.attendanceType;
+        const isAttendance = e.attendanceType === "attendance";
         const eDate = e.date || e.startDate || "";
         return isAttendance && eDate >= today && eDate <= maxDate;
       })

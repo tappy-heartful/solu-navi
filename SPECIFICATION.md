@@ -597,6 +597,15 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - 曲募集をお知らせに表示（`showCallInAnnouncement`）: 現在募集中の曲がある場合のお知らせバナー表示制御（デフォルト: 有効 `true`）。
     - 投票をお知らせに表示（`showVoteInAnnouncement`）: 現在投票受付中の曲がある場合のお知らせバナー表示制御（デフォルト: 有効 `true`）。
     - 未払いの部費があればお知らせに表示（`showFeeInAnnouncement`）: 自分に未払いの部費・集金がある場合のお知らせ表示制御（デフォルト: 有効 `true`）。
+  - **イベント予告・出欠催促通知設定（全体LINE・GAS連携）**:
+    - **定期イベント予告通知の有効化 (`enableEventNotice`)**: 全体LINEグループへの定期イベント予告配信の有効/無効制御（デフォルト: 有効 `true`）。
+    - **送信曜日設定 (`eventNoticeDaysOfWeek`)**: 通知を送信する曜日を 0(日)〜6(土) の配列で複数指定可能（デフォルト: `[1]` = 毎週月曜日）。
+    - **対象期間設定 (`eventNoticeTargetDays`)**: 送信当日から向こう何日後までのイベントを予告・通知するか（デフォルト: 7日分、1〜60日で設定可能）。
+    - **GAS (Google Apps Script) 連携**: 毎朝8時〜9時に1日1回実行されるスクリプト `gas/SoluNavi_EventNotice_Bot.js` が Firestore から送信曜日・対象日数を直接読み込み、条件に合致した日だけ全体LINEグループへイベント一覧および出欠・日程調整の回答導線を一括送信。
+    - **画面上からのテスト送信**: システム管理者はアプリ設定画面から「全体LINEへ今すぐテスト通知を送信」ボタンにより、送信曜日に関わらず即座に動作テストが可能。
+  - **イベント種別の拡張（予定のみ・回答不要対応）**:
+    - イベントの回答種別（`attendanceType`）に従来の「出欠確認 (`attendance`)」「日程調整 (`schedule`)」に加え、**「予定のみ（出欠・日程調整なし） (`none`)」** を追加。
+    - 出欠回答や日程調整を受け付けない単なる予定・スケジュールの共有に対応。受付期間の入力は不要となり、確認画面・一覧画面・カレンダーでも出欠回答フォームや集計テーブルは表示されず、「予定のみ（回答不要）」としてスマートに提示される。
   - **ホーム画面お知らせカードの常時表示仕様**:
     - 受付中の曲投票や曲募集などのお知らせ事項が存在しない場合も、カード枠（📢 お知らせ）を常に表示し、内部に「お知らせはありません🍀」およびPWA案内をスマートに提示。
   - **権限管理と画面上での権限明記仕様 (システム管理者のみ編集可能)**:
@@ -631,14 +640,14 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 
 | コレクション名 | ドキュメントID | 主なフィールド | 読み取り | 書き込み/編集 |
 | :--- | :--- | :--- | :--- | :--- |
-| `settings` | `general` | `generalLineGroupId`, `generalLineGroupName`, `generalLineGroupJoinedAt`, `sectionLineGroupIds`, `sectionLineGroupNames`, `sectionLineGroupJoinedAt`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / `isSettingsAdmin` |
+| `settings` | `general` | `generalLineGroupId`, `generalLineGroupName`, `generalLineGroupJoinedAt`, `sectionLineGroupIds`, `sectionLineGroupNames`, `sectionLineGroupJoinedAt`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `enableEventNotice`, `eventNoticeDaysOfWeek`, `eventNoticeTargetDays`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / `isSettingsAdmin` |
 | `users` | `uid` | `displayName`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `enrollmentYear`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |
 | `roles` | `id` (例: `1`) | `name`, `order`, `description` | 認証済部員 | `isMasterAdmin` |
 | `prefectures` | `id` (例: `38`) | `name`, `order` | 認証済部員 | `isMasterAdmin` |
 | `municipalities` | `id` (例: `38201`) | `name`, `prefectureCode` | 認証済部員 | `isMasterAdmin` |
-| `events` | 自動採番 | `title`, `attendanceType`, `date`, `candidateDates`, `placeName`, `prefectureId`, `municipalityId`, `website`, `googleMap`, `access`, `rentTimeRanges`, `isVenueReserved`, `schedule`, `dress`, `bring`, `rent`, `youtubeUrl`, `youtubeTimestamps`, `setlist`, `instrumentConfig`, `acceptStartDate`, `acceptEndDate` | 認証済部員 | `isEventAdmin` |
+| `events` | 自動採番 | `title`, `attendanceType` (attendance/schedule/none), `date`, `candidateDates`, `placeName`, `prefectureId`, `municipalityId`, `website`, `googleMap`, `access`, `rentTimeRanges`, `isVenueReserved`, `schedule`, `dress`, `bring`, `rent`, `youtubeUrl`, `youtubeTimestamps`, `setlist`, `instrumentConfig`, `acceptStartDate`, `acceptEndDate` | 認証済部員 | `isEventAdmin` |
 | `eventAttendanceAnswers` | `{eventId}_{uid}` | `eventId`, `uid`, `status`, `comment` | 認証済部員 | 本人 / `isEventAdmin` |
 | `eventAdjustAnswers` | `{eventId}_{uid}` | `eventId`, `uid`, `answers` (`{ [date]: statusId }`), `comment` | 認証済部員 | 本人 / `isEventAdmin` |
 | `eventRecordings` | 自動採番 | `eventId`, `uid`, `title`, `url` | 認証済部員 | 本人 / `isEventAdmin` (削除) |

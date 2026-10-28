@@ -41,7 +41,7 @@ type Props = {
   mode: "new" | "edit" | "copy";
   eventId?: string;
   initialEvent?: Event | null;
-  initialType?: "schedule" | "attendance";
+  initialType?: "schedule" | "attendance" | "none";
   scores: Score[];
   sections: Section[];
   instruments: Instrument[];
@@ -81,7 +81,7 @@ export function EventEditClient({
   const isEdit = mode === "edit";
   const { start: defaultStart, end: defaultEnd } = defaultDates();
 
-  const [attendanceType, setAttendanceType] = useState<"schedule" | "attendance">(
+  const [attendanceType, setAttendanceType] = useState<"schedule" | "attendance" | "none">(
     initialEvent?.attendanceType || initialType
   );
   const [date, setDate] = useState(dotDateToHyphen(initialEvent?.date || initialDate || ""));
@@ -224,7 +224,7 @@ export function EventEditClient({
       return;
     }
 
-    if (attendanceType === "attendance" && !date) {
+    if (attendanceType !== "schedule" && !date) {
       await showDialog("イベント日を入力してください", true);
       return;
     }
@@ -237,14 +237,16 @@ export function EventEditClient({
       }
     }
 
-    if (!acceptStartDate || !acceptEndDate) {
-      await showDialog("受付期間を入力してください", true);
-      return;
-    }
+    if (attendanceType !== "none") {
+      if (!acceptStartDate || !acceptEndDate) {
+        await showDialog("受付期間を入力してください", true);
+        return;
+      }
 
-    if (acceptStartDate > acceptEndDate) {
-      await showDialog("受付終了日は開始日以降にしてください", true);
-      return;
+      if (acceptStartDate > acceptEndDate) {
+        await showDialog("受付終了日は開始日以降にしてください", true);
+        return;
+      }
     }
 
     const confirmed = await showDialog("イベントを保存しますか？");
@@ -279,13 +281,13 @@ export function EventEditClient({
         title: title.trim(),
         color: color || DEFAULT_EVENT_COLOR,
         attendanceType,
-        date: attendanceType === "attendance" ? hyphenDateToDot(date) : "",
+        date: attendanceType !== "schedule" ? hyphenDateToDot(date) : "",
         candidateDates:
           attendanceType === "schedule"
             ? candidateDates.filter((d) => d.trim() !== "").map(hyphenDateToDot).sort()
             : [],
-        acceptStartDate: hyphenDateToDot(acceptStartDate),
-        acceptEndDate: hyphenDateToDot(acceptEndDate),
+        acceptStartDate: attendanceType !== "none" ? hyphenDateToDot(acceptStartDate) : "",
+        acceptEndDate: attendanceType !== "none" ? hyphenDateToDot(acceptEndDate) : "",
         placeName: placeName.trim(),
         prefectureId: prefectureId || "",
         municipalityId: municipalityId || "",
@@ -403,6 +405,16 @@ export function EventEditClient({
                 />
                 <span>日程調整（複数候補日から調整）</span>
               </label>
+              <label className={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="attendanceType"
+                  checked={attendanceType === "none"}
+                  onChange={() => setAttendanceType("none")}
+                  className={styles.radio}
+                />
+                <span>予定のみ（出欠・日程調整なし）</span>
+              </label>
             </div>
           </div>
 
@@ -461,7 +473,7 @@ export function EventEditClient({
           </div>
 
           {/* 日付 / 候補日 */}
-          {attendanceType === "attendance" ? (
+          {attendanceType !== "schedule" ? (
             <div className={styles.formGroup}>
               <label className={styles.label}>
                 イベント日 <span className={styles.required}>*</span>
@@ -506,27 +518,29 @@ export function EventEditClient({
             </div>
           )}
 
-          {/* 受付期間 */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              受付期間 <span className={styles.required}>*</span>
-            </label>
-            <div className={styles.dateRow}>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={acceptStartDate}
-                onChange={(e) => setAcceptStartDate(e.target.value)}
-              />
-              <span className={styles.dateSeparator}>～</span>
-              <input
-                type="date"
-                className={styles.dateInput}
-                value={acceptEndDate}
-                onChange={(e) => setAcceptEndDate(e.target.value)}
-              />
+          {/* 受付期間: 予定のみ (none) の場合は非表示 */}
+          {attendanceType !== "none" && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                受付期間 <span className={styles.required}>*</span>
+              </label>
+              <div className={styles.dateRow}>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={acceptStartDate}
+                  onChange={(e) => setAcceptStartDate(e.target.value)}
+                />
+                <span className={styles.dateSeparator}>～</span>
+                <input
+                  type="date"
+                  className={styles.dateInput}
+                  value={acceptEndDate}
+                  onChange={(e) => setAcceptEndDate(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 開催地 */}
           <div className={styles.formGroup}>

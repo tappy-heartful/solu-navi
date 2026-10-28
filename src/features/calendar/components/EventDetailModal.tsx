@@ -95,7 +95,7 @@ export function EventDetailModal({
   // ===== 編集・新規作成用フォームステート =====
   const [formTitle, setFormTitle] = useState("");
   const [formColor, setFormColor] = useState(DEFAULT_EVENT_COLOR);
-  const [formAttendanceType, setFormAttendanceType] = useState<"attendance" | "schedule">("attendance");
+  const [formAttendanceType, setFormAttendanceType] = useState<"attendance" | "schedule" | "none">("attendance");
   const [formDate, setFormDate] = useState("");
   const [formCandidateDates, setFormCandidateDates] = useState<string[]>([""]);
   const [formIsAllDay, setFormIsAllDay] = useState(false);
@@ -308,6 +308,7 @@ export function EventDetailModal({
   }, []);
 
   const event = data?.event;
+  const isNone = event?.attendanceType === "none";
   const isSchedule = event?.attendanceType === "schedule";
   const todayStr = format(new Date(), "yyyy.MM.dd");
   const isPast = event?.date ? event.date < todayStr : false;
@@ -435,10 +436,12 @@ export function EventDetailModal({
     setIsSavingEvent(true);
     showSpinner();
     try {
+      const isSchedule = formAttendanceType === "schedule";
       const isAttendance = formAttendanceType === "attendance";
-      const dotDate = isAttendance ? hyphenDateToDot(formDate) : "";
+      const isNone = formAttendanceType === "none";
+      const dotDate = !isSchedule ? hyphenDateToDot(formDate) : "";
       const dotCandidateDates =
-        !isAttendance
+        isSchedule
           ? formCandidateDates.filter((d) => d.trim() !== "").map(hyphenDateToDot)
           : [];
 
@@ -616,7 +619,7 @@ export function EventDetailModal({
       return;
     }
 
-    if (formAttendanceType === "attendance" && !formDate) {
+    if (formAttendanceType !== "schedule" && !formDate) {
       await showDialog("開催日を選択してください", true);
       return;
     }
@@ -960,6 +963,16 @@ export function EventDetailModal({
                         <i className="fa-solid fa-calendar-days" />
                         <span>日程調整 (候補日)</span>
                       </button>
+                      <button
+                        type="button"
+                        className={`${styles.typeToggleBtn} ${
+                          formAttendanceType === "none" ? styles.typeToggleBtnActive : ""
+                        }`}
+                        onClick={() => setFormAttendanceType("none")}
+                      >
+                        <i className="fa-solid fa-bell-slash" />
+                        <span>予定のみ (回答不要)</span>
+                      </button>
                     </div>
                   ) : (
                     <div className={styles.fixedTypeContainer}>
@@ -972,10 +985,16 @@ export function EventDetailModal({
                           className={
                             formAttendanceType === "schedule"
                               ? "fa-solid fa-calendar-days"
+                              : formAttendanceType === "none"
+                              ? "fa-solid fa-bell-slash"
                               : "fa-solid fa-calendar-check"
                           }
                         />{" "}
-                        {formAttendanceType === "schedule" ? "日程調整 (候補日)" : "イベント出欠 (特定日)"}
+                        {formAttendanceType === "schedule"
+                          ? "日程調整 (候補日)"
+                          : formAttendanceType === "none"
+                          ? "予定のみ (回答不要)"
+                          : "イベント出欠 (特定日)"}
                       </span>
                       <span className={styles.fixedTypeNote}>※作成後に回答種別を変更することはできません</span>
                     </div>
@@ -983,7 +1002,7 @@ export function EventDetailModal({
                 </div>
 
                 {/* 日程設定 */}
-                {formAttendanceType === "attendance" ? (
+                {formAttendanceType !== "schedule" ? (
                   <>
                     <div className={styles.formField}>
                       <div className={styles.fieldLabelRow}>
@@ -1445,8 +1464,28 @@ export function EventDetailModal({
           ) : (
             /* ===== 閲覧・出欠回答表示モード ===== */
             <>
-              {/* 1. 出欠回答・回答編集インラインセクション */}
-              <div className={styles.answerSectionCard}>
+              {/* 1. 出欠回答・回答編集インラインセクション (予定のみの場合は案内表示) */}
+              {isNone ? (
+                <div
+                  style={{
+                    marginBottom: "12px",
+                    padding: "14px 16px",
+                    borderRadius: "12px",
+                    backgroundColor: "#f8fafc",
+                    border: "1px dashed #cbd5e1",
+                    textAlign: "center",
+                    color: "#475569",
+                    fontSize: "13px",
+                  }}
+                >
+                  <i
+                    className="fa-solid fa-circle-info"
+                    style={{ marginRight: "6px", color: "#0284c7" }}
+                  />
+                  このイベントは<strong>予定のみ</strong>です（出欠・日程調整の回答は受け付けていません）。
+                </div>
+              ) : (
+                <div className={styles.answerSectionCard}>
                 <div className={styles.answerSectionHeader}>
                   <div className={styles.answerTitleRow}>
                     <i className="fa-solid fa-user-check" style={{ color: "#146081", fontSize: "16px" }} />
@@ -1629,6 +1668,7 @@ export function EventDetailModal({
                   </div>
                 )}
               </div>
+              )}
 
               {/* 2. 基本情報カード */}
               <div className={styles.sectionCard}>
@@ -1813,8 +1853,9 @@ export function EventDetailModal({
                 )}
               </div>
 
-              {/* 3. 出欠状況 / 日程調整集計カード */}
-              <div className={styles.sectionCard}>
+              {/* 3. 出欠状況 / 日程調整集計カード (予定のみの場合は非表示) */}
+              {!isNone && (
+                <div className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
                   <h3 className={styles.sectionTitle}>
                     <i className="fa-solid fa-users" />
@@ -2150,6 +2191,7 @@ export function EventDetailModal({
                   </div>
                 )}
               </div>
+              )}
 
               {/* 4. セットリスト */}
               {event.setlist && event.setlist.length > 0 && (

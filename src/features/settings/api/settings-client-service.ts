@@ -86,6 +86,9 @@ export async function saveAppSettings(
     showCallInAnnouncement: formData.showCallInAnnouncement ?? true,
     showVoteInAnnouncement: formData.showVoteInAnnouncement ?? true,
     showFeeInAnnouncement: formData.showFeeInAnnouncement ?? true,
+    enableEventNotice: formData.enableEventNotice ?? true,
+    eventNoticeDaysOfWeek: Array.isArray(formData.eventNoticeDaysOfWeek) ? formData.eventNoticeDaysOfWeek : [1],
+    eventNoticeTargetDays: Number(formData.eventNoticeTargetDays) || DEFAULT_APP_SETTINGS.eventNoticeTargetDays || 7,
     updatedAt: Date.now(),
     updatedBy: updatedByUid || "anonymous",
   };

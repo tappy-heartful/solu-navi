@@ -17,4 +17,7 @@ export interface SettingsFormData {
   showCallInAnnouncement: boolean;
   showVoteInAnnouncement: boolean;
   showFeeInAnnouncement: boolean;
+  enableEventNotice: boolean;
+  eventNoticeDaysOfWeek: number[];
+  eventNoticeTargetDays: number;
 }

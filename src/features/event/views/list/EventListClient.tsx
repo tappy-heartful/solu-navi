@@ -113,6 +113,10 @@ export function EventListClient({ events, prefNamesMap = {}, munNamesMap = {} }:
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
   const renderStatusCell = (e: Event, type: "schedule" | "future" | "closed") => {
+    if (e.attendanceType === "none") {
+      return <span className={`${styles.statusBadge} ${styles.noneBadge}`}>予定のみ</span>;
+    }
+
     const isSchedule = e.attendanceType === "schedule";
     const hasAttended = myAttendanceAnswers[e.id];
     const hasAdjusted = myAdjustAnswers[e.id] && Object.keys(myAdjustAnswers[e.id]).length > 0;

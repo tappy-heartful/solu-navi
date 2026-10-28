@@ -20,6 +20,7 @@ type Props = {
   collectionName?: string;
   answerStatus: AnswerStatusType;
   answerStatusText: string;
+  hideAnswerStatus?: boolean;
   isActive: boolean;
   onDelete?: () => Promise<void>;
   afterDeletePath?: string;
@@ -39,6 +40,7 @@ export const AnswerConfirmLayout = ({
   collectionName,
   answerStatus,
   answerStatusText,
+  hideAnswerStatus,
   isActive,
   onDelete,
   afterDeletePath,
@@ -112,11 +114,13 @@ export const AnswerConfirmLayout = ({
 
       <div className={styles.container}>
         {/* 回答ステータスバッジ */}
-        <div className={styles.statusContainer}>
-          <span className={`${styles.statusBadge} ${styles[answerStatus]}`}>
-            {answerStatusText}
-          </span>
-        </div>
+        {!hideAnswerStatus && (
+          <div className={styles.statusContainer}>
+            <span className={`${styles.statusBadge} ${styles[answerStatus]}`}>
+              {answerStatusText}
+            </span>
+          </div>
+        )}
 
         {children}
 

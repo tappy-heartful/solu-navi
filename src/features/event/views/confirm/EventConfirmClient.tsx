@@ -86,16 +86,20 @@ export function EventConfirmClient({ eventId, data }: Props) {
     hideSpinner();
   }, []);
 
+  const isNone = event.attendanceType === "none";
   const isSchedule = event.attendanceType === "schedule";
   const isPast = isEventPast(event);
-  const inTerm = isInTerm(event.acceptStartDate || "", event.acceptEndDate || "");
-  const isActive = !isPast && inTerm;
+  const inTerm = !isNone && isInTerm(event.acceptStartDate || "", event.acceptEndDate || "");
+  const isActive = !isPast && !isNone && inTerm;
 
   const myAnswerExists = answers.some((a) => a.uid === uid);
 
   let answerStatus: "answered" | "pending" | "closed";
   let answerStatusText: string;
-  if (isPast) {
+  if (isNone) {
+    answerStatus = "closed";
+    answerStatusText = "予定のみ";
+  } else if (isPast) {
     answerStatus = "closed";
     answerStatusText = "終了";
   } else if (!inTerm) {
@@ -615,11 +619,12 @@ export function EventConfirmClient({ eventId, data }: Props) {
         basePath="/event"
         dataId={eventId}
         featureIdKey="eventId"
-        answerStatus={answerStatus}
-        answerStatusText={answerStatusText}
-        isActive={isActive}
+        answerStatus={isNone ? "closed" : answerStatus}
+        answerStatusText={isNone ? "予定のみ" : answerStatusText}
+        hideAnswerStatus={isNone}
+        isActive={!isNone && isActive}
         onDelete={handleDelete}
-        answerMenuSlot={answerMenuSlot}
+        answerMenuSlot={isNone ? null : answerMenuSlot}
         canManage={canManage}
       >
         {/* 日付 / 候補日 */}
@@ -635,12 +640,14 @@ export function EventConfirmClient({ eventId, data }: Props) {
           )}
         </DisplayField>
 
-        {/* 受付期間 */}
-        <DisplayField label={isSchedule ? "日程調整受付期間" : "出欠受付期間"}>
-          {event.acceptStartDate || event.acceptEndDate
-            ? `${getDayOfWeek(event.acceptStartDate || "")} ～ ${getDayOfWeek(event.acceptEndDate || "")}`
-            : "未設定"}
-        </DisplayField>
+        {/* 受付期間: 予定のみ (none) の場合は非表示 */}
+        {!isNone && (
+          <DisplayField label={isSchedule ? "日程調整受付期間" : "出欠受付期間"}>
+            {event.acceptStartDate || event.acceptEndDate
+              ? `${getDayOfWeek(event.acceptStartDate || "")} ～ ${getDayOfWeek(event.acceptEndDate || "")}`
+              : "未設定"}
+          </DisplayField>
+        )}
 
         {/* タイトル */}
         <DisplayField label="タイトル">{event.title}</DisplayField>
@@ -830,41 +837,62 @@ export function EventConfirmClient({ eventId, data }: Props) {
         )}
 
         {/* 回答状況 */}
-        <div style={{ marginBottom: "1.25rem" }}>
-          <label className={styles.fieldTitle}>{isSchedule ? "日程調整" : "出欠"}</label>
-          <div>
-            <span className={styles.answerCountSummary}>
-              回答{answers.length}人 (未回答{unansweredUids.length}人)
-            </span>
-            {isSchedule ? renderAdjustTable() : renderAttendanceBlocks()}
-
-            {/* サブ回答状況の表示 */}
-            {isSchedule && attendanceAnswersProp && attendanceAnswersProp.length > 0 && (
-              <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px dashed #cbd5e1" }}>
-                <h4 style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px", fontWeight: "bold" }}>
-                  <i className="fa-solid fa-users" style={{ marginRight: "0.5rem" }} />
-                  出欠回答（登録済みデータ）
-                </h4>
-                <span className={styles.answerCountSummary}>
-                  回答{attendanceAnswersProp.length}人 (未回答{allUserUids.length - attendanceAnswersProp.length}人)
-                </span>
-                {renderAttendanceBlocks(attendanceAnswersProp)}
-              </div>
-            )}
-            {!isSchedule && adjustAnswersProp && adjustAnswersProp.length > 0 && (
-              <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px dashed #cbd5e1" }}>
-                <h4 style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px", fontWeight: "bold" }}>
-                  <i className="fa-solid fa-calendar-days" style={{ marginRight: "0.5rem" }} />
-                  日程調整回答（登録済みデータ）
-                </h4>
-                <span className={styles.answerCountSummary}>
-                  回答{adjustAnswersProp.length}人 (未回答{allUserUids.length - adjustAnswersProp.length}人)
-                </span>
-                {renderAdjustTable(adjustAnswersProp)}
-              </div>
-            )}
+        {isNone ? (
+          <div
+            style={{
+              marginBottom: "1.5rem",
+              padding: "1.25rem 1rem",
+              borderRadius: "12px",
+              backgroundColor: "#f8fafc",
+              border: "1px dashed #cbd5e1",
+              textAlign: "center",
+              color: "#475569",
+              fontSize: "0.92rem",
+            }}
+          >
+            <i
+              className="fa-solid fa-circle-info"
+              style={{ marginRight: "0.5rem", color: "#0284c7", fontSize: "1.05rem" }}
+            />
+            このイベントは<strong>予定のみ</strong>です（出欠・日程調整の回答は受け付けていません）。
           </div>
-        </div>
+        ) : (
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label className={styles.fieldTitle}>{isSchedule ? "日程調整" : "出欠"}</label>
+            <div>
+              <span className={styles.answerCountSummary}>
+                回答{answers.length}人 (未回答{unansweredUids.length}人)
+              </span>
+              {isSchedule ? renderAdjustTable() : renderAttendanceBlocks()}
+
+              {/* サブ回答状況の表示 */}
+              {isSchedule && attendanceAnswersProp && attendanceAnswersProp.length > 0 && (
+                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px dashed #cbd5e1" }}>
+                  <h4 style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px", fontWeight: "bold" }}>
+                    <i className="fa-solid fa-users" style={{ marginRight: "0.5rem" }} />
+                    出欠回答（登録済みデータ）
+                  </h4>
+                  <span className={styles.answerCountSummary}>
+                    回答{attendanceAnswersProp.length}人 (未回答{allUserUids.length - attendanceAnswersProp.length}人)
+                  </span>
+                  {renderAttendanceBlocks(attendanceAnswersProp)}
+                </div>
+              )}
+              {!isSchedule && adjustAnswersProp && adjustAnswersProp.length > 0 && (
+                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px dashed #cbd5e1" }}>
+                  <h4 style={{ fontSize: "0.95rem", color: "#475569", marginBottom: "8px", fontWeight: "bold" }}>
+                    <i className="fa-solid fa-calendar-days" style={{ marginRight: "0.5rem" }} />
+                    日程調整回答（登録済みデータ）
+                  </h4>
+                  <span className={styles.answerCountSummary}>
+                    回答{adjustAnswersProp.length}人 (未回答{allUserUids.length - adjustAnswersProp.length}人)
+                  </span>
+                  {renderAdjustTable(adjustAnswersProp)}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 回答時コメント */}
         {(() => {
