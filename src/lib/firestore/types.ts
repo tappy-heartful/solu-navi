@@ -402,3 +402,47 @@ export interface AppSettings {
   lastSavedAt?: any;
 }
 
+// ===== お問い合わせ機能 (Contact & Support Chat) =====
+export type ContactCategory = "bug" | "request" | "question" | "data_fix" | "other";
+
+export type ContactFeature =
+  | "event"
+  | "fee"
+  | "score"
+  | "media"
+  | "vote_call"
+  | "blue_note"
+  | "user"
+  | "auth"
+  | "other";
+
+export type ContactStatus = "open" | "in_progress" | "resolved";
+
+export interface Contact {
+  id: string;
+  uid: string; // 投稿者のUID
+  userName: string; // 投稿者の表示名
+  userAvatar?: string; // 投稿者のアバターURL
+  category: ContactCategory; // お問い合わせ種別
+  feature: ContactFeature; // 対象機能
+  title: string; // 件名
+  deviceInfo?: string; // 端末環境 (例: iPhone iOS 17 / PWA)
+  status: ContactStatus; // 対応ステータス
+  latestMessage?: string; // 最新メッセージ本文
+  latestMessageAt?: number; // 最新メッセージ送信日時
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ContactMessage {
+  id: string;
+  contactId: string;
+  senderUid: string;
+  senderName: string;
+  senderAvatar?: string;
+  isAdmin: boolean; // システム管理者からの発言か
+  text: string;
+  createdAt: number;
+}
+
+

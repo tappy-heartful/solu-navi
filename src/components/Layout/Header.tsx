@@ -22,6 +22,7 @@ import {
   faRecordVinyl,
   faRightLeft,
   faGear,
+  faHeadset,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserAvatar } from "../Common/UserAvatar";
@@ -228,6 +229,10 @@ export function Header() {
                 <Link href="/handover" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faRightLeft} className={styles.subIcon} />
                   <span className={styles.subLabel}>引継ぎ</span>
+                </Link>
+                <Link href="/contact" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
+                  <FontAwesomeIcon icon={faHeadset} className={styles.subIcon} />
+                  <span className={styles.subLabel}>お問い合わせ</span>
                 </Link>
                 <Link href="/settings" className={styles.subCard} prefetch={false} onClick={handleMenuNav}>
                   <FontAwesomeIcon icon={faGear} className={styles.subIcon} />

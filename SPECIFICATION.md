@@ -646,13 +646,35 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
       - **メッセージ人格 & ホームURL案内統一規約**: すべてのLINEメッセージ（グループ自動登録時の返信、出欠・日程調整リマインド、プッシュ・マルチキャスト通知）は、「Solu Naviコンシェルジュ 全体用（各パート用）」の人格として送信され、メッセージ末尾に必ず Solu Navi ホーム画面案内（`https://solu-navi.vercel.app/`）が付与される。
       - **全体LINE追加時の各パート公式LINE招待案内**: 全体LINEグループに公式LINEが追加・登録された際の自動返信メッセージには、各パート（サックス、トロンボーン、トランペット、リズム）の公式LINEアカウントを各パートLINEグループへ招待するよう促す案内メッセージと招待URL（lin.ee）が自動で付与される。
 
+### 3.17. お問い合わせ・サポートチャット機能 (`/contact`)
+- **目的**: 部員がアプリの操作で困ったとき、不具合を発見したとき、新機能・改善を提案したいとき、登録データの修正を依頼したいときに、迷わず正確に伝えられる専用窓口を提供。
+- **特徴・UI仕様**:
+  - **フォーマット入力による認識の齟齬排除 (`/contact/edit`)**:
+    - **お問い合わせ種別 (`category`)**: 不具合・エラー報告 (`bug`)、機能要望・改善提案 (`request`)、使い方・操作の質問 (`question`)、データ修正・削除依頼 (`data_fix`)、その他 (`other`) の5種類からワンタップで選択。選択種別に応じてプレースホルダーや入力案内が動的に最適化。
+    - **対象機能名 (`feature`)**: イベント・出欠・日程調整、部費・集金、譜面、録音メディア、曲募集・投票、今日の一曲、部員名簿、ログイン認証、全般・その他から選択。
+    - **件名・タイトル (`title`)**: お問い合わせの要約を1行で入力。
+    - **端末・利用環境の自動取得 (`deviceInfo`)**: ブラウザの `userAgent` および PWA（スタンドアロン）起動状態からOS・ブラウザ・アプリ環境を自動判定して入力欄へプレフィル（編集可能）。不具合調査を極めて円滑化。
+    - **詳しい内容・発生手順 (`content`)**: 何をした時にどうなったか等を詳細に記入。
+  - **システム管理者とのLINE風チャットUI (`/contact/confirm?contactId=xxx`)**:
+    - **チャットタイムライン**: LINE公式を想起させる落ち着いたブルーグレー背景、日付セパレーター（ピルバッジ）、吹き出し（相手: 左側・白・アバター/名前/管理者タグ付き、自分: 右側・LINEグリーン・時刻表示）。
+    - **リアルタイム双方向メッセージング**: Firestore `onSnapshot` によるリアルタイム購読により、画面を開いたまま管理者とのやり取りが即座に反映。
+    - **対応ステータス管理**: 「未対応 (`open`)」「対応中 (`in_progress`)」「解決済み (`resolved`)」。システム管理者は画面上部のバーからワンタップでステータス変更が可能。解決済みのスレッドに部員が返信した場合は自動で再オープン。
+  - **一覧画面 (`/contact`)**:
+    - 一般部員は自身のお問い合わせ履歴、システム管理者は全部員のお問い合わせを「未対応」「対応中」「解決済み」のタブ別件数バッジ付きで一覧表示・管理。
+- **画面構成**:
+  - 一覧: `/contact`
+  - 新規作成: `/contact/edit`
+  - 詳細確認・チャット: `/contact/confirm?contactId=xxx` (規約15準拠: 画面名「お問い合わせ確認」)
+
 ---
 
 ## 4. データモデル (Cloud Firestore)
 
 | コレクション名 | ドキュメントID | 主なフィールド | 読み取り | 書き込み/編集 |
 | :--- | :--- | :--- | :--- | :--- |
-| `settings` | `general` | `generalLineGroupId`, `generalLineGroupName`, `generalLineGroupJoinedAt`, `sectionLineGroupIds`, `sectionLineGroupNames`, `sectionLineGroupJoinedAt`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `enableEventNotice`, `eventNoticeDaysOfWeek`, `eventNoticeTargetDays`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / `isSettingsAdmin` |
+| `contacts` | 自動採番 | `uid`, `userName`, `userAvatar`, `category`, `feature`, `title`, `deviceInfo`, `status`, `latestMessage`, `latestMessageAt`, `createdAt`, `updatedAt` | 投稿者本人 / `isSystemAdmin` | 投稿者本人 / `isSystemAdmin` |
+| `contacts/{id}/messages` | 自動採番 | `contactId`, `senderUid`, `senderName`, `senderAvatar`, `isAdmin`, `text`, `createdAt` | 投稿者本人 / `isSystemAdmin` | 投稿者本人 / `isSystemAdmin` |
+| `settings` | `general` | `generalLineGroupId`, `generalLineGroupName`, `generalLineGroupJoinedAt`, `sectionLineGroupIds`, `sectionLineGroupNames`, `sectionLineGroupJoinedAt`, `homeAttendanceDays`, `homeScoreCount`, `homeMediaCount`, `showCallInAnnouncement`, `showVoteInAnnouncement`, `showFeeInAnnouncement`, `enableEventNotice`, `eventNoticeDaysOfWeek`, `eventNoticeTargetDays`, `enableFeeRemind`, `feeRemindDaysBefore`, `updatedAt`, `updatedBy` | 認証済部員 | `isSystemAdmin` / `isSettingsAdmin` |
 | `users` | `uid` | `displayName`, `abbreviation`, `sectionId`, `roleId`, `instrumentIds`, `enrollmentYear`, `agreedAt`, `isSystemAdmin`, 各種 `is*Admin` | 認証済部員 | 本人 / `isUserAdmin` |
 | `sections` | `id` (例: `1`) | `name`, `shortName`, `order`, `color` | 認証済部員 | `isMasterAdmin` |
 | `instruments` | `id` (例: `as`) | `name`, `sectionId`, `order` | 認証済部員 | `isMasterAdmin` |
