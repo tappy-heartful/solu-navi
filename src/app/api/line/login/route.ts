@@ -47,12 +47,20 @@ export async function POST(req: NextRequest) {
     if (!userDoc.exists) {
       await userRef.set({
         uid: hashedUid,
+        lineUid: profile.userId,
         displayName: profile.displayName || "新規メンバー",
         pictureUrl: profile.pictureUrl || "",
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
+
+    // 7.5. lineMessagingIds の更新 (streak-navi準拠: 個人宛てプッシュ通知用生LINE UIDマッピング)
+    await adminDb.collection("lineMessagingIds").doc(hashedUid).set({
+      lineUid: profile.userId,
+      isNavi: true,
+      updatedAt: new Date(),
+    }, { merge: true });
 
     // 8. PWA セッション同期（pwaSessionId がある場合）
     let isPwaLogin = false;

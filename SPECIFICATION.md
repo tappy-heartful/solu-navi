@@ -266,6 +266,10 @@
   - **ブラウザ側セッションの完全分離**: 外部ブラウザ側コールバック（`/callback`）は `isPwaLogin` を検知すると、ブラウザ側でのログインを明示的に遮断（`logout()` で既存セッションを破棄）し、「ログイン成功！Solu Naviアプリにお戻りください」のメッセージとダイアログを表示して待機（ブラウザ側でホーム画面に遷移させない）。
   - **公開パスの強制リダイレクト防止 (`AuthGuard`)**: `streak-navi` の設計に完全準拠し、公開パス（`/login`, `/callback`, `/agreement`, `/about`）での勝手なホーム画面への自動リダイレクトを排除。
   - Firestore の `pwaAuthSessions/{pwaSessionId}` ドキュメント（`status: "completed"`, `customToken`）を PWA 側がリアルタイム監視（`onSnapshot`）およびフォアグラウンド復帰時（`visibilitychange`/`focus`）に即時直接取得（`getDoc`）し、PWA アプリ本体が `customToken` で自動サインインしてホームへシームレスに遷移。
+- **LINEログイン時における生LINE UIDの安全な永続化 (`lineMessagingIds`)**:
+  - `streak-navi` の設計に完全準拠し、LINEログイン（`/api/line/login`）成功時に取得した生の `rawLineUid`（`verifyData.sub` / `profile.userId`）を、ハッシュ化された安全なFirebase UID（`hashedUid`）と紐付けて `lineMessagingIds/{hashedUid}` に `{ lineUid: rawLineUid, isNavi: true, updatedAt: new Date() }` として保存（merge: true）。
+  - クライアントSDKからの不正読み書きを遮断（FirestoreルールでAdmin SDK専用制限）し、サーバーサイド（Server Actions / Cron API / GAS）からの個人宛てLINEプッシュ通知（部費未払い催促、出欠催促等）送信時に安全に参照。
+  - 新規部員登録時にも `users/{hashedUid}` のドキュメントに `lineUid` をセット。
 - **PC/iPad全画面レスポンシブ表示 (ログイン・コールバック画面)**:
   - `globals.css` の `body:has([data-page="login"])` および `body:has([data-page="callback"])` により、ログイン画面・コールバック画面では `body` の `max-width: 768px` 拘束を解除して全画面（幅100%）化。
   - `100vw` と親コンテナの競合による画面右端の見切れや余白露出を完全に解消し、PC・iPad・スマホ問わず画面全体に美しい背景が広がり、中央に認証カード・タイトルが完璧にセンタリング配置される設計を実現。
@@ -501,6 +505,9 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - 部費確認画面でも、自身が対象外の場合は「あなたはこの集金の対象外です」案内カードを表示。
   - **画面からの手動催促通知の完全排除**:
     - メンバー間の円滑な関係性や心理的配慮のため、アプリ画面上からの手動催促送信ボタンは一切設けない設計（AGENTS.mdルール17準拠）。
+  - **期限前自動催促機能 (GAS / Cron 連携)**:
+    - 画面上の手動催促ボタンを排除する一方で、支払期日のN日前（アプリ設定で調整可能、デフォルト: 3日前）になると、未納部員の個人LINEアカウントへ「Solu Naviコンシェルジュ」から自動で納入リマインドメッセージを送信。
+    - LINE Messaging APIのプッシュ送信を使用し、初回ログイン時に保存された生の `lineUid`（`lineMessagingIds/{uid}`）を参照して個人宛てに安全・確実に配信。
   - **集金一覧画面の「集金中」「集金済み」2エリア分割表示**:
     - 部費・集金一覧（`/fee`）において、登録された案件を「⏳ 集金中」と「✅ 集金済み」の2つの見出しエリアに自動分類して表示。
     - 各セクションに見出し、Font Awesome アイコン、および件数バッジを配置し、streak-navi 準拠の左アクセントカラーバー（集金中: スカイブルー、集金済み: エメラルドグリーン）で視覚的に整理。
@@ -603,6 +610,11 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - **対象期間設定 (`eventNoticeTargetDays`)**: 送信当日から向こう何日後までのイベントを予告・通知するか（デフォルト: 7日分、1〜60日で設定可能）。
     - **GAS (Google Apps Script) 連携**: 毎朝8時〜9時に1日1回実行されるスクリプト `gas/SoluNavi_EventNotice_Bot.js`（1ファイル・1日1回動かす関数: `execDailyNotification` のみ）が、Solu Navi API（`/api/cron/event-notice`）を呼び出し、指定曜日・対象日数を自動判定して全体LINEグループへイベント一覧および出欠・日程調整の回答導線を一括送信。外部ライブラリの追加や秘密鍵のGAS管理が不要な軽量・セキュア設計とし、URL等の設定値は GAS の `PropertiesService.getScriptProperties()` で管理。
     - **画面上からのテスト送信**: システム管理者はアプリ設定画面から「全体LINEへ今すぐテスト通知を送信」ボタンにより、送信曜日に関わらず即座に動作テストが可能。
+  - **部費・集金 未払い催促通知設定（個人LINE・GAS連携）**:
+    - **未払い集金催促通知の有効化 (`enableFeeRemind`)**: 未納部員への個人宛てLINE催促の有効/無効制御（デフォルト: 有効 `true`）。
+    - **催促タイミング設定 (`feeRemindDaysBefore`)**: 支払期日の何日前の朝に催促を送信するか（デフォルト: `3`日前、1〜30日で設定可能）。
+    - **GAS (Google Apps Script) 連携**: `gas/SoluNavi_EventNotice_Bot.js` の日次実行（`execDailyNotification`）から `/api/cron/fee-remind` を呼び出し、支払期日のN日前に合致する集金案件を抽出して未納部員の個人LINEアカウントへSolu Naviコンシェルジュから自動プッシュ配信。
+    - **画面上からのテスト送信**: システム管理者はアプリ設定画面から「個人LINEへ今すぐテスト催促を送信」ボタンにより、未締切・未払いの集金を対象に即座に動作テストが可能。
   - **イベント種別の拡張（予定のみ・回答不要対応）**:
     - イベントの回答種別（`attendanceType`）に従来の「出欠確認 (`attendance`)」「日程調整 (`schedule`)」に加え、**「予定のみ（出欠・日程調整なし） (`none`)」** を追加。
     - 出欠回答や日程調整を受け付けない単なる予定・スケジュールの共有に対応。受付期間の入力は不要となり、確認画面・一覧画面・カレンダーでも出欠回答フォームや集計テーブルは表示されず、「予定のみ（回答不要）」としてスマートに提示される。

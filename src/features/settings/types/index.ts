@@ -20,4 +20,6 @@ export interface SettingsFormData {
   enableEventNotice: boolean;
   eventNoticeDaysOfWeek: number[];
   eventNoticeTargetDays: number;
+  enableFeeRemind: boolean;
+  feeRemindDaysBefore: number;
 }

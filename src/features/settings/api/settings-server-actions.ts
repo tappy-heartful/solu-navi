@@ -30,6 +30,8 @@ export async function getAppSettingsServer(): Promise<AppSettings> {
       homeAttendanceCount: typeof data.homeAttendanceCount === "number" ? data.homeAttendanceCount : DEFAULT_APP_SETTINGS.homeAttendanceCount,
       homeScoreCount: typeof data.homeScoreCount === "number" ? data.homeScoreCount : DEFAULT_APP_SETTINGS.homeScoreCount,
       homeMediaCount: typeof data.homeMediaCount === "number" ? data.homeMediaCount : DEFAULT_APP_SETTINGS.homeMediaCount,
+      enableFeeRemind: typeof data.enableFeeRemind === "boolean" ? data.enableFeeRemind : DEFAULT_APP_SETTINGS.enableFeeRemind,
+      feeRemindDaysBefore: typeof data.feeRemindDaysBefore === "number" ? data.feeRemindDaysBefore : DEFAULT_APP_SETTINGS.feeRemindDaysBefore,
     };
   } catch (err) {
     console.error("[getAppSettingsServer] Error:", err);

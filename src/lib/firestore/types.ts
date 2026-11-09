@@ -395,6 +395,8 @@ export interface AppSettings {
   enableEventNotice?: boolean;       // イベント予告LINE通知を送信するか (デフォルト: true)
   eventNoticeDaysOfWeek?: number[];  // 送信する曜日 [0(日), 1(月), ..., 6(土)] (デフォルト: [1] ※月曜)
   eventNoticeTargetDays?: number;    // 向こう何日分のイベントを対象にするか (デフォルト: 7)
+  enableFeeRemind?: boolean;         // 未払い集金LINE催促を送信するか (デフォルト: true)
+  feeRemindDaysBefore?: number;      // 支払期日の何日前に催促するか (N日前, デフォルト: 3)
   updatedAt?: number;
   updatedBy?: string;
   lastSavedAt?: any;

@@ -31,6 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
 import { sendUpcomingEventsNoticeToGeneralLine } from "@/features/event/api/event-notification-server-actions";
+import { sendDueFeeRemindersAction } from "@/features/fee/api/fee-notification-server-actions";
 import { saveAppSettings } from "../api/settings-client-service";
 import { SettingsFormData } from "../types";
 import { LineIntegrationModal } from "../components/LineIntegrationModal";
@@ -94,6 +95,10 @@ export function SettingsEditClient({
       initialSettings.eventNoticeDaysOfWeek ?? DEFAULT_APP_SETTINGS.eventNoticeDaysOfWeek ?? [1],
     eventNoticeTargetDays:
       initialSettings.eventNoticeTargetDays ?? DEFAULT_APP_SETTINGS.eventNoticeTargetDays ?? 7,
+    enableFeeRemind:
+      initialSettings.enableFeeRemind ?? DEFAULT_APP_SETTINGS.enableFeeRemind ?? true,
+    feeRemindDaysBefore:
+      initialSettings.feeRemindDaysBefore ?? DEFAULT_APP_SETTINGS.feeRemindDaysBefore ?? 3,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -165,6 +170,30 @@ export function SettingsEditClient({
     }
   };
 
+  // 部費・集金未払い催促のテスト送信 (期限判定をバイパスして未払い部員へ個人LINE送信)
+  const handleTestSendFeeRemind = async () => {
+    if (!canEdit) return;
+    const ok = await showDialog(
+      "未払いの集金がある部員へ、個人宛てLINE催促のテスト通知を送信しますか？\n（※期限N日前の条件をバイパスして、未締切・未払いの集金を対象に今すぐ送信します）"
+    );
+    if (!ok) return;
+
+    showSpinner();
+    try {
+      const res = await sendDueFeeRemindersAction(true);
+      hideSpinner();
+      if (res.success) {
+        await showDialog(`送信結果🍀\n${res.message}`, true);
+      } else {
+        await showDialog(res.message, true);
+      }
+    } catch (err: any) {
+      hideSpinner();
+      console.error("[handleTestSendFeeRemind] error:", err);
+      await showDialog(`送信に失敗しました: ${err.message}`, true);
+    }
+  };
+
   // 初期値にリセット (システム管理者のみ実行可能)
   const handleResetToDefault = async () => {
     if (!canEdit) {
@@ -184,6 +213,11 @@ export function SettingsEditClient({
       showCallInAnnouncement: DEFAULT_APP_SETTINGS.showCallInAnnouncement ?? true,
       showVoteInAnnouncement: DEFAULT_APP_SETTINGS.showVoteInAnnouncement ?? true,
       showFeeInAnnouncement: DEFAULT_APP_SETTINGS.showFeeInAnnouncement ?? true,
+      enableEventNotice: DEFAULT_APP_SETTINGS.enableEventNotice ?? true,
+      eventNoticeDaysOfWeek: DEFAULT_APP_SETTINGS.eventNoticeDaysOfWeek ?? [1],
+      eventNoticeTargetDays: DEFAULT_APP_SETTINGS.eventNoticeTargetDays ?? 7,
+      enableFeeRemind: DEFAULT_APP_SETTINGS.enableFeeRemind ?? true,
+      feeRemindDaysBefore: DEFAULT_APP_SETTINGS.feeRemindDaysBefore ?? 3,
     }));
   };
 
@@ -634,7 +668,109 @@ export function SettingsEditClient({
             </div>
           </div>
 
-          {/* 4. LINEグループ設定 (一番下に配置 / グループID表示・編集に特化) */}
+          {/* 4. 部費・集金 未払い催促通知 (個人LINE / GAS) */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardIcon} style={{ background: "#fef3c7", color: "#d97706" }}>
+                <FontAwesomeIcon icon={faCoins} />
+              </div>
+              <div className={styles.cardHeaderInfo}>
+                <h2 className={styles.cardTitle}>部費・集金 未払い催促通知 (個人LINE / GAS)</h2>
+                <span className={styles.cardBadge}>自動催促</span>
+              </div>
+            </div>
+
+            <p className={styles.cardSubtitle}>
+              Google Apps Script（GAS）または日次Cronから実行され、集金の支払期日のN日前になると、未納部員の個人LINE宛てにSolu Naviコンシェルジュから催促メッセージを自動送信します。
+            </p>
+
+            <div className={styles.checkboxList}>
+              {/* 定期催促の有効/無効 */}
+              <label className={styles.checkboxOptionRow}>
+                <div className={styles.checkboxTextGroup}>
+                  <div className={styles.checkboxTitle}>
+                    <FontAwesomeIcon
+                      icon={faBell}
+                      className={styles.inlineOptionIcon}
+                      style={{ color: "#d97706" }}
+                    />
+                    <span>未払い集金催促通知を有効にする</span>
+                  </div>
+                  <div className={styles.checkboxDesc}>
+                    有効にすると、支払期日のN日前に未払いのメンバーへ個人宛てLINE催促が送信されます。
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  className={styles.checkboxInput}
+                  checked={formData.enableFeeRemind}
+                  disabled={!canEdit || isSaving}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      enableFeeRemind: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            {/* 催促タイミング設定 (N日前) */}
+            <div style={{ marginTop: "1.25rem" }}>
+              <div className={styles.countCard}>
+                <div>
+                  <div className={styles.countLabel}>
+                    <FontAwesomeIcon
+                      icon={faClock}
+                      className={styles.countIcon}
+                      style={{ color: "#d97706" }}
+                    />
+                    <span>催促を送信するタイミング</span>
+                  </div>
+                  <div className={styles.countSub}>
+                    支払期日の何日前の朝に個人宛て催促メッセージを送信するか（推奨: 3日前）
+                  </div>
+                </div>
+                <div className={styles.numberInputWrapper}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    className={styles.numberInput}
+                    value={formData.feeRemindDaysBefore}
+                    disabled={!canEdit || isSaving || !formData.enableFeeRemind}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        feeRemindDaysBefore: Math.max(1, parseInt(e.target.value) || 1),
+                      }))
+                    }
+                  />
+                  <span className={styles.unitText}>日前</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.noticeInfoBox}>
+              💡 <strong>GASとの連携について</strong>:
+              Google Apps Script（GAS）の日次トリガーで毎朝実行されます。初回ログイン済みの部員の個人LINEアカウントへSolu Naviコンシェルジュから直接送信されます。
+            </div>
+
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.testSendBtn}
+                onClick={handleTestSendFeeRemind}
+                disabled={!canEdit || isSaving}
+                title="未締切の集金を対象に、未払い部員の個人LINEへ今すぐテスト催促を送信します"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} />
+                <span>個人LINEへ今すぐテスト催促を送信</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 5. LINEグループID設定 (一番下に配置 / グループID表示・編集に特化) */}
           <div className={styles.card}>
             <div className={styles.cardHeader}>
               <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>

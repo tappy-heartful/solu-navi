@@ -271,5 +271,10 @@ service cloud.firestore {
       allow create: if true;
       allow read: if isSystemAdmin();
     }
+
+    // LINE ID連携：自分の情報の削除のみ許可（作成・更新・読み取りはAdmin SDK専用）
+    match /lineMessagingIds/{uid} {
+      allow delete: if isAuthenticated() && request.auth.uid == uid;
+    }
   }
 }
