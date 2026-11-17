@@ -46,10 +46,12 @@ import { DEFAULT_SECTIONS, DEFAULT_ROLES, DEFAULT_INSTRUMENTS } from "@/lib/fire
 import {
   getGradeFromEnrollmentYear,
   buildYouTubeHtml,
+  extractYouTubeId,
   getWatchVideosOrder,
   getRandomIndex,
   format,
 } from "@/lib/functions";
+import { YouTubePlayer } from "@/components/Common/YouTubePlayer";
 import { showSpinner } from "@/components/Common/Spinner";
 import styles from "./HomeClient.module.css";
 
@@ -68,47 +70,81 @@ const Player = React.memo(
     idx: number;
     setIdx: React.Dispatch<React.SetStateAction<number>>;
     onRandom: () => void;
-  }) => (
-    <div className={styles.playerWrapper}>
-      <h2 className={styles.playerTitle}>
-        {subtitle && <div className={styles.playerSubtitle}>{subtitle}</div>}
-        {title}
-      </h2>
-      <div
-        dangerouslySetInnerHTML={{
-          __html: buildYouTubeHtml(getWatchVideosOrder(idx, data), false),
-        }}
-      />
-      <div className={styles.playerControls}>
-        <button
-          type="button"
-          onClick={() => setIdx((idx - 1 + data.length) % data.length)}
-          className={styles.playerControl}
-          title="前へ"
-          aria-label="前へ"
-        >
-          <i className="fa-solid fa-backward-step"></i>
-        </button>
-        <button
-          type="button"
-          onClick={onRandom}
-          className={styles.playerControl}
-          title="ランダム再生"
-        >
-          ランダム <i className="fa-solid fa-arrows-rotate"></i>
-        </button>
-        <button
-          type="button"
-          onClick={() => setIdx((idx + 1) % data.length)}
-          className={styles.playerControl}
-          title="次へ"
-          aria-label="次へ"
-        >
-          <i className="fa-solid fa-forward-step"></i>
-        </button>
+  }) => {
+    const [isContinuous, setIsContinuous] = React.useState(true);
+
+    const currentItem = data[idx];
+    const currentVideoId =
+      currentItem?.youtubeId ||
+      extractYouTubeId((currentItem as any)?.referenceTrack || "") ||
+      "";
+
+    const handleEnded = React.useCallback(() => {
+      if (isContinuous) {
+        setIdx((prev) => (prev + 1) % data.length);
+      }
+    }, [isContinuous, data.length, setIdx]);
+
+    return (
+      <div className={styles.playerWrapper}>
+        <h2 className={styles.playerTitle}>
+          {subtitle && <div className={styles.playerSubtitle}>{subtitle}</div>}
+          {title}
+        </h2>
+        {currentVideoId ? (
+          <YouTubePlayer
+            videoId={currentVideoId}
+            onEnded={handleEnded}
+            autoPlay={false}
+          />
+        ) : (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: buildYouTubeHtml(getWatchVideosOrder(idx, data), false),
+            }}
+          />
+        )}
+        <div className={styles.playerControls}>
+          <button
+            type="button"
+            onClick={() => setIdx((idx - 1 + data.length) % data.length)}
+            className={styles.playerControl}
+            title="前へ"
+            aria-label="前へ"
+          >
+            <i className="fa-solid fa-backward-step"></i>
+          </button>
+          <button
+            type="button"
+            onClick={onRandom}
+            className={styles.playerControl}
+            title="ランダム再生"
+          >
+            ランダム <i className="fa-solid fa-arrows-rotate"></i>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIdx((idx + 1) % data.length)}
+            className={styles.playerControl}
+            title="次へ"
+            aria-label="次へ"
+          >
+            <i className="fa-solid fa-forward-step"></i>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsContinuous(!isContinuous)}
+            className={`${styles.playerControl} ${isContinuous ? styles.playerControlActive : styles.playerControlInactive}`}
+            title={isContinuous ? "連続再生: ON（曲が終わると自動で次の曲へ）" : "連続再生: OFF"}
+            aria-label={isContinuous ? "連続再生 ON" : "連続再生 OFF"}
+          >
+            <i className={`fa-solid ${isContinuous ? "fa-repeat" : "fa-arrow-right"}`}></i>
+            {isContinuous ? "連続再生 ON" : "連続再生 OFF"}
+          </button>
+        </div>
       </div>
-    </div>
-  )
+    );
+  }
 );
 Player.displayName = "Player";
 
