@@ -29,8 +29,8 @@ export function ScoreListClient({ initialData }: Props) {
     {
       search: "",
       genre: "",
-      eventId: initialData.events[0]?.id || "",
-      sort: "createdAt-desc",
+      eventId: "",
+      sort: "title-asc",
     },
     (s, f) => scoreFilterFn(s, f, initialData.events),
     (a, b, f) => scoreSortFn(a, b, f, initialData.events)
@@ -76,10 +76,10 @@ export function ScoreListClient({ initialData }: Props) {
             <FilterSelect
               label="並び替え"
               options={[
-                { id: "createdAt-desc", name: "新着順" },
-                { id: "createdAt-asc", name: "古い順" },
                 { id: "title-asc", name: "タイトル昇順" },
                 { id: "title-desc", name: "タイトル降順" },
+                { id: "createdAt-desc", name: "新着順" },
+                { id: "createdAt-asc", name: "古い順" },
               ]}
               value={list.filters.sort}
               onChange={(v) => list.updateFilter("sort", v)}

@@ -33,7 +33,7 @@ export const scoreSortFn = (a: Score, b: Score, f: ScoreFilters, events: EventWi
     const orderedIds = event?.scoreIdsInSetlist || [];
     return orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id);
   }
-  const [key, order] = (f.sort || "createdAt-desc").split("-");
+  const [key, order] = (f.sort || "title-asc").split("-");
   const isAsc = order === "asc";
   if (key === "title") {
     return isAsc
