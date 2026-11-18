@@ -1,7 +1,14 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { sendLineMulticastMessage, sendLinePushMessage, formatConciergeMessage } from "@/lib/line";
+import {
+  sendLineMulticastMessage,
+  sendLinePushMessage,
+  formatConciergeMessage,
+  getLineAccessTokenForTarget,
+} from "@/lib/line";
+import { DEFAULT_ATTENDANCE_STATUSES } from "@/lib/firestore/constants";
+import { AttendanceStatus } from "@/lib/firestore/types";
 
 /**
  * 出欠未回答者へのLINEリマインド自動通知
@@ -313,6 +320,309 @@ export async function sendUpcomingEventsNoticeToGeneralLine(isForce = false): Pr
       sent: false,
       eventCount: 0,
       message: `イベント予告通知の送信に失敗しました: ${err.message}`,
+    };
+  }
+}
+
+/**
+ * 各パート（セクション）LINEグループ宛て イベント開始N分前リマインド通知
+ * イベント内容およびパートメンバーの出欠状況一覧を送信
+ * 
+ * @param isForce - テスト送信フラグ (日時の判定や送信済みチェックをバイパス)
+ */
+export async function sendUpcomingEventsNoticeToSectionsAction(isForce = false): Promise<{
+  success: boolean;
+  sentCount: number;
+  message: string;
+  details?: any[];
+}> {
+  try {
+    // 1. アプリ設定を取得
+    const settingsDoc = await adminDb.collection("appSettings").doc("default").get();
+    const settings = (settingsDoc.exists ? settingsDoc.data() : {}) as any;
+
+    // 有効判定 (force でない場合)
+    if (!isForce && settings.enableSectionEventRemind === false) {
+      return {
+        success: true,
+        sentCount: 0,
+        message: "パート別イベント前リマインド通知は無効に設定されています。",
+      };
+    }
+
+    const minutesBefore = Number(settings.sectionEventRemindMinutesBefore ?? 30);
+    const sectionLineGroupIds: Record<string, string> = settings.sectionLineGroupIds || {};
+
+    const configuredSectionIds = Object.keys(sectionLineGroupIds).filter(
+      (secId) => Boolean(sectionLineGroupIds[secId])
+    );
+
+    if (configuredSectionIds.length === 0) {
+      return {
+        success: true,
+        sentCount: 0,
+        message: "パートLINEグループIDが1件も設定されていません。アプリ設定をご確認ください。",
+      };
+    }
+
+    // 2. 現在日時 (JST)
+    const now = new Date();
+    const jstOffset = 9 * 60; // minutes
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const jstNow = new Date(utc + jstOffset * 60000);
+    const yyyy = jstNow.getFullYear();
+    const mm = String(jstNow.getMonth() + 1).padStart(2, "0");
+    const dd = String(jstNow.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}.${mm}.${dd}`;
+
+    // 3. セクションマスタ取得
+    const sectionsSnap = await adminDb.collection("sections").get();
+    const sections = sectionsSnap.docs.length > 0
+      ? sectionsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as any))
+      : (await import("@/data/master/sections.json")).default;
+
+    // 4. 出欠ステータスマスタ取得
+    const statusesSnap = await adminDb.collection("attendanceStatuses").get();
+    const attendanceStatuses: AttendanceStatus[] = statusesSnap.docs.length > 0
+      ? statusesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as AttendanceStatus))
+      : (DEFAULT_ATTENDANCE_STATUSES || []);
+    
+    const statusMap = new Map<string, string>();
+    attendanceStatuses.forEach((st) => statusMap.set(st.id, st.name));
+
+    // 5. ユーザー一覧を取得し、パート別に整理
+    const usersSnap = await adminDb.collection("users").get();
+    const usersBySection = new Map<string, any[]>();
+    usersSnap.docs.forEach((doc) => {
+      const u = { id: doc.id, ...doc.data() } as any;
+      if (u.status === "archived") return;
+      const secId = String(u.sectionId || "");
+      if (secId) {
+        if (!usersBySection.has(secId)) usersBySection.set(secId, []);
+        usersBySection.get(secId)!.push(u);
+      }
+    });
+
+    // 6. 全イベント取得
+    const eventsSnap = await adminDb.collection("events").get();
+    const allEvents = eventsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as any));
+
+    // 7. 対象イベントの抽出
+    let targetEvents: any[] = [];
+
+    if (isForce) {
+      // テスト送信時: 今日のイベントがあれば優先、なければ直近（日付順で一番近い）のイベントを1件対象にする
+      const todayEvents = allEvents.filter((ev) => {
+        const d = (ev.date || ev.startDate || "").replace(/-/g, ".");
+        return d === todayStr;
+      });
+
+      if (todayEvents.length > 0) {
+        targetEvents = [todayEvents[0]];
+      } else {
+        // 今日以降のイベント、なければ直近のイベント
+        const futureEvents = allEvents
+          .filter((ev) => (ev.date || ev.startDate || "").replace(/-/g, ".") >= todayStr)
+          .sort((a, b) => (a.date || a.startDate || "").localeCompare(b.date || b.startDate || ""));
+        if (futureEvents.length > 0) {
+          targetEvents = [futureEvents[0]];
+        } else if (allEvents.length > 0) {
+          targetEvents = [allEvents[0]];
+        }
+      }
+    } else {
+      // 通常定期実行時:
+      // 本日のイベントで、開始時刻が設定されており、開始N分前の通知ウィンドウに入っているもの
+      const nowMs = jstNow.getTime();
+
+      targetEvents = allEvents.filter((ev) => {
+        const d = (ev.date || ev.startDate || "").replace(/-/g, ".");
+        if (d !== todayStr) return false;
+        if (!ev.startTime) return false;
+
+        const timeParts = ev.startTime.split(":");
+        if (timeParts.length < 2) return false;
+        const startH = Number(timeParts[0]);
+        const startM = Number(timeParts[1]);
+        if (isNaN(startH) || isNaN(startM)) return false;
+
+        // イベント開始のミリ秒
+        const eventStartDate = new Date(jstNow.getFullYear(), jstNow.getMonth(), jstNow.getDate(), startH, startM, 0, 0);
+        const eventStartMs = eventStartDate.getTime();
+
+        // リマインド予定時刻
+        const remindTriggerMs = eventStartMs - minutesBefore * 60 * 1000;
+
+        // 現在時刻がトリガー時刻以降、かつイベント開始後30分以内であること
+        const inWindow = nowMs >= remindTriggerMs && nowMs <= (eventStartMs + 30 * 60 * 1000);
+        return inWindow;
+      });
+    }
+
+    if (targetEvents.length === 0) {
+      return {
+        success: true,
+        sentCount: 0,
+        message: isForce
+          ? "対象となるイベントが見つかりませんでした。"
+          : `現在、開始${minutesBefore}分前のリマインド対象となるイベントはありません。`,
+      };
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://solu-navi.vercel.app";
+    let totalSentCount = 0;
+    const sendDetails: any[] = [];
+
+    // 8. イベントごと・パートごとにメッセージを生成して送信
+    for (const ev of targetEvents) {
+      // イベントの出欠回答を取得
+      const answersSnap = await adminDb
+        .collection("eventAttendanceAnswers")
+        .where("eventId", "==", ev.id)
+        .get();
+      const answersByUid = new Map<string, any>();
+      answersSnap.docs.forEach((d) => {
+        const a = d.data();
+        answersByUid.set(a.uid, a);
+      });
+
+      const evDate = ev.date || ev.startDate || "日程未定";
+      const timeStr = ev.startTime ? ` ${ev.startTime}${ev.endTime ? `〜${ev.endTime}` : ""}` : "";
+      const alreadySentMap = ev.sectionRemindSent || {};
+      const updatedSentMap = { ...alreadySentMap };
+
+      for (const sec of sections) {
+        const secId = String(sec.id);
+        const groupId = sectionLineGroupIds[secId];
+        if (!groupId) continue; // グループID未設定のパートはスキップ
+
+        // 通常実行時、すでに送信済みであればスキップ
+        if (!isForce && alreadySentMap[secId]) {
+          continue;
+        }
+
+        // このパートのメンバー
+        const secUsers = usersBySection.get(secId) || [];
+        if (secUsers.length === 0 && !isForce) {
+          continue;
+        }
+
+        // ステータスごとの部員集計
+        // statusId -> ユーザーリスト (名前 + コメント)
+        const statusGroups = new Map<string, string[]>();
+        const unansweredUsers: string[] = [];
+
+        secUsers.forEach((u) => {
+          const uName = u.displayName || u.abbreviation || "部員";
+          const ans = answersByUid.get(u.id || u.uid);
+          if (!ans || !ans.status) {
+            unansweredUsers.push(uName);
+          } else {
+            const stId = String(ans.status);
+            if (!statusGroups.has(stId)) statusGroups.set(stId, []);
+            let note = uName;
+            if (ans.comment && ans.comment.trim()) {
+              note += ` (${ans.comment.trim()})`;
+            }
+            statusGroups.get(stId)!.push(note);
+          }
+        });
+
+        // 出欠ステータスごとのテキスト生成
+        let statusSummary = "";
+        attendanceStatuses.forEach((st) => {
+          const list = statusGroups.get(String(st.id)) || [];
+          if (list.length > 0) {
+            statusSummary += `\n📌 ${st.name} (${list.length}名):\n${list.join("\n")}\n`;
+          }
+        });
+
+        // 定義外ステータスがあれば追記
+        statusGroups.forEach((list, stId) => {
+          if (!statusMap.has(stId) && list.length > 0) {
+            statusSummary += `\n📌 回答 (${list.length}名):\n${list.join("\n")}\n`;
+          }
+        });
+
+        // 未回答者
+        if (unansweredUsers.length > 0) {
+          statusSummary += `\n❓ 未回答 (${unansweredUsers.length}名):\n${unansweredUsers.join("\n")}\n`;
+        }
+
+        if (!statusSummary.trim()) {
+          statusSummary = "\n（出欠回答はありません）\n";
+        }
+
+        // メッセージ本文の組み立て
+        let body = `【パート別イベント直前リマインド】\n`;
+        body += isForce
+          ? `※テスト送信です※\n`
+          : `まもなくイベントが開始されます（開始${minutesBefore}分前）🎺\n`;
+        body += `準備や出欠状況を確認しましょう！\n\n`;
+        body += `📌 イベント: ${ev.title}\n`;
+        body += `📅 日時: ${evDate}${timeStr}\n`;
+        if (ev.placeName) body += `📍 場所: ${ev.placeName}\n`;
+        if (ev.description) body += `📝 備考: ${ev.description}\n`;
+        body += `\n━━━━━━━━━━━━━━━\n`;
+        body += `👥【${sec.name} 出欠状況】(計${secUsers.length}名)\n`;
+        body += statusSummary;
+        body += `━━━━━━━━━━━━━━━\n`;
+        body += `▼ 出欠の変更・詳細確認はこちら\n${appUrl}/event/confirm?eventId=${ev.id}`;
+
+        const fullMessage = formatConciergeMessage(body, "section", secId);
+
+        // トークン取得
+        const token =
+          settings.sectionChannelAccessTokens?.[secId] ||
+          getLineAccessTokenForTarget("section", secId);
+
+        try {
+          await sendLinePushMessage(groupId, [{ type: "text", text: fullMessage }], token);
+          totalSentCount++;
+          updatedSentMap[secId] = Date.now();
+          sendDetails.push({
+            eventId: ev.id,
+            eventTitle: ev.title,
+            sectionId: secId,
+            sectionName: sec.name,
+            groupId,
+            status: "success",
+          });
+        } catch (sendErr: any) {
+          console.error(`[sendUpcomingEventsNoticeToSectionsAction] Send error for sec ${secId}:`, sendErr);
+          sendDetails.push({
+            eventId: ev.id,
+            eventTitle: ev.title,
+            sectionId: secId,
+            sectionName: sec.name,
+            groupId,
+            status: "error",
+            error: sendErr.message,
+          });
+        }
+      }
+
+      // イベントの送信済み記録をFirestoreに更新 (通常送信、またはテスト送信でも記録可能だが重複防止のため通常時更新)
+      if (!isForce) {
+        await adminDb.collection("events").doc(ev.id).set(
+          { sectionRemindSent: updatedSentMap },
+          { merge: true }
+        );
+      }
+    }
+
+    return {
+      success: true,
+      sentCount: totalSentCount,
+      message: `${totalSentCount}件のパートLINEグループへイベント前リマインド通知を送信しました！`,
+      details: sendDetails,
+    };
+  } catch (err: any) {
+    console.error("[sendUpcomingEventsNoticeToSectionsAction] Error:", err);
+    return {
+      success: false,
+      sentCount: 0,
+      message: `パート別イベント前リマインド送信に失敗しました: ${err.message}`,
     };
   }
 }

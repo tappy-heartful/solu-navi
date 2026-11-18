@@ -91,6 +91,8 @@ export async function saveAppSettings(
     eventNoticeTargetDays: Number(formData.eventNoticeTargetDays) || DEFAULT_APP_SETTINGS.eventNoticeTargetDays || 7,
     enableFeeRemind: formData.enableFeeRemind ?? true,
     feeRemindDaysBefore: Number(formData.feeRemindDaysBefore) || DEFAULT_APP_SETTINGS.feeRemindDaysBefore || 3,
+    enableSectionEventRemind: formData.enableSectionEventRemind ?? true,
+    sectionEventRemindMinutesBefore: Number(formData.sectionEventRemindMinutesBefore) || DEFAULT_APP_SETTINGS.sectionEventRemindMinutesBefore || 30,
     updatedAt: Date.now(),
     updatedBy: updatedByUid || "anonymous",
   };

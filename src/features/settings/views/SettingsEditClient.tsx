@@ -30,7 +30,10 @@ import { DEFAULT_APP_SETTINGS } from "@/lib/firestore/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { showDialog, showSpinner, hideSpinner, writeLog } from "@/lib/functions";
-import { sendUpcomingEventsNoticeToGeneralLine } from "@/features/event/api/event-notification-server-actions";
+import {
+  sendUpcomingEventsNoticeToGeneralLine,
+  sendUpcomingEventsNoticeToSectionsAction,
+} from "@/features/event/api/event-notification-server-actions";
 import { sendDueFeeRemindersAction } from "@/features/fee/api/fee-notification-server-actions";
 import { saveAppSettings } from "../api/settings-client-service";
 import { SettingsFormData } from "../types";
@@ -99,6 +102,10 @@ export function SettingsEditClient({
       initialSettings.enableFeeRemind ?? DEFAULT_APP_SETTINGS.enableFeeRemind ?? true,
     feeRemindDaysBefore:
       initialSettings.feeRemindDaysBefore ?? DEFAULT_APP_SETTINGS.feeRemindDaysBefore ?? 3,
+    enableSectionEventRemind:
+      initialSettings.enableSectionEventRemind ?? DEFAULT_APP_SETTINGS.enableSectionEventRemind ?? true,
+    sectionEventRemindMinutesBefore:
+      initialSettings.sectionEventRemindMinutesBefore ?? DEFAULT_APP_SETTINGS.sectionEventRemindMinutesBefore ?? 30,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -194,6 +201,30 @@ export function SettingsEditClient({
     }
   };
 
+  // パート別イベント前リマインドのテスト送信 (時間判定をバイパスして各パートLINEグループへ即時テスト送信)
+  const handleTestSendSectionEventRemind = async () => {
+    if (!canEdit) return;
+    const ok = await showDialog(
+      "直近のイベントを対象に、各パートLINEグループへ出欠状況リマインドのテスト通知を送信しますか？\n（※イベント開始N分前の時間判定をバイパスし、今日以降の直近イベントを対象に今すぐ送信します）"
+    );
+    if (!ok) return;
+
+    showSpinner();
+    try {
+      const res = await sendUpcomingEventsNoticeToSectionsAction(true);
+      hideSpinner();
+      if (res.success) {
+        await showDialog(`送信結果🍀\n${res.message}`, true);
+      } else {
+        await showDialog(res.message, true);
+      }
+    } catch (err: any) {
+      hideSpinner();
+      console.error("[handleTestSendSectionEventRemind] error:", err);
+      await showDialog(`送信に失敗しました: ${err.message}`, true);
+    }
+  };
+
   // 初期値にリセット (システム管理者のみ実行可能)
   const handleResetToDefault = async () => {
     if (!canEdit) {
@@ -218,6 +249,8 @@ export function SettingsEditClient({
       eventNoticeTargetDays: DEFAULT_APP_SETTINGS.eventNoticeTargetDays ?? 7,
       enableFeeRemind: DEFAULT_APP_SETTINGS.enableFeeRemind ?? true,
       feeRemindDaysBefore: DEFAULT_APP_SETTINGS.feeRemindDaysBefore ?? 3,
+      enableSectionEventRemind: DEFAULT_APP_SETTINGS.enableSectionEventRemind ?? true,
+      sectionEventRemindMinutesBefore: DEFAULT_APP_SETTINGS.sectionEventRemindMinutesBefore ?? 30,
     }));
   };
 
@@ -766,6 +799,96 @@ export function SettingsEditClient({
               >
                 <FontAwesomeIcon icon={faPaperPlane} />
                 <span>個人LINEへ今すぐテスト催促を送信</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4. パート別イベント前リマインド通知 */}
+          <div className={styles.card}>
+            <div className={styles.cardHeader}>
+              <div className={`${styles.cardIcon} ${styles.lineIconBg}`}>
+                <FontAwesomeIcon icon={faBell} />
+              </div>
+              <div className={styles.cardHeaderInfo}>
+                <div className={styles.cardTitleRow}>
+                  <h2 className={styles.cardTitle}>パート別イベント前リマインド通知</h2>
+                  <span className={styles.optionalBadge}>GAS連携</span>
+                </div>
+                <p className={styles.cardDescription}>
+                  イベント（練習・合奏・本番など）の開始前に、各パートのLINEグループへ当日のイベント内容およびパート部員の出欠状況を自動送信します。
+                </p>
+              </div>
+            </div>
+
+            {/* 送信有効 / 無効スイッチ */}
+            <div className={styles.checkboxRow} style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "1rem" }}>
+              <div className={styles.checkboxLabelGroup}>
+                <span className={styles.checkboxLabelText}>パート別イベント前リマインドを自動送信する</span>
+                <span className={styles.checkboxSubText}>
+                  有効にすると、イベント開始のN分前に各パートのLINEグループへ出欠状況が送信されます。
+                </span>
+              </div>
+              <label className={styles.switch}>
+                <input
+                  type="checkbox"
+                  className={styles.checkboxInput}
+                  checked={formData.enableSectionEventRemind}
+                  disabled={!canEdit || isSaving}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      enableSectionEventRemind: e.target.checked,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            {/* リマインドタイミング設定 (N分前) */}
+            <div style={{ marginTop: "1.25rem" }}>
+              <div className={styles.countCard}>
+                <div>
+                  <label className={styles.countLabel}>イベント開始の何分前に送信するか</label>
+                  <p className={styles.countHelp}>
+                    イベント開始時刻（例: 18:00）の何分前に各パートLINEへ通知するかを設定します（デフォルト: 30分前）。
+                  </p>
+                </div>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="number"
+                    min={5}
+                    max={180}
+                    step={5}
+                    className={styles.numberInput}
+                    value={formData.sectionEventRemindMinutesBefore}
+                    disabled={!canEdit || isSaving || !formData.enableSectionEventRemind}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        sectionEventRemindMinutesBefore: Math.max(1, parseInt(e.target.value) || 30),
+                      }))
+                    }
+                  />
+                  <span className={styles.unitText}>分前</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.noticeInfoBox}>
+              💡 <strong>GASとの連携について</strong>:
+              Google Apps Script（GAS）の時間主導型トリガー（10分おき等）で実行されます。各パートのLINEグループ宛てに、そのパートのメンバーの出欠回答（出席・遅刻・欠席・未回答）がまとめて送信されます。
+            </div>
+
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className={styles.testSendBtn}
+                onClick={handleTestSendSectionEventRemind}
+                disabled={!canEdit || isSaving}
+                title="直近のイベントを対象に、各パートLINEへ今すぐテストリマインドを送信します"
+              >
+                <FontAwesomeIcon icon={faPaperPlane} />
+                <span>各パートLINEへ今すぐテスト送信</span>
               </button>
             </div>
           </div>

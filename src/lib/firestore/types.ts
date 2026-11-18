@@ -319,6 +319,7 @@ export interface Event {
   allowAssign?: boolean;
   setlist?: SetlistGroup[];
   instrumentConfig?: Record<string, InstrumentPart[]>;
+  sectionRemindSent?: Record<string, number>; // パート別イベント前リマインド通知送信記録 { [sectionId]: timestamp }
   isVenueReserved?: boolean;
   isRecurring?: boolean;
   recurrenceId?: string;
@@ -405,6 +406,8 @@ export interface AppSettings {
   eventNoticeTargetDays?: number;    // 向こう何日分のイベントを対象にするか (デフォルト: 7)
   enableFeeRemind?: boolean;         // 未払い集金LINE催促を送信するか (デフォルト: true)
   feeRemindDaysBefore?: number;      // 支払期日の何日前に催促するか (N日前, デフォルト: 3)
+  enableSectionEventRemind?: boolean; // パート別LINEグループへイベント前リマインド通知を送信するか (デフォルト: true)
+  sectionEventRemindMinutesBefore?: number; // イベント開始時刻の何分前にリマインドするか (N分前, デフォルト: 30)
   updatedAt?: number;
   updatedBy?: string;
   lastSavedAt?: any;

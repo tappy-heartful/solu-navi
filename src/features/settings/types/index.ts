@@ -22,4 +22,6 @@ export interface SettingsFormData {
   eventNoticeTargetDays: number;
   enableFeeRemind: boolean;
   feeRemindDaysBefore: number;
+  enableSectionEventRemind: boolean;
+  sectionEventRemindMinutesBefore: number;
 }

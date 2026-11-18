@@ -65,5 +65,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   eventNoticeTargetDays: 7,   // 向こう7日分
   enableFeeRemind: true,       // 未払い集金催促
   feeRemindDaysBefore: 3,     // 支払期日の3日前
+  enableSectionEventRemind: true, // パート別イベント前リマインド
+  sectionEventRemindMinutesBefore: 30, // イベント開始30分前
 };
 
