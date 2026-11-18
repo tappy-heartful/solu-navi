@@ -435,9 +435,11 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
     - `prefectures.json`: 全国47都道府県（47件）
     - `municipalities.json`: 全国市区町村（1,892件）
     - `grades.json`: 学年表記リスト（8件）
+    - `defaultInstrumentConfigs.json`: デフォルト楽器編成マスタ（4セクション/17パート）
+    - `blueNotes.json`: 今日の一曲初期選曲リスト（174件）
   - `@/lib/firestore/constants.ts` はこれら JSON ファイルを直接インポートして定数エクスポートを行い、コードと初期データの完全同期を保証。
 - **全マスタ一括初期投入 (`seedMasterData`)**:
-  - 管理画面ヘッダーの「初期データ投入」ボタンより、上記 JSON に定義された全マスタ（パート・役職・楽器・都道府県・市区町村：計1,959件）を Firestore に一括投入可能。
+  - 管理画面ヘッダーの「初期データ投入」ボタンより、上記 JSON に定義された全マスタ（パート・役職・楽器・デフォルト楽器編成・出欠・日程調整・ジャンル・譜面状況・都道府県・市区町村）を Firestore に一括投入可能。
   - 市区町村データ（1,892件）は Firestore の `writeBatch` 上限（500件）を超えないよう400件単位でチャンク分割コミットを行い、処理中のプログレスメッセージ表示および監査ログ（`logs`）への記録を自動実行。
 
 ### 3.7. 譜面・保管ボックス情報管理機能 (`/score`) (streak-navi楽器構成準拠)
@@ -446,9 +448,9 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
   - タイトル、保管場所・ボックス番号、関連リンク（Google Driveや任意URL）、YouTube参考音源URL、ジャンルマスタ複数紐付け、楽器編成・パート構成、略称（譜割用）、備考、ホーム表示設定。
   - **保管場所・ボックス番号の所在検索機能**: 「ボックスA-3」「第3共用施設 棚2」「青ファイルNo.12」などの保管場所を登録。一覧画面のフリーワード検索でタイトルだけでなくボックス番号や保管場所からも該当譜面を即時逆引き検索可能。
   - **関連リンクの柔軟な登録**: 「譜面（Google Drive URL）」という限定的な表記から「関連リンク」に表現を緩和。Google Driveのほか、任意の関連WebURL（Dropboxや参考ページ等）を柔軟に登録可能。
-  - **楽器構成・パート譜の有無設定 (streak-naviイベント楽器構成機能完全準拠)**:
-    - サックス、トランペット、トロンボーン、リズムの各セクションごとに、パート名（`partName` 例: 1st, 2nd, Lead, Solo等）と対応楽器（`instrumentId`）を追加・編集・削除可能。
-    - 「ビッグバンド標準編成 (17パート) を一括セット」ボタンおよびセクション別「標準パート入力」ボタンを搭載し、ワンタップで標準パートを展開可能。
+  - **楽器構成・パート譜の有無設定 (デフォルト楽器編成マスタ連携)**:
+    - サックス、トランペット、トロンボーン、リズム等の各セクションごとに、パート名（`partName` 例: 1st, 2nd, Lead, Solo等）と対応楽器（`instrumentId`）を追加・編集・削除可能。
+    - 「デフォルト楽器編成を一括セット」ボタンおよびセクション別「デフォルトパート入力」ボタンを搭載し、マスタデータ（`defaultInstrumentConfigs`）からワンタップで標準パートを展開可能。コード上のハードコードを撤廃し、マスタメンテナンス（`/master`）で設定された編成が即座に反映される。
   - **YouTube 参考音源プレイリスト自動生成**: 表示中の譜面一覧から YouTube ID を抽出し、ワンクリックで全曲連続再生可能な `youtube.com/watch_videos?video_ids=...` リンクを自動生成。
   - 「関連リンクを開く」ボタンから外部共有ファイルや参照リンクを直接閲覧。
   - **録音・メディア連携**: 譜面の新規作成・編集時に、部内で登録された録音・動画をプルダウンから選択・紐付け可能。譜面確認画面（`/score/confirm`）にて紐付くメディア情報とリンクを表示し、ワンタップで試聴・メディア確認へ遷移可能。
@@ -697,6 +699,7 @@ Solu Navi では、モジュールごとの細やかな権限分離（Role-Based
 | `scores` | 自動採番 | `title`, `abbreviation`, `storageLocation`, `scoreUrl`, `genres`, `referenceTrack`, `youtubeId`, `instrumentConfig`, `note`, `isDispTop` | 認証済部員 | `isScoreAdmin` |
 | `medias` | 自動採番 | `title`, `date`, `youtubeUrl`, `driveUrl`, `instagramUrl`, `isDispTop` | 認証済部員 | `isMediaAdmin` |
 | `blueNotes` | `MMDD` (例: `0101`) | `id`, `title`, `youtubeId`, `createdBy`, `createdAt`, `updatedAt` | 認証済部員 | 認証済部員 (作成) / 本人 / `isBlueNoteAdmin` (編集・削除) |
+| `defaultInstrumentConfigs` | `sectionId` (例: `1`, `2`) | `id`, `sectionId`, `sectionName`, `parts` (`InstrumentPart[]`), `updatedAt` | 認証済部員 | `isMasterAdmin` / `isScoreAdmin` |
 | `fees` | 自動採番 | `title`, `amount`, `dueDate`, `description`, `targetGrades`, `targetUserIds` | 認証済部員 | `isFeeAdmin` |
 | `feePayments` | `{feeId}_{uid}` | `feeId`, `uid`, `status`, `paidAt`, `paidMethod`, `note` | 認証済部員 | `isFeeAdmin` / 本人(更新) |
 | `archives` | 自動採番 | 論理削除退避データ (`{collection}_{docId}_{timestamp}`) | `isSystemAdmin` | 認証済部員 (作成) |

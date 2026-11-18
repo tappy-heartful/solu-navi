@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "sectionId": "1",
+    "sectionName": "サックス",
+    "parts": [
+      { "partName": "As1", "instrumentId": "as" },
+      { "partName": "As2", "instrumentId": "as" },
+      { "partName": "Ts1", "instrumentId": "ts" },
+      { "partName": "Ts2", "instrumentId": "ts" },
+      { "partName": "B", "instrumentId": "bs" }
+    ]
+  },
+  {
+    "id": "2",
+    "sectionId": "2",
+    "sectionName": "トランペット",
+    "parts": [
+      { "partName": "Tp1", "instrumentId": "tp" },
+      { "partName": "Tp2", "instrumentId": "tp" },
+      { "partName": "Tp3", "instrumentId": "tp" },
+      { "partName": "Tp4", "instrumentId": "tp" }
+    ]
+  },
+  {
+    "id": "3",
+    "sectionId": "3",
+    "sectionName": "トロンボーン",
+    "parts": [
+      { "partName": "Tb1", "instrumentId": "tb" },
+      { "partName": "Tb2", "instrumentId": "tb" },
+      { "partName": "Tb3", "instrumentId": "tb" },
+      { "partName": "Tb4", "instrumentId": "tb" }
+    ]
+  },
+  {
+    "id": "4",
+    "sectionId": "4",
+    "sectionName": "リズム",
+    "parts": [
+      { "partName": "Pf", "instrumentId": "pf" },
+      { "partName": "Gt", "instrumentId": "gt" },
+      { "partName": "Ba", "instrumentId": "ba" },
+      { "partName": "Dr", "instrumentId": "dr" }
+    ]
+  }
+]

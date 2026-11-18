@@ -1,9 +1,10 @@
 import "server-only";
 import { adminDb } from "@/lib/firebase-admin";
 import * as utils from "@/lib/functions";
-import { Genre, Score, EventWithSetlist } from "@/lib/firestore/types";
+import { Genre, Score, EventWithSetlist, DefaultInstrumentConfigDoc } from "@/lib/firestore/types";
 import { toPlainObject } from "@/lib/firestore/utils";
 import defaultGenres from "@/data/master/genres.json";
+import { DEFAULT_DEFAULT_INSTRUMENT_CONFIGS } from "@/lib/firestore/constants";
 import { unstable_cache } from "next/cache";
 
 /**
@@ -146,4 +147,22 @@ export async function getLinkedMediaServer(
     console.error("[getLinkedMediaServer] Error:", err);
     return null;
   }
+}
+
+/**
+ * デフォルト楽器編成マスタを取得（サーバーサイド専用）
+ */
+export async function getDefaultInstrumentConfigsServer(): Promise<DefaultInstrumentConfigDoc[]> {
+  try {
+    const snap = await adminDb.collection("defaultInstrumentConfigs").get();
+    if (!snap.empty) {
+      return snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as DefaultInstrumentConfigDoc[];
+    }
+  } catch (err) {
+    console.error("[getDefaultInstrumentConfigsServer] Error:", err);
+  }
+  return [...DEFAULT_DEFAULT_INSTRUMENT_CONFIGS];
 }

@@ -140,6 +140,10 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isMasterAdmin() || isCallAdmin();
     }
+    match /defaultInstrumentConfigs/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isMasterAdmin() || isScoreAdmin();
+    }
 
     // サークル・システム設定
     match /settings/{id} {

@@ -9,6 +9,7 @@ import {
   EventAdjustStatus,
   Genre,
   ScoreStatus,
+  DefaultInstrumentConfigDoc,
 } from "@/lib/firestore/types";
 import {
   DEFAULT_SECTIONS,
@@ -20,6 +21,7 @@ import {
   DEFAULT_EVENT_ADJUST_STATUSES,
   DEFAULT_GENRES,
   DEFAULT_SCORE_STATUSES,
+  DEFAULT_DEFAULT_INSTRUMENT_CONFIGS,
 } from "@/lib/firestore/constants";
 import { toPlainObject } from "@/lib/firestore/utils";
 
@@ -34,6 +36,7 @@ export interface MasterPageData {
   eventAdjustStatuses: EventAdjustStatus[];
   genres: Genre[];
   scoreStatuses: ScoreStatus[];
+  defaultInstrumentConfigs: DefaultInstrumentConfigDoc[];
   isSectionsFromDefault: boolean;
   isRolesFromDefault: boolean;
   isInstrumentsFromDefault: boolean;
@@ -43,6 +46,7 @@ export interface MasterPageData {
   isGenresFromDefault: boolean;
   isScoreStatusesFromDefault: boolean;
   isMunicipalitiesFromDefault: boolean;
+  isDefaultInstrumentConfigsFromDefault: boolean;
 }
 
 
@@ -240,6 +244,26 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
   }
   scoreStatuses.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
+  // 9. defaultInstrumentConfigs
+  let defaultInstrumentConfigs: DefaultInstrumentConfigDoc[] = [];
+  let isDefaultInstrumentConfigsFromDefault = false;
+  try {
+    const snap = await adminDb.collection("defaultInstrumentConfigs").get();
+    if (!snap.empty) {
+      defaultInstrumentConfigs = snap.docs.map((d) => ({
+        ...toPlainObject(d.data()),
+        id: d.id,
+      })) as DefaultInstrumentConfigDoc[];
+    } else {
+      defaultInstrumentConfigs = [...DEFAULT_DEFAULT_INSTRUMENT_CONFIGS];
+      isDefaultInstrumentConfigsFromDefault = true;
+    }
+  } catch (err) {
+    console.error("Failed to fetch defaultInstrumentConfigs:", err);
+    defaultInstrumentConfigs = [...DEFAULT_DEFAULT_INSTRUMENT_CONFIGS];
+    isDefaultInstrumentConfigsFromDefault = true;
+  }
+
   return {
     sections,
     roles,
@@ -251,6 +275,7 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
     eventAdjustStatuses,
     genres,
     scoreStatuses,
+    defaultInstrumentConfigs,
     isSectionsFromDefault,
     isRolesFromDefault,
     isInstrumentsFromDefault,
@@ -260,6 +285,7 @@ export async function fetchMasterDataServer(): Promise<MasterPageData> {
     isGenresFromDefault,
     isScoreStatusesFromDefault,
     isMunicipalitiesFromDefault,
+    isDefaultInstrumentConfigsFromDefault,
   };
 }
 

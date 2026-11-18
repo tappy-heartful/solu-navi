@@ -20,6 +20,7 @@ import {
   EventAdjustStatus,
   Genre,
   ScoreStatus,
+  DefaultInstrumentConfigDoc,
 } from "@/lib/firestore/types";
 import {
   DEFAULT_SECTIONS,
@@ -31,6 +32,7 @@ import {
   DEFAULT_EVENT_ADJUST_STATUSES,
   DEFAULT_GENRES,
   DEFAULT_SCORE_STATUSES,
+  DEFAULT_DEFAULT_INSTRUMENT_CONFIGS,
 } from "@/lib/firestore/constants";
 
 
@@ -237,6 +239,48 @@ export async function deleteScoreStatus(statusId: string): Promise<void> {
   await deleteDoc(doc(db, "scoreStatus", statusId));
 }
 
+/**
+ * デフォルト楽器編成の保存（新規または更新）
+ */
+export async function saveDefaultInstrumentConfig(config: DefaultInstrumentConfigDoc): Promise<void> {
+  const ref = doc(db, "defaultInstrumentConfigs", config.id);
+  await setDoc(
+    ref,
+    {
+      sectionId: config.sectionId,
+      sectionName: config.sectionName || "",
+      parts: config.parts || [],
+      updatedAt: Date.now(),
+    },
+    { merge: true }
+  );
+}
+
+/**
+ * デフォルト楽器編成の削除
+ */
+export async function deleteDefaultInstrumentConfig(id: string): Promise<void> {
+  await deleteDoc(doc(db, "defaultInstrumentConfigs", id));
+}
+
+/**
+ * デフォルト楽器編成の取得（クライアント）
+ */
+export async function getClientDefaultInstrumentConfigs(): Promise<DefaultInstrumentConfigDoc[]> {
+  try {
+    const snap = await getDocs(collection(db, "defaultInstrumentConfigs"));
+    if (!snap.empty) {
+      return snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as any),
+      })) as DefaultInstrumentConfigDoc[];
+    }
+  } catch (err) {
+    console.error("Failed to fetch defaultInstrumentConfigs:", err);
+  }
+  return [...DEFAULT_DEFAULT_INSTRUMENT_CONFIGS];
+}
+
 export interface SeedOptions {
   includeSections?: boolean;
   includeRoles?: boolean;
@@ -247,6 +291,7 @@ export interface SeedOptions {
   includeEventAdjustStatuses?: boolean;
   includeGenres?: boolean;
   includeScoreStatuses?: boolean;
+  includeDefaultInstrumentConfigs?: boolean;
   onProgress?: (message: string) => void;
 }
 
@@ -260,6 +305,7 @@ export interface SeedResult {
   eventAdjustStatusesCount: number;
   genresCount: number;
   scoreStatusesCount: number;
+  defaultInstrumentConfigsCount: number;
 }
 
 
@@ -278,6 +324,7 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
     includeEventAdjustStatuses = true,
     includeGenres = true,
     includeScoreStatuses = true,
+    includeDefaultInstrumentConfigs = true,
     onProgress,
   } = options;
 
@@ -290,6 +337,7 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
   let eventAdjustStatusesCount = 0;
   let genresCount = 0;
   let scoreStatusesCount = 0;
+  let defaultInstrumentConfigsCount = 0;
 
   // 1. sections 投入
   if (includeSections) {
@@ -478,6 +526,27 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
     scoreStatusesCount = DEFAULT_SCORE_STATUSES.length;
   }
 
+  // 10. defaultInstrumentConfigs 投入
+  if (includeDefaultInstrumentConfigs) {
+    onProgress?.("デフォルト楽器編成マスタを登録中...");
+    const batch = writeBatch(db);
+    for (const conf of DEFAULT_DEFAULT_INSTRUMENT_CONFIGS) {
+      const confRef = doc(db, "defaultInstrumentConfigs", conf.id);
+      batch.set(
+        confRef,
+        {
+          sectionId: conf.sectionId,
+          sectionName: conf.sectionName || "",
+          parts: conf.parts || [],
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
+    }
+    await batch.commit();
+    defaultInstrumentConfigsCount = DEFAULT_DEFAULT_INSTRUMENT_CONFIGS.length;
+  }
+
   return {
     sectionsCount,
     rolesCount,
@@ -488,6 +557,7 @@ export async function seedMasterData(options: SeedOptions = {}): Promise<SeedRes
     eventAdjustStatusesCount,
     genresCount,
     scoreStatusesCount,
+    defaultInstrumentConfigsCount,
   };
 }
 

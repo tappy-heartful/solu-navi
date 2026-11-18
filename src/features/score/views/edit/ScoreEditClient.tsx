@@ -8,7 +8,8 @@ import { GenreInput } from "../../components/GenreInput";
 import { AppInput } from "@/components/Form/AppInput";
 import { saveScore } from "@/features/score/api/score-client-service";
 import { rules } from "@/lib/validation";
-import { Genre, Score, SectionDoc, InstrumentDoc, InstrumentPart } from "@/lib/firestore/types";
+import { Genre, Score, SectionDoc, InstrumentDoc, InstrumentPart, DefaultInstrumentConfigDoc } from "@/lib/firestore/types";
+import { DEFAULT_DEFAULT_INSTRUMENT_CONFIGS } from "@/lib/firestore/constants";
 import { useAppForm } from "@/hooks/useAppForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faTrashCan, faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
@@ -22,6 +23,7 @@ type Props = {
   allSections: SectionDoc[];
   allInstruments: InstrumentDoc[];
   medias?: { id: string; title: string; date: string }[];
+  defaultInstrumentConfigs?: DefaultInstrumentConfigDoc[];
 };
 
 export function ScoreEditClient({
@@ -32,6 +34,7 @@ export function ScoreEditClient({
   allSections,
   allInstruments,
   medias = [],
+  defaultInstrumentConfigs = [],
 }: Props) {
   const { userData } = useAuth();
 
@@ -109,84 +112,38 @@ export function ScoreEditClient({
     });
   };
 
-  // 標準編成セット（セクション別）
+  // デフォルト楽器編成マスタ（空なら定数フォールバック）
+  const activeDefaultConfigs =
+    defaultInstrumentConfigs && defaultInstrumentConfigs.length > 0
+      ? defaultInstrumentConfigs
+      : DEFAULT_DEFAULT_INSTRUMENT_CONFIGS;
+
+  // 標準編成セット（セクション別 - マスタデータから展開）
   const setStandardSectionParts = (sectionId: string) => {
-    const sec = allSections.find((s) => s.id === sectionId);
-    if (!sec) return;
-
-    let parts: InstrumentPart[] = [];
-    if (sec.name.includes("サックス") || sec.name.includes("Sax")) {
-      parts = [
-        { partName: "A1", instrumentId: allInstruments.find((i) => i.id === "as")?.id || "" },
-        { partName: "A2", instrumentId: allInstruments.find((i) => i.id === "as")?.id || "" },
-        { partName: "T1", instrumentId: allInstruments.find((i) => i.id === "ts")?.id || "" },
-        { partName: "T2", instrumentId: allInstruments.find((i) => i.id === "ts")?.id || "" },
-        { partName: "B", instrumentId: allInstruments.find((i) => i.id === "bs")?.id || "" },
-      ];
-    } else if (sec.name.includes("トランペット") || sec.name.includes("Trumpet")) {
-      parts = [
-        { partName: "1", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-        { partName: "2", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-        { partName: "3", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-        { partName: "4", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-      ];
-    } else if (sec.name.includes("トロンボーン") || sec.name.includes("Trombone")) {
-      parts = [
-        { partName: "1", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-        { partName: "2", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-        { partName: "3", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-        { partName: "4 (B)", instrumentId: allInstruments.find((i) => i.id === "btb")?.id || allInstruments.find((i) => i.id === "tb")?.id || "" },
-      ];
-    } else if (sec.name.includes("リズム") || sec.name.includes("Rhythm")) {
-      parts = [
-        { partName: "Pf", instrumentId: allInstruments.find((i) => i.id === "pf")?.id || "" },
-        { partName: "Gt", instrumentId: allInstruments.find((i) => i.id === "gt")?.id || "" },
-        { partName: "Ba", instrumentId: allInstruments.find((i) => i.id === "ba")?.id || "" },
-        { partName: "Dr", instrumentId: allInstruments.find((i) => i.id === "dr")?.id || "" },
-      ];
-    }
-
-    if (parts.length > 0) {
+    const matched = activeDefaultConfigs.find(
+      (c) => c.sectionId === sectionId || c.id === sectionId
+    );
+    if (matched && matched.parts && matched.parts.length > 0) {
       setInstrumentConfig((prev) => ({
         ...prev,
-        [sectionId]: parts,
+        [sectionId]: matched.parts.map((p) => ({
+          partName: p.partName,
+          instrumentId: p.instrumentId || "",
+        })),
       }));
     }
   };
 
-  // 全セクション一括で標準17人編成をセット
+  // 全セクション一括でデフォルト楽器編成をセット - マスタデータから展開
   const setAllStandardParts = () => {
     const newConfig: Record<string, InstrumentPart[]> = {};
-    allSections.forEach((sec) => {
-      if (sec.name.includes("サックス") || sec.name.includes("Sax")) {
-        newConfig[sec.id] = [
-          { partName: "A1", instrumentId: allInstruments.find((i) => i.id === "as")?.id || "" },
-          { partName: "A2", instrumentId: allInstruments.find((i) => i.id === "as")?.id || "" },
-          { partName: "T1", instrumentId: allInstruments.find((i) => i.id === "ts")?.id || "" },
-          { partName: "T2", instrumentId: allInstruments.find((i) => i.id === "ts")?.id || "" },
-          { partName: "B", instrumentId: allInstruments.find((i) => i.id === "bs")?.id || "" },
-        ];
-      } else if (sec.name.includes("トランペット") || sec.name.includes("Trumpet")) {
-        newConfig[sec.id] = [
-          { partName: "1", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-          { partName: "2", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-          { partName: "3", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-          { partName: "4", instrumentId: allInstruments.find((i) => i.id === "tp")?.id || "" },
-        ];
-      } else if (sec.name.includes("トロンボーン") || sec.name.includes("Trombone")) {
-        newConfig[sec.id] = [
-          { partName: "1", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-          { partName: "2", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-          { partName: "3", instrumentId: allInstruments.find((i) => i.id === "tb")?.id || "" },
-          { partName: "4 (B)", instrumentId: allInstruments.find((i) => i.id === "btb")?.id || allInstruments.find((i) => i.id === "tb")?.id || "" },
-        ];
-      } else if (sec.name.includes("リズム") || sec.name.includes("Rhythm")) {
-        newConfig[sec.id] = [
-          { partName: "Pf", instrumentId: allInstruments.find((i) => i.id === "pf")?.id || "" },
-          { partName: "Gt", instrumentId: allInstruments.find((i) => i.id === "gt")?.id || "" },
-          { partName: "Ba", instrumentId: allInstruments.find((i) => i.id === "ba")?.id || "" },
-          { partName: "Dr", instrumentId: allInstruments.find((i) => i.id === "dr")?.id || "" },
-        ];
+    activeDefaultConfigs.forEach((conf) => {
+      const secId = conf.sectionId || conf.id;
+      if (secId && conf.parts && conf.parts.length > 0) {
+        newConfig[secId] = conf.parts.map((p) => ({
+          partName: p.partName,
+          instrumentId: p.instrumentId || "",
+        }));
       }
     });
     setInstrumentConfig(newConfig);
@@ -278,7 +235,7 @@ export function ScoreEditClient({
           onClick={setAllStandardParts}
         >
           <FontAwesomeIcon icon={faWandMagicSparkles} />
-          ビッグバンド標準編成 (17パート) を一括セット
+          デフォルト楽器編成を一括セット
         </button>
 
         {allSections.map((sec) => {
@@ -302,7 +259,7 @@ export function ScoreEditClient({
                   className={styles.setStandardBtn}
                   onClick={() => setStandardSectionParts(sec.id)}
                 >
-                  標準パート入力
+                  デフォルトパート入力
                 </button>
               </div>
 

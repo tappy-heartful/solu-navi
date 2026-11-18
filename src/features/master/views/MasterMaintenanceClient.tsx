@@ -15,7 +15,10 @@ import {
   EventAdjustStatus,
   Genre,
   ScoreStatus,
+  DefaultInstrumentConfigDoc,
+  InstrumentPart,
 } from "@/lib/firestore/types";
+import { DEFAULT_DEFAULT_INSTRUMENT_CONFIGS } from "@/lib/firestore/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import {
@@ -43,6 +46,9 @@ import {
   deleteGenre,
   saveScoreStatus,
   deleteScoreStatus,
+  saveDefaultInstrumentConfig,
+  deleteDefaultInstrumentConfig,
+  getClientDefaultInstrumentConfigs,
   seedMasterData,
   getClientSections,
   getClientRoles,
@@ -58,6 +64,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSliders,
+  faWandMagicSparkles,
   faShieldHalved,
   faLock,
   faDatabase,
@@ -91,6 +98,7 @@ type Props = {
   initialEventAdjustStatuses?: EventAdjustStatus[];
   initialGenres?: Genre[];
   initialScoreStatuses?: ScoreStatus[];
+  initialDefaultInstrumentConfigs?: DefaultInstrumentConfigDoc[];
   isSectionsFromDefault: boolean;
   isRolesFromDefault?: boolean;
   isInstrumentsFromDefault: boolean;
@@ -100,12 +108,14 @@ type Props = {
   isGenresFromDefault?: boolean;
   isScoreStatusesFromDefault?: boolean;
   isMunicipalitiesFromDefault?: boolean;
+  isDefaultInstrumentConfigsFromDefault?: boolean;
 };
 
 type TabType =
   | "sections"
   | "roles"
   | "instruments"
+  | "defaultInstrumentConfig"
   | "attendance"
   | "adjust"
   | "genres"
@@ -122,6 +132,7 @@ const TAB_CONFIG: Record<
   sections: { label: "パート" },
   roles: { label: "役職" },
   instruments: { label: "楽器" },
+  defaultInstrumentConfig: { label: "デフォルト楽器編成" },
   attendance: { label: "出欠ステータス" },
   adjust: { label: "日程調整ステータス" },
   genres: { label: "ジャンル" },
@@ -141,6 +152,7 @@ export function MasterMaintenanceClient({
   initialEventAdjustStatuses = [],
   initialGenres = [],
   initialScoreStatuses = [],
+  initialDefaultInstrumentConfigs = [],
   isSectionsFromDefault,
   isRolesFromDefault,
   isInstrumentsFromDefault,
@@ -150,6 +162,7 @@ export function MasterMaintenanceClient({
   isGenresFromDefault,
   isScoreStatusesFromDefault,
   isMunicipalitiesFromDefault,
+  isDefaultInstrumentConfigsFromDefault,
 }: Props) {
   const router = useRouter();
   const { userData } = useAuth();
@@ -168,12 +181,18 @@ export function MasterMaintenanceClient({
   const [eventAdjustStatuses, setEventAdjustStatuses] = useState<EventAdjustStatus[]>(initialEventAdjustStatuses);
   const [genres, setGenres] = useState<Genre[]>(initialGenres);
   const [scoreStatuses, setScoreStatuses] = useState<ScoreStatus[]>(initialScoreStatuses);
+  const [defaultInstrumentConfigs, setDefaultInstrumentConfigs] = useState<DefaultInstrumentConfigDoc[]>(
+    initialDefaultInstrumentConfigs && initialDefaultInstrumentConfigs.length > 0
+      ? initialDefaultInstrumentConfigs
+      : DEFAULT_DEFAULT_INSTRUMENT_CONFIGS
+  );
 
   // 未登録（初期JSONファイル表示中）フラグ管理
   const [fromDefaultMap, setFromDefaultMap] = useState<Record<TabType, boolean>>({
     sections: isSectionsFromDefault,
     roles: !!isRolesFromDefault,
     instruments: isInstrumentsFromDefault,
+    defaultInstrumentConfig: !!isDefaultInstrumentConfigsFromDefault,
     attendance: !!isAttendanceStatusesFromDefault,
     adjust: !!isEventAdjustStatusesFromDefault,
     genres: !!isGenresFromDefault,
@@ -181,6 +200,10 @@ export function MasterMaintenanceClient({
     prefectures: !!isPrefecturesFromDefault,
     municipalities: !!isMunicipalitiesFromDefault,
   });
+
+  // デフォルト楽器編成編集モーダル用
+  const [defaultConfigModalOpen, setDefaultConfigModalOpen] = useState(false);
+  const [editingDefaultConfig, setEditingDefaultConfig] = useState<DefaultInstrumentConfigDoc | null>(null);
 
   // 役職編集・作成モーダル用
   const [roleModalOpen, setRoleModalOpen] = useState(false);
@@ -1123,12 +1146,112 @@ export function MasterMaintenanceClient({
     }
   };
 
+  // ---- デフォルト楽器編成のハンドラ ----
+
+  const handleOpenEditDefaultConfig = (sec: SectionDoc) => {
+    if (!canEdit) return;
+    const existing = defaultInstrumentConfigs.find(
+      (c) => c.sectionId === sec.id || c.id === sec.id
+    );
+    const docData: DefaultInstrumentConfigDoc = existing
+      ? {
+          id: sec.id,
+          sectionId: sec.id,
+          sectionName: sec.name,
+          parts: existing.parts.map((p) => ({ ...p })),
+        }
+      : {
+          id: sec.id,
+          sectionId: sec.id,
+          sectionName: sec.name,
+          parts: [],
+        };
+    setEditingDefaultConfig(docData);
+    setDefaultConfigModalOpen(true);
+  };
+
+  const handleSaveDefaultConfig = async () => {
+    if (!canEdit || !editingDefaultConfig) return;
+
+    const confirmed = await showDialog(
+      `パート「${editingDefaultConfig.sectionName || "セクション"}」のデフォルト楽器編成を保存しますか？`
+    );
+    if (!confirmed) return;
+
+    showSpinner();
+    try {
+      await saveDefaultInstrumentConfig(editingDefaultConfig);
+      await writeLog({
+        dataId: editingDefaultConfig.id,
+        action: "デフォルト楽器編成マスタ更新",
+      });
+      const updated = await getClientDefaultInstrumentConfigs();
+      setDefaultInstrumentConfigs(updated);
+      setFromDefaultMap((prev) => ({ ...prev, defaultInstrumentConfig: false }));
+      setDefaultConfigModalOpen(false);
+      hideSpinner();
+      await showDialog("デフォルト楽器編成を保存しました", true);
+      router.refresh();
+    } catch (err) {
+      hideSpinner();
+      console.error("[MasterMaintenanceClient] デフォルト楽器編成保存エラー:", err);
+      await writeLog({
+        dataId: editingDefaultConfig.id,
+        action: "デフォルト楽器編成マスタ更新",
+        status: "error",
+        errorDetail: { message: (err as Error).message },
+      });
+      await showDialog("保存に失敗しました", true);
+    }
+  };
+
+  const handleAddPartToEditing = () => {
+    if (!editingDefaultConfig) return;
+    const secInstruments = instruments.filter(
+      (inst) => inst.sectionId === editingDefaultConfig.sectionId
+    );
+    const defaultInstId = secInstruments.length > 0 ? secInstruments[0].id : "";
+    setEditingDefaultConfig((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: [...prev.parts, { partName: "", instrumentId: defaultInstId }],
+      };
+    });
+  };
+
+  const handleRemovePartFromEditing = (index: number) => {
+    if (!editingDefaultConfig) return;
+    setEditingDefaultConfig((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: prev.parts.filter((_, i) => i !== index),
+      };
+    });
+  };
+
+  const handleUpdatePartInEditing = (
+    index: number,
+    field: "partName" | "instrumentId",
+    value: string
+  ) => {
+    if (!editingDefaultConfig) return;
+    setEditingDefaultConfig((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        parts: prev.parts.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+      };
+    });
+  };
+
   // ---- 初期マスタシード投入 ----
 
   const handleSeed = async () => {
     if (!canEdit) return;
     const confirmed = await showDialog(
-      "全マスタデータ（パート、役職、楽器、出欠、日程調整、ジャンル、譜面状況、都道府県、市区町村）を Firestore に一括登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）"
+      "全マスタデータ（パート、役職、楽器、デフォルト楽器編成、出欠、日程調整、ジャンル、譜面状況、都道府県、市区町村）を Firestore に一括登録しますか？\n（JSONファイル定義に基づき初期データが登録・上書きされます）"
     );
     if (!confirmed) return;
 
@@ -1148,6 +1271,7 @@ export function MasterMaintenanceClient({
         newSecs,
         newRoles,
         newInsts,
+        newConfigs,
         newPrefs,
         newMunCount,
         newAtts,
@@ -1158,6 +1282,7 @@ export function MasterMaintenanceClient({
         getClientSections(),
         getClientRoles(),
         getClientInstruments(),
+        getClientDefaultInstrumentConfigs(),
         getClientPrefectures(),
         getClientMunicipalitiesTotalCount(),
         getClientAttendanceStatuses(),
@@ -1168,6 +1293,7 @@ export function MasterMaintenanceClient({
       setSections(newSecs);
       setRoles(newRoles);
       setInstruments(newInsts);
+      setDefaultInstrumentConfigs(newConfigs);
       setPrefectures(newPrefs);
       setMunicipalitiesCount(newMunCount);
       setAttendanceStatuses(newAtts);
@@ -1179,6 +1305,7 @@ export function MasterMaintenanceClient({
         sections: false,
         roles: false,
         instruments: false,
+        defaultInstrumentConfig: false,
         attendance: false,
         adjust: false,
         genres: false,
@@ -1194,7 +1321,7 @@ export function MasterMaintenanceClient({
 
       hideSpinner();
       await showDialog(
-        `初期マスタを一括登録しました。\n・パート: ${res.sectionsCount}件\n・役職: ${res.rolesCount}件\n・楽器: ${res.instrumentsCount}件\n・出欠: ${res.attendanceStatusesCount}件\n・日程調整: ${res.eventAdjustStatusesCount}件\n・ジャンル: ${res.genresCount}件\n・譜面状況: ${res.scoreStatusesCount}件\n・都道府県: ${res.prefecturesCount}件\n・市区町村: ${res.municipalitiesCount}件`,
+        `初期マスタを一括登録しました。\n・パート: ${res.sectionsCount}件\n・役職: ${res.rolesCount}件\n・楽器: ${res.instrumentsCount}件\n・デフォルト楽器編成: ${res.defaultInstrumentConfigsCount}件\n・出欠: ${res.attendanceStatusesCount}件\n・日程調整: ${res.eventAdjustStatusesCount}件\n・ジャンル: ${res.genresCount}件\n・譜面状況: ${res.scoreStatusesCount}件\n・都道府県: ${res.prefecturesCount}件\n・市区町村: ${res.municipalitiesCount}件`,
         true
       );
       router.refresh();
@@ -1227,6 +1354,7 @@ export function MasterMaintenanceClient({
         includeSections: tab === "sections",
         includeRoles: tab === "roles",
         includeInstruments: tab === "instruments",
+        includeDefaultInstrumentConfigs: tab === "defaultInstrumentConfig",
         includeAttendanceStatuses: tab === "attendance",
         includeEventAdjustStatuses: tab === "adjust",
         includeGenres: tab === "genres",
@@ -1235,6 +1363,11 @@ export function MasterMaintenanceClient({
         includeMunicipalities: tab === "municipalities",
         onProgress: (msg) => console.log(msg),
       });
+
+      if (tab === "defaultInstrumentConfig") {
+        const updated = await getClientDefaultInstrumentConfigs();
+        setDefaultInstrumentConfigs(updated);
+      }
 
       await writeLog({
         action: `マスタデータ個別初期投入: ${config.label}`,
@@ -1545,6 +1678,20 @@ export function MasterMaintenanceClient({
           </button>
           <button
             type="button"
+            className={`${styles.tabItem} ${currentTab === "defaultInstrumentConfig" ? styles.tabItemActive : ""}`}
+            onClick={() => setCurrentTab("defaultInstrumentConfig")}
+          >
+            <FontAwesomeIcon icon={faWandMagicSparkles} />
+            デフォルト楽器編成
+            <span className={styles.tabBadge}>
+              {defaultInstrumentConfigs.reduce((acc, c) => acc + (c.parts?.length || 0), 0)}
+            </span>
+            {fromDefaultMap.defaultInstrumentConfig && (
+              <span className={styles.tabBadgeUnregistered}>未登録</span>
+            )}
+          </button>
+          <button
+            type="button"
             className={`${styles.tabItem} ${currentTab === "attendance" ? styles.tabItemActive : ""}`}
             onClick={() => setCurrentTab("attendance")}
           >
@@ -1848,6 +1995,130 @@ export function MasterMaintenanceClient({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* タブコンテンツ: デフォルト楽器編成 */}
+        {currentTab === "defaultInstrumentConfig" && (
+          <div className={styles.contentCard}>
+            {renderMasterHeader("defaultInstrumentConfig", "デフォルト楽器編成")}
+            <div style={{ marginBottom: "16px", fontSize: "14px", color: "#64748b" }}>
+              譜面作成時やイベント編成設定時に「デフォルト楽器編成を一括セット」または「デフォルトパート入力」を押した際に自動展開される標準パート編成です。
+            </div>
+
+            {sections.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <FontAwesomeIcon icon={faWandMagicSparkles} />
+                </div>
+                <p>パートマスタが登録されていません</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {sections.map((sec) => {
+                  const conf = defaultInstrumentConfigs.find(
+                    (c) => c.sectionId === sec.id || c.id === sec.id
+                  );
+                  const parts = conf?.parts || [];
+
+                  return (
+                    <div
+                      key={sec.id}
+                      style={{
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "12px",
+                        padding: "16px",
+                        backgroundColor: "#ffffff",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "12px",
+                          borderBottom: "1px solid #f1f5f9",
+                          paddingBottom: "10px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div
+                            style={{
+                              width: "12px",
+                              height: "22px",
+                              borderRadius: "4px",
+                              backgroundColor: sec.color || "#146081",
+                            }}
+                          />
+                          <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>
+                            {sec.name}
+                          </h4>
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              background: "#f1f5f9",
+                              color: "#475569",
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {parts.length} パート
+                          </span>
+                        </div>
+
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className={styles.actionBtnEdit}
+                            onClick={() => handleOpenEditDefaultConfig(sec)}
+                            style={{ fontSize: "13px", padding: "6px 14px" }}
+                          >
+                            <FontAwesomeIcon icon={faPenToSquare} />
+                            <span>編成を編集</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {parts.length === 0 ? (
+                        <div style={{ fontSize: "13px", color: "#94a3b8", fontStyle: "italic", padding: "8px 0" }}>
+                          デフォルトパートが設定されていません
+                        </div>
+                      ) : (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                          {parts.map((p, pIdx) => {
+                            const inst = instruments.find((i) => i.id === p.instrumentId);
+                            return (
+                              <div
+                                key={pIdx}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  background: "#f8fafc",
+                                  border: "1px solid #cbd5e1",
+                                  borderRadius: "6px",
+                                  padding: "6px 12px",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                <span style={{ fontWeight: "bold", color: "#1e293b" }}>
+                                  {p.partName || `Part ${pIdx + 1}`}
+                                </span>
+                                <span style={{ color: "#64748b", fontSize: "12px" }}>
+                                  ({inst ? inst.name : p.instrumentId || "未指定"})
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -3030,6 +3301,110 @@ export function MasterMaintenanceClient({
                   onClick={handleSaveScoreStatus}
                 >
                   {isScoreStatusNew ? "追加する" : "保存する"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* デフォルト楽器編成編集モーダル */}
+        {defaultConfigModalOpen && editingDefaultConfig && (
+          <Modal
+            onClose={() => setDefaultConfigModalOpen(false)}
+            title={`デフォルト楽器編成の編集 - ${editingDefaultConfig.sectionName || "パート"}`}
+          >
+            <div className={styles.modalForm}>
+              <div style={{ marginBottom: "16px", fontSize: "14px", color: "#475569" }}>
+                パート名（例: As1, 1st, Lead）と使用する楽器を選択してください。
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "400px", overflowY: "auto", paddingRight: "4px" }}>
+                {editingDefaultConfig.parts.map((p, idx) => {
+                  const secInstruments = instruments.filter(
+                    (inst) => inst.sectionId === editingDefaultConfig.sectionId
+                  );
+
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        background: "#f8fafc",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <span style={{ fontSize: "12px", color: "#94a3b8", width: "20px", textAlign: "center" }}>
+                        {idx + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={p.partName}
+                        onChange={(e) => handleUpdatePartInEditing(idx, "partName", e.target.value)}
+                        placeholder="パート名 (例: As1)"
+                        className={styles.formInput}
+                        style={{ flex: "1 1 120px", minWidth: "100px" }}
+                        maxLength={10}
+                      />
+                      <select
+                        value={p.instrumentId || ""}
+                        onChange={(e) => handleUpdatePartInEditing(idx, "instrumentId", e.target.value)}
+                        className={styles.formInput}
+                        style={{ flex: "1.5 1 160px", minWidth: "140px" }}
+                      >
+                        <option value="">楽器を選択</option>
+                        {secInstruments.map((inst) => (
+                          <option key={inst.id} value={inst.id}>
+                            {inst.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePartFromEditing(idx)}
+                        style={{
+                          background: "#fee2e2",
+                          border: "none",
+                          color: "#ef4444",
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                        title="削除"
+                      >
+                        <FontAwesomeIcon icon={faTrashCan} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddPartToEditing}
+                className={styles.btnSecondary}
+                style={{ marginTop: "12px", width: "100%", justifyContent: "center" }}
+              >
+                <FontAwesomeIcon icon={faPlus} /> パートを追加
+              </button>
+
+              <div className={styles.modalFooter} style={{ marginTop: "20px" }}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => setDefaultConfigModalOpen(false)}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleSaveDefaultConfig}
+                >
+                  保存する
                 </button>
               </div>
             </div>

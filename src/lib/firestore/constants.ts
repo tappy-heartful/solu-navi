@@ -9,6 +9,7 @@ import {
   Genre,
   ScoreStatus,
   AppSettings,
+  DefaultInstrumentConfigDoc,
 } from "./types";
 import defaultSectionsData from "@/data/master/sections.json";
 import defaultRolesData from "@/data/master/roles.json";
@@ -20,6 +21,7 @@ import defaultAttendanceStatusesData from "@/data/master/attendanceStatuses.json
 import defaultEventAdjustStatusesData from "@/data/master/eventAdjustStatuses.json";
 import defaultGenresData from "@/data/master/genres.json";
 import defaultScoreStatusesData from "@/data/master/scoreStatuses.json";
+import defaultInstrumentConfigsData from "@/data/master/defaultInstrumentConfigs.json";
 
 export const DEFAULT_SECTIONS: SectionDoc[] = defaultSectionsData as SectionDoc[];
 
@@ -40,6 +42,8 @@ export const DEFAULT_EVENT_ADJUST_STATUSES: EventAdjustStatus[] = defaultEventAd
 export const DEFAULT_GENRES: Genre[] = defaultGenresData as Genre[];
 
 export const DEFAULT_SCORE_STATUSES: ScoreStatus[] = defaultScoreStatusesData as ScoreStatus[];
+
+export const DEFAULT_DEFAULT_INSTRUMENT_CONFIGS: DefaultInstrumentConfigDoc[] = defaultInstrumentConfigsData as DefaultInstrumentConfigDoc[];
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   generalLineGroupId: "",

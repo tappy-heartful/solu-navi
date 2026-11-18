@@ -268,6 +268,14 @@ export interface InstrumentPart {
   instrumentId?: string;
 }
 
+export interface DefaultInstrumentConfigDoc {
+  id: string; // sectionId (例: "1", "2", "3", "4")
+  sectionId: string;
+  sectionName?: string;
+  parts: InstrumentPart[];
+  updatedAt?: number;
+}
+
 export interface EventYouTubeTimestamp {
   time: string; // "mm:ss"
   comment: string;
